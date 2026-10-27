@@ -1,0 +1,1175 @@
+/*
+ * Components use theme variables only: no raw colors, no font names. Sizes are rem multiples of the theme's
+ * --base-size, spacing is var(--space-*). Only 1-3px hairlines and outlines are written as pixels.
+ * Extra variables (--media-ratio, --hero-cols, ...) always have a fallback. See PROJECT.md.
+ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: var(--base-size);
+  -webkit-text-size-adjust: 100%;
+  scrollbar-gutter: stable; /* opening the lightbox must not change the page width */
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  line-height: var(--line-height);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+  line-height: 1.1;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+/*
+ * Long words (German compounds such as "Geschwindigkeitsregelung") must never widen the page. The text is
+ * hyphenated by the page language (<html lang>), and overflow-wrap: anywhere is the safety net for a word that
+ * still does not fit its column. Fact values in the hero are the exception: they never wrap (see .hero__fact-value).
+ */
+h1,
+h2,
+h3,
+.details__label,
+.details__value,
+.faq__question,
+.faq__answer,
+.button,
+.hero__description,
+.offer__note,
+.offer__disclaimer,
+.site-header__name,
+.hero__trust li,
+.site-footer {
+  hyphens: auto;
+  overflow-wrap: anywhere;
+}
+
+/* grid and flex children may shrink below their content, so a long word cannot stretch a column */
+.details__row > *,
+.hero__intro-grid > *,
+.offer__columns > *,
+.specs__group,
+.faq__item,
+.gallery__bar > *,
+.hero__fact {
+  min-width: 0;
+}
+
+a {
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+
+/* small uppercase label in the accent color */
+.label {
+  margin: 0;
+  color: var(--accent);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.section-title {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  margin-bottom: var(--space-5);
+}
+
+.button {
+  display: inline-block;
+  padding: var(--space-3) var(--space-4);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+.button:hover {
+  background: transparent;
+  color: var(--accent);
+}
+
+.button--outline {
+  background: transparent;
+  color: var(--accent);
+}
+
+.button--outline:hover {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.button--small {
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.link {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.3em;
+}
+
+.link:hover {
+  color: var(--accent);
+}
+
+/* header strip */
+.site-header {
+  display: flex;
+  align-items: center;
+  min-height: var(--header-h, 4.25rem);
+  border-bottom: 1px solid var(--border);
+}
+
+.site-header__inner {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+}
+
+.site-header__name {
+  min-width: 0;
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+/*
+ * hero. On wide, tall windows it is ONE screen in three zones: the title zone (eyebrow, headline), the center
+ * zone with the photo frame (all the remaining height) and the bottom row (intro columns). The title zone and the
+ * bottom row never depend on the photo; the frame depends only on the window. Widths are fractions of
+ * var(--container-wide, var(--container)). Mobile and short windows keep a normal one-column flow.
+ */
+.hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero__bg {
+  z-index: 0;
+  object-fit: cover;
+  opacity: 0.12;
+}
+
+.hero__container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: var(--container-wide, var(--container));
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+
+/* title zone: one centered column */
+.hero__stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-block: var(--space-5) var(--space-4);
+  text-align: center;
+}
+
+.hero__headline {
+  margin-top: var(--space-3);
+  font-size: var(--hero-headline-size, clamp(1.9rem, 4vw, 3.25rem));
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+/*
+ * center zone: the photo frame. Here (normal flow) its box comes from the aspect ratio of the product type; in
+ * the one-screen mode below it comes from the window. The photo is fitted into the box by data-fit, which the
+ * server decides from the photo's ratio: cover (focus point, small crop) or contain on a quiet matte (no crop).
+ */
+.hero__photo {
+  position: relative;
+  width: 100%;
+  margin: var(--space-5) auto 0;
+  aspect-ratio: var(--media-ratio, 3 / 2);
+}
+
+.hero__frame {
+  width: 100%;
+  height: 100%;
+}
+
+.hero__box {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--radius);
+}
+
+.hero__photo[data-fit="contain"] .hero__box {
+  background: var(--surface);
+}
+
+.hero__image {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero__photo[data-fit="contain"] .hero__image {
+  object-fit: contain;
+}
+
+.hero__placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+}
+
+/* bottom row: a thin line across the container, then two columns on its edges */
+.hero__intro {
+  position: relative;
+  z-index: 1;
+  padding-bottom: var(--space-5);
+}
+
+.hero__intro-grid {
+  display: grid;
+  gap: var(--space-5);
+  padding-block: var(--space-5);
+  border-top: 1px solid var(--border);
+}
+
+.hero__description {
+  max-width: 40rem;
+  color: var(--muted);
+}
+
+/* key facts: large serif value over a small uppercase label; two columns of two on mobile */
+.hero__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hero__fact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-block: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.hero__fact-value {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  line-height: 1.1;
+  font-variant-numeric: lining-nums;
+  white-space: nowrap; /* a value never wraps inside itself ("ca. / 37.100 / km"); the size is chosen to fit */
+  overflow-wrap: normal;
+  hyphens: manual;
+}
+
+.hero__fact-label {
+  color: var(--muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hero__figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.hero__amount {
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  line-height: 1.1;
+  font-variant-numeric: lining-nums;
+  color: var(--accent);
+}
+
+.hero__note {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* two buttons of the same size, stacked: the width of their column */
+.hero__actions {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.hero__actions .button {
+  width: 100%;
+}
+
+/* trust: short items, centered; stacked on mobile, one thin line with separators on wide screens */
+.hero__trust {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+  list-style: none;
+}
+
+@media (min-width: 56em) {
+  .hero__headline {
+    max-width: 80%;
+  }
+
+  .hero__trust {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0;
+  }
+
+  .hero__trust li + li::before {
+    content: "·";
+    margin-inline: var(--space-3);
+  }
+
+  /* wide but short windows: normal flow, the frame is a centered box with the ratio of the product type */
+  .hero__photo {
+    display: flex;
+    justify-content: center;
+    aspect-ratio: auto;
+  }
+
+  .hero__frame {
+    position: relative;
+    width: var(--hero-photo-width, 60%);
+    height: auto;
+    aspect-ratio: var(--media-ratio, 3 / 2);
+  }
+
+  .hero__box {
+    position: absolute;
+    inset: 0;
+    height: auto;
+  }
+
+  .hero__intro-grid {
+    grid-template-columns: 55% 35%;
+    justify-content: space-between;
+    padding-block: var(--space-6);
+  }
+
+  .hero__intro-aside {
+    text-align: right;
+  }
+
+  .hero__figure {
+    align-items: flex-end;
+  }
+
+  .hero__facts {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .hero__fact {
+    padding-block: 0;
+    padding-inline: var(--space-3);
+    border-top: 0;
+  }
+
+  /* one size for all wide windows: four German values fit one row of the 55% column; never below 1.25rem */
+  .hero__fact-value {
+    font-size: clamp(1.25rem, 1.9vw, 1.5rem);
+  }
+
+  .hero__fact:first-child {
+    padding-left: 0;
+  }
+
+  .hero__fact + .hero__fact {
+    border-left: 1px solid var(--border);
+  }
+}
+
+/*
+ * One screen: on wide AND tall enough windows the hero is the viewport below the header (100vh first as the
+ * fallback for browsers without svh). The center zone takes everything the title zone and the bottom row leave,
+ * and never less than a floor; if the content is taller the hero grows, so nothing is clipped and the text is
+ * never shrunk. 37.5em is 600px at the default font size.
+ *
+ * The frame is as tall as the zone; its width is height x --hero-frame-max-ratio, kept between
+ * --hero-photo-min-width (default 40%) and --hero-photo-width (default 60%) of the container. The box inside it is at most as tall as the zone and at most
+ * width / --hero-frame-min-ratio, so the frame ratio stays between the two ratios whatever the window is.
+ * Nothing in the zone depends on the photo, which means no layout shift.
+ */
+@media (min-width: 56em) and (min-height: 37.5em) {
+  .hero {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - var(--header-h, 4.25rem));
+    min-height: calc(100svh - var(--header-h, 4.25rem));
+  }
+
+  .hero__stage {
+    flex: 1;
+    min-height: 0;
+    padding-bottom: 0;
+  }
+
+  .hero__photo {
+    display: grid;
+    flex: 1;
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr); /* one full-size cell, so the frame's percentages have a base */
+    place-items: center;
+    width: 100%;
+    min-height: var(--hero-frame-min-height, 12rem);
+    margin-block: var(--space-4) var(--space-3);
+  }
+
+  .hero__frame {
+    display: grid;
+    align-content: center;
+    width: auto; /* from the height and the ratio below, kept between --hero-photo-min-width and --hero-photo-width */
+    min-width: var(--hero-photo-min-width, 40%);
+    max-width: var(--hero-photo-width, 60%);
+    height: 100%;
+    aspect-ratio: var(--hero-frame-max-ratio, 1.7778);
+  }
+
+  .hero__box {
+    position: relative;
+    inset: auto;
+    align-self: center;
+    width: 100%;
+    max-height: 100%;
+    aspect-ratio: var(--hero-frame-min-ratio, 1);
+  }
+
+  /* bottom row: bounded heights */
+  .hero__intro {
+    flex: none;
+    padding-bottom: var(--space-4);
+  }
+
+  .hero__intro-grid {
+    padding-block: var(--space-4);
+  }
+
+  .hero__description {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+
+  .hero__note {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+  }
+
+  .hero__actions .button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--hero-button-height, 3rem);
+    padding-block: 0;
+  }
+}
+
+/* laptop-height windows (under about 50em): the compact bottom row */
+@media (min-width: 56em) and (min-height: 37.5em) and (max-height: 50em) {
+  .hero__stage {
+    padding-top: var(--space-3);
+  }
+
+  .hero__photo {
+    margin-block: var(--space-3) var(--space-2);
+  }
+
+  .hero__intro {
+    padding-bottom: var(--space-3);
+  }
+
+  .hero__intro-grid {
+    padding-block: var(--space-3);
+  }
+
+  .hero__description {
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  .hero__facts {
+    flex-wrap: nowrap;
+    margin-top: var(--space-3);
+  }
+
+  /* the figure a little smaller (rem only); the note stays visible on one clamped line */
+  .hero__amount {
+    font-size: clamp(1.5rem, 2.8vw, 2rem);
+  }
+
+  .hero__actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: var(--space-2);
+  }
+
+  .hero__actions .button {
+    padding-inline: var(--space-2);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+  }
+
+  .hero__trust {
+    display: none;
+  }
+}
+
+/* definition lists: specs and offer details */
+.details {
+  margin: 0;
+  border-top: 1px solid var(--border);
+}
+
+.details__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-3);
+  padding-block: var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.details__label {
+  color: var(--muted);
+}
+
+.details__value {
+  margin: 0;
+}
+
+/* specs */
+.specs {
+  padding-block: var(--space-5) var(--space-6);
+}
+
+.specs__group {
+  break-inside: avoid;
+  margin-bottom: var(--space-5);
+}
+
+.specs__group .label {
+  margin-bottom: var(--space-3);
+}
+
+/* two balanced columns of groups on wide screens (no gaps under shorter groups) */
+@media (min-width: 56em) {
+  .specs__groups {
+    column-count: 2;
+    column-gap: var(--space-6);
+  }
+}
+
+/* offer */
+.offer {
+  padding-block: var(--space-6);
+  background: var(--surface);
+  border-block: 1px solid var(--border);
+}
+
+.offer__columns {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.offer__title {
+  margin-top: var(--space-2);
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+}
+
+.offer__price {
+  margin-top: var(--space-4);
+  font-family: var(--font-heading);
+  font-size: clamp(2.2rem, 6vw, 3.2rem);
+  line-height: 1;
+  text-wrap: balance;
+  font-variant-numeric: lining-nums;
+  color: var(--accent);
+}
+
+.offer__note {
+  margin-top: var(--space-2);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.offer__action {
+  margin-top: var(--space-5);
+}
+
+.offer__disclaimer {
+  margin-top: var(--space-4);
+  max-width: 40rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+@media (min-width: 56em) {
+  .offer__columns--split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: var(--space-6);
+    align-items: start;
+  }
+
+  /* the details become two columns of stacked label-over-value rows, about as tall as the left column */
+  .offer__details .details {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-5);
+    border-top: 0;
+  }
+
+  .offer__details .details__row {
+    display: block;
+    border-top: 1px solid var(--border);
+    border-bottom: 0;
+    padding-block: var(--space-3);
+  }
+
+  .offer__details .details__label {
+    display: block;
+    font-size: 0.8rem;
+  }
+
+  .offer__details .details__row[data-field="notes"] {
+    grid-column: 1 / -1;
+  }
+}
+
+.gallery,
+.video {
+  padding-block: var(--space-5);
+}
+
+/* gallery: scroll-snap track, so touch swipe and momentum are native */
+.gallery__viewport {
+  position: relative;
+}
+
+.gallery__track {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  list-style: none;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+
+.gallery__track::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gallery__track {
+    scroll-behavior: smooth;
+  }
+}
+
+.gallery__slide {
+  flex: 0 0 100%;
+  aspect-ratio: var(--gallery-ratio, 3 / 2);
+  background: var(--surface);
+  scroll-snap-align: center;
+}
+
+.gallery__open {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+
+.gallery__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius);
+  object-fit: cover;
+}
+
+.gallery__nav {
+  position: absolute;
+  top: 50%;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  transform: translateY(-50%);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.gallery__nav::before {
+  content: "";
+  display: block;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin: auto;
+  border-top: 2px solid currentcolor;
+  border-right: 2px solid currentcolor;
+}
+
+.gallery__nav--prev {
+  left: var(--space-3);
+}
+
+.gallery__nav--prev::before {
+  transform: translateX(0.12rem) rotate(-135deg);
+}
+
+.gallery__nav--next {
+  right: var(--space-3);
+}
+
+.gallery__nav--next::before {
+  transform: translateX(-0.12rem) rotate(45deg);
+}
+
+.gallery__nav:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.gallery__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+}
+
+.gallery__counter {
+  flex: none;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+.gallery__thumbs-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+/* soft edge fades (painted with the page color) show that the strip scrolls; they appear only on the sides with more */
+.gallery__thumbs-wrap::before,
+.gallery__thumbs-wrap::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  width: 2.5rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.gallery__thumbs-wrap::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bg), transparent);
+}
+
+.gallery__thumbs-wrap::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bg), transparent);
+}
+
+.gallery__thumbs-wrap--more-start::before,
+.gallery__thumbs-wrap--more-end::after {
+  opacity: 1;
+}
+
+.gallery__thumbs {
+  scrollbar-color: var(--muted) transparent;
+  scrollbar-width: thin;
+  display: flex;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-1) var(--space-1) var(--space-2);
+  overflow-x: auto;
+  list-style: none;
+}
+
+.gallery__thumb {
+  display: block;
+  width: 4.5rem;
+  aspect-ratio: var(--gallery-ratio, 3 / 2);
+  padding: 0;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  opacity: 0.65;
+}
+
+.gallery__thumb[aria-current="true"] {
+  opacity: 1;
+  outline: 2px solid var(--accent-line, var(--accent));
+  outline-offset: 2px;
+}
+
+.gallery__thumb-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* lightbox: native modal dialog, full screen */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.lightbox[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.lightbox__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+}
+
+.lightbox__counter {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+.lightbox__close {
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lightbox__stage {
+  position: relative;
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  place-items: center;
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+.lightbox__img {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* video */
+.video__frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.video__file,
+.video__embed,
+.video__facade {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.video__facade {
+  padding: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.video__poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.video__play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4rem;
+  height: 4rem;
+  transform: translate(-50%, -50%);
+  background: var(--bg);
+  border: 2px solid var(--accent-line, var(--accent));
+  border-radius: 50%;
+}
+
+.video__play::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-30%, -50%);
+  border-left: 1.1rem solid var(--accent-line, var(--accent));
+  border-block: 0.7rem solid transparent;
+}
+
+.video__facade:hover .video__play {
+  background: var(--surface);
+}
+
+/* faq */
+.faq {
+  padding-block: var(--space-6);
+}
+
+.faq__list {
+  max-width: 48rem;
+  border-top: 1px solid var(--border);
+}
+
+.faq__item {
+  border-bottom: 1px solid var(--border);
+}
+
+.faq__question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block: var(--space-3);
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.faq__question::-webkit-details-marker {
+  display: none;
+}
+
+.faq__icon {
+  position: relative;
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+}
+
+.faq__icon::before,
+.faq__icon::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--accent-line, var(--accent));
+  transition: transform 0.2s;
+}
+
+.faq__icon::after {
+  transform: rotate(90deg);
+}
+
+.faq__item[open] .faq__icon::after {
+  transform: rotate(0deg);
+}
+
+.faq__answer {
+  padding-bottom: var(--space-4);
+  max-width: 40rem;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery__thumbs-wrap::before,
+  .gallery__thumbs-wrap::after,
+  .button,
+  .faq__icon::before,
+  .faq__icon::after {
+    transition: none;
+  }
+}
+
+/* footer */
+.site-footer {
+  padding-block: var(--space-5);
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.site-footer__inner {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.site-footer__name {
+  color: var(--text);
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+}
+
+.site-footer__prototype {
+  color: var(--text);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.site-footer a {
+  color: var(--text);
+}
+
+/* development theme switcher */
+.theme-switcher {
+  position: fixed;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  z-index: 1000;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: calc(100vw - 2 * var(--space-3));
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+}
+
+.theme-switcher a {
+  padding: 2px var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-decoration: none;
+}
+
+.theme-switcher a[aria-current="true"] {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+}
+
+.theme-switcher__warning {
+  flex-basis: 100%;
+  color: var(--muted);
+}

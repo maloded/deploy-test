@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "slug": "example-house",
+  "productType": "house",
+  "offerType": "sale",
+  "title": {
+    "en": "Example villa with garden"
+  },
+  "tagline": {
+    "en": "Fake example listing for a house."
+  },
+  "price": {
+    "amount": 890000,
+    "currency": "EUR",
+    "note": {
+      "en": "Example price. All data on this page is fake."
+    }
+  },
+  "specs": [
+    {
+      "key": "bedrooms",
+      "label": {
+        "en": "Bedrooms"
+      },
+      "value": "4",
+      "group": "rooms"
+    },
+    {
+      "key": "heating",
+      "label": {
+        "en": "Heating"
+      },
+      "value": "Example heat pump",
+      "group": "energy"
+    },
+    {
+      "key": "location",
+      "label": {
+        "en": "Location"
+      },
+      "value": "Example town",
+      "group": "location"
+    }
+  ],
+  "media": {
+    "hero": "hero.png",
+    "gallery": [],
+    "background": null,
+    "video": null
+  },
+  "faq": [],
+  "details": {
+    "property": {
+      "areaM2": 180,
+      "rooms": 6,
+      "plotM2": 650,
+      "energyClass": "B",
+      "yearBuilt": 2015
+    }
+  },
+  "hero": {
+    "trust": [
+      {
+        "en": "Example: energy certificate available"
+      },
+      {
+        "en": "Example: viewing by appointment"
+      }
+    ]
+  }
+}

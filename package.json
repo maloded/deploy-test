@@ -1,0 +1,46 @@
+{
+  "name": "luxury-landing",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npm run images && next dev",
+    "build": "npm run images && next build",
+    "start": "next start",
+    "fonts": "node scripts/copy-fonts.mjs",
+    "check:themes": "node scripts/run.mjs scripts/check-themes.ts",
+    "check:template-clean": "node scripts/run.mjs scripts/check-template-clean.mjs",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "images": "node scripts/run.mjs scripts/make-web-images.mjs",
+    "images:export": "node scripts/run.mjs scripts/export-media-web.mjs",
+    "export:template": "node scripts/run.mjs scripts/export-template.mjs",
+    "verify:deploy": "node scripts/run.mjs scripts/verify-deploy.mjs",
+    "snapshot": "node scripts/run.mjs scripts/make-demo-snapshot.mjs"
+  },
+  "engines": {
+    "node": "22.x"
+  },
+  "dependencies": {
+    "next": "16.4.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@fontsource/cormorant-garamond": "5.3.0",
+    "@fontsource/inter": "5.3.0",
+    "@fontsource/source-sans-3": "5.3.1",
+    "@fontsource/source-serif-4": "5.3.1",
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.3",
+    "happy-dom": "21.0.4",
+    "sharp": "0.35.5",
+    "typescript": "5.9.3",
+    "vitest": "5.0.5"
+  }
+}

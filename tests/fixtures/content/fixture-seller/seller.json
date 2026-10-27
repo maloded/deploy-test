@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "displayName": "Fixture Seller",
+  "legalNote": {
+    "en": "Information on this page is indicative and does not constitute a binding offer.",
+    "de": "Die Angaben auf dieser Seite sind unverbindlich und stellen kein verbindliches Angebot dar."
+  },
+  "contact": {
+    "email": "example@example.com"
+  },
+  "languages": [
+    "en",
+    "de"
+  ],
+  "defaultLanguage": "en",
+  "theme": "light-editorial",
+  "consentText": {
+    "en": "Example: I agree that my details are used to answer my enquiry.",
+    "de": "Beispiel: Ich stimme zu, dass meine Angaben zur Beantwortung meiner Anfrage verwendet werden."
+  }
+}

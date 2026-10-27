@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "slug": "example-bag",
+  "productType": "bag",
+  "offerType": "sale",
+  "title": {
+    "en": "Example leather handbag"
+  },
+  "tagline": {
+    "en": "Fake example listing for a bag."
+  },
+  "price": {
+    "amount": 2400,
+    "currency": "EUR",
+    "note": {
+      "en": "Example price. All data on this page is fake."
+    }
+  },
+  "specs": [
+    {
+      "key": "material",
+      "label": {
+        "en": "Material"
+      },
+      "value": "Example calfskin",
+      "group": "material"
+    },
+    {
+      "key": "dimensions",
+      "label": {
+        "en": "Dimensions"
+      },
+      "value": "30 x 22 x 12 cm",
+      "group": "dimensions"
+    },
+    {
+      "key": "condition",
+      "label": {
+        "en": "Condition"
+      },
+      "value": "Example: very good",
+      "group": "condition"
+    }
+  ],
+  "media": {
+    "hero": "hero.png",
+    "gallery": [],
+    "background": null,
+    "video": null
+  },
+  "faq": [],
+  "details": {
+    "authenticity": {
+      "certificate": true,
+      "serialPresent": true,
+      "purchasedFrom": "Example Boutique"
+    }
+  },
+  "hero": {
+    "trust": [
+      {
+        "en": "Example: authenticity certificate"
+      },
+      {
+        "en": "Example: purchase receipt"
+      }
+    ]
+  }
+}

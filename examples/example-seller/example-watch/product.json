@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "slug": "example-watch",
+  "productType": "watch",
+  "offerType": "sale",
+  "theme": "dark-premium",
+  "title": {
+    "en": "Example chronograph watch"
+  },
+  "tagline": {
+    "en": "Fake example listing for a watch."
+  },
+  "price": {
+    "amount": 8900,
+    "currency": "EUR",
+    "note": {
+      "en": "Example price. All data on this page is fake."
+    }
+  },
+  "specs": [
+    {
+      "key": "movement",
+      "label": {
+        "en": "Movement"
+      },
+      "value": "Example automatic caliber",
+      "group": "movement"
+    },
+    {
+      "key": "caseDiameter",
+      "label": {
+        "en": "Case diameter"
+      },
+      "value": "40 mm",
+      "group": "case"
+    },
+    {
+      "key": "strap",
+      "label": {
+        "en": "Strap"
+      },
+      "value": "Example steel bracelet",
+      "group": "strap"
+    }
+  ],
+  "media": {
+    "hero": "hero.png",
+    "gallery": [],
+    "background": null,
+    "video": null
+  },
+  "faq": [],
+  "details": {
+    "provenance": {
+      "box": true,
+      "papers": true,
+      "serviceHistory": {
+        "en": "Example: serviced in 2024."
+      }
+    }
+  },
+  "hero": {
+    "trust": [
+      {
+        "en": "Example: box and papers"
+      },
+      {
+        "en": "Example: serviced in 2024"
+      }
+    ]
+  }
+}

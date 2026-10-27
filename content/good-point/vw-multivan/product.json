@@ -1,0 +1,623 @@
+{
+  "schemaVersion": 1,
+  "slug": "vw-multivan",
+  "productType": "car",
+  "offerType": "sale",
+  "title": {
+    "de": "Volkswagen Multivan (T7) Business 2.0 TDI",
+    "en": "Volkswagen Multivan (T7) Business 2.0 TDI"
+  },
+  "tagline": {
+    "de": "Gepflegter Siebensitzer mit DSG-Automatik, Fahrzeugpapiere frei von Belastungen.",
+    "en": "Well-kept seven-seater with DSG automatic gearbox, vehicle papers free of encumbrance."
+  },
+  "price": {
+    "amount": 53900,
+    "currency": "EUR"
+  },
+  "hero": {
+    "eyebrow": [
+      {
+        "de": "Wien",
+        "en": "Vienna"
+      }
+    ],
+    "headline": {
+      "de": "VW Multivan 2.0 TDI",
+      "en": "VW Multivan 2.0 TDI"
+    },
+    "description": {
+      "de": "Volkswagen Multivan (T7) in Indiumgrau mit sieben Sitzen, Dieselmotor und 7-Gang-DSG. Technisch in gutem Zustand, ausschließlich in VW-Servicebetrieben gewartet. Zustand und Historie, auch ein Schadensereignis im Jahr 2025, finden Sie unter Technische Daten.",
+      "en": "Volkswagen Multivan (T7) in Indium grey with seven seats, diesel engine and 7-speed DSG. Technically in good condition, serviced only at VW service centres. Condition and history, including a damage event in 2025, are listed under Specifications."
+    },
+    "highlights": [
+      "year",
+      "mileage",
+      "power",
+      "gearbox"
+    ],
+    "trust": [
+      {
+        "de": "Ausschließlich in VW-Servicebetrieben gewartet",
+        "en": "Serviced only at VW service centres"
+      },
+      {
+        "de": "Pickerl gültig bis 07/2028",
+        "en": "Inspection valid until 07/2028"
+      },
+      {
+        "de": "Zusätzlicher Satz Sommerreifen",
+        "en": "Additional set of summer tyres"
+      }
+    ]
+  },
+  "specs": [
+    {
+      "key": "power",
+      "label": {
+        "de": "Leistung",
+        "en": "Power"
+      },
+      "value": {
+        "de": "150 PS (110 kW)",
+        "en": "150 PS (110 kW)"
+      },
+      "group": "engine"
+    },
+    {
+      "key": "fuel",
+      "label": {
+        "de": "Kraftstoff",
+        "en": "Fuel"
+      },
+      "value": {
+        "de": "Diesel (2,0 l)",
+        "en": "Diesel (2.0 l)"
+      },
+      "group": "engine"
+    },
+    {
+      "key": "emission",
+      "label": {
+        "de": "Abgasnorm",
+        "en": "Emission standard"
+      },
+      "value": {
+        "de": "Euro 6",
+        "en": "Euro 6"
+      },
+      "group": "engine"
+    },
+    {
+      "key": "gearbox",
+      "label": {
+        "de": "Getriebe",
+        "en": "Gearbox"
+      },
+      "value": {
+        "de": "7-Gang-DSG (Automatik)",
+        "en": "7-speed DSG (automatic)"
+      },
+      "group": "engine"
+    },
+    {
+      "key": "drive",
+      "label": {
+        "de": "Antrieb",
+        "en": "Drive"
+      },
+      "value": {
+        "de": "Frontantrieb",
+        "en": "Front-wheel drive"
+      },
+      "group": "engine"
+    },
+    {
+      "key": "consumption",
+      "label": {
+        "de": "Verbrauch (WLTP)",
+        "en": "Consumption (WLTP)"
+      },
+      "value": {
+        "de": "6,6 l/100 km",
+        "en": "6.6 l/100 km"
+      },
+      "group": "engine"
+    },
+    {
+      "key": "co2",
+      "label": {
+        "de": "CO₂-Emissionen (WLTP)",
+        "en": "CO₂ emissions (WLTP)"
+      },
+      "value": {
+        "de": "174 g/km",
+        "en": "174 g/km"
+      },
+      "group": "engine"
+    },
+    {
+      "key": "colour",
+      "label": {
+        "de": "Farbe",
+        "en": "Colour"
+      },
+      "value": {
+        "de": "Indiumgrau Metallic",
+        "en": "Indium grey metallic"
+      },
+      "group": "body"
+    },
+    {
+      "key": "doors",
+      "label": {
+        "de": "Türen",
+        "en": "Doors"
+      },
+      "value": {
+        "de": "5 (zwei Schiebetüren mit Soft-Close, elektrische Heckklappe)",
+        "en": "5 (two sliding doors with soft close, electric tailgate)"
+      },
+      "group": "body"
+    },
+    {
+      "key": "dimensions",
+      "label": {
+        "de": "Maße (L × B × H)",
+        "en": "Dimensions (L × W × H)"
+      },
+      "value": {
+        "de": "4.973 × 1.941 × 1.887 mm",
+        "en": "4,973 × 1,941 × 1,887 mm"
+      },
+      "group": "body"
+    },
+    {
+      "key": "towing",
+      "label": {
+        "de": "Anhängelast",
+        "en": "Towing capacity"
+      },
+      "value": {
+        "de": "bis 2.000 kg gebremst, 750 kg ungebremst",
+        "en": "up to 2,000 kg braked, 750 kg unbraked"
+      },
+      "group": "body"
+    },
+    {
+      "key": "tyres",
+      "label": {
+        "de": "Bereifung",
+        "en": "Tyres"
+      },
+      "value": {
+        "de": "235/55 R17 auf 17-Zoll-Leichtmetallrädern „Dundrod“, zusätzlich ein Satz Sommerreifen",
+        "en": "235/55 R17 on 17-inch “Dundrod” alloy wheels, plus a set of summer tyres"
+      },
+      "group": "body"
+    },
+    {
+      "key": "bodyEquipment",
+      "label": {
+        "de": "Karosserie und Fenster",
+        "en": "Body and windows"
+      },
+      "value": {
+        "de": "Panorama-Glasdach, Easy Open/Easy Close, Schiebefenster, Privacy-Verglasung (65 %) ab B-Säule",
+        "en": "Panoramic glass roof, Easy Open/Easy Close, sliding windows, 65% privacy glass from the B-pillar"
+      },
+      "group": "body"
+    },
+    {
+      "key": "seats",
+      "label": {
+        "de": "Sitze",
+        "en": "Seats"
+      },
+      "value": {
+        "de": "7 (2-2-3)",
+        "en": "7 (2-2-3)"
+      },
+      "group": "interior"
+    },
+    {
+      "key": "interiorEquipment",
+      "label": {
+        "de": "Innenraum",
+        "en": "Interior"
+      },
+      "value": {
+        "de": "Family-Paket (Multifunktions-Tischkonsole, Schubladen unter den Sitzen), Armlehnen vorne, elektrische Lendenwirbelstütze, Klapptische, Stoff „Bi-Color Bright Dots“",
+        "en": "Family package (multifunction table console, drawers under the seats), front armrests, electric lumbar support, folding tables, “Bi-Color Bright Dots” fabric"
+      },
+      "group": "interior"
+    },
+    {
+      "key": "assistants",
+      "label": {
+        "de": "Assistenzsysteme",
+        "en": "Assistance systems"
+      },
+      "value": {
+        "de": "Travel & Emergency Assist, adaptive Geschwindigkeitsregelung ACC Stop&Go, Lane Assist, Side Assist, Ausstiegsassistent, Türöffnungswarnung, Car2X, Parksensoren vorn und hinten, Rückfahrkamera",
+        "en": "Travel & Emergency Assist, adaptive cruise control ACC stop&go, Lane Assist, Side Assist, exit assist, door-opening warning, Car2X, front and rear parking sensors, rear camera"
+      },
+      "group": "equipment"
+    },
+    {
+      "key": "lights",
+      "label": {
+        "de": "Licht",
+        "en": "Lights"
+      },
+      "value": {
+        "de": "IQ.Light Matrix-LED-Scheinwerfer, dunkle LED-Rückleuchten",
+        "en": "IQ.Light matrix LED headlights, dark LED tail lights"
+      },
+      "group": "equipment"
+    },
+    {
+      "key": "multimedia",
+      "label": {
+        "de": "Multimedia",
+        "en": "Multimedia"
+      },
+      "value": {
+        "de": "Digital Cockpit 10,25 Zoll, Discover Media Navigation, kabelloses App-Connect (CarPlay/Android Auto), DAB+, 8 Lautsprecher, USB-C vorn und hinten",
+        "en": "Digital cockpit 10.25\", Discover Media navigation, wireless App-Connect (CarPlay/Android Auto), DAB+, 8 speakers, USB-C front and rear"
+      },
+      "group": "equipment"
+    },
+    {
+      "key": "comfort",
+      "label": {
+        "de": "Komfort",
+        "en": "Comfort"
+      },
+      "value": {
+        "de": "Standheizung mit Fernbedienung, beheizbare Frontscheibe, Sitzheizung vorn, Climatronic, Keyless Advanced, 4 Schlüssel",
+        "en": "Parking heater with remote, heated windscreen, heated front seats, Climatronic, Keyless Advanced, 4 keys"
+      },
+      "group": "equipment"
+    },
+    {
+      "key": "chassis",
+      "label": {
+        "de": "Fahrwerk",
+        "en": "Chassis"
+      },
+      "value": {
+        "de": "Dynamisch tiefergelegtes Fahrwerk, Fahrmodi, vollwertiges Reserverad",
+        "en": "Dynamic lowered suspension, driving modes, full-size spare wheel"
+      },
+      "group": "equipment"
+    },
+    {
+      "key": "safety",
+      "label": {
+        "de": "Sicherheit und Anhängerkupplung",
+        "en": "Safety and tow bar"
+      },
+      "value": {
+        "de": "PreCrash, Anhängerkupplung mit elektrischer Entriegelung",
+        "en": "PreCrash, tow bar with electric release"
+      },
+      "group": "equipment"
+    },
+    {
+      "key": "year",
+      "label": {
+        "de": "Erstzulassung",
+        "en": "First registration"
+      },
+      "value": {
+        "de": "07/2023",
+        "en": "07/2023"
+      },
+      "group": "condition"
+    },
+    {
+      "key": "mileage",
+      "label": {
+        "de": "Kilometerstand",
+        "en": "Mileage"
+      },
+      "value": {
+        "de": "ca. 37.100 km",
+        "en": "approx. 37,100 km"
+      },
+      "group": "condition"
+    },
+    {
+      "key": "condition",
+      "label": {
+        "de": "Zustand",
+        "en": "Condition"
+      },
+      "value": {
+        "de": "Technisch gut; leichte Gebrauchsspuren (Schrammen, kleine Kratzer), nichts Gravierendes gemeldet",
+        "en": "Technically good; minor signs of use (scuffs, small scratches), nothing serious reported"
+      },
+      "group": "condition"
+    },
+    {
+      "key": "service",
+      "label": {
+        "de": "Wartung",
+        "en": "Servicing"
+      },
+      "value": {
+        "de": "Ausschließlich in VW-Servicebetrieben",
+        "en": "Only at VW service centres"
+      },
+      "group": "condition"
+    },
+    {
+      "key": "inspection",
+      "label": {
+        "de": "Pickerl",
+        "en": "Periodic inspection (Pickerl)"
+      },
+      "value": {
+        "de": "Bestanden 07/2026, nächste Überprüfung 07/2028",
+        "en": "Passed 07/2026, next due 07/2028"
+      },
+      "group": "condition"
+    },
+    {
+      "key": "owners",
+      "label": {
+        "de": "Besitzer",
+        "en": "Owners"
+      },
+      "value": {
+        "de": "2 bisher (der Verkäufer ist der zweite)",
+        "en": "2 so far (the seller is the second)"
+      },
+      "group": "condition"
+    },
+    {
+      "key": "damage",
+      "label": {
+        "de": "Schadensereignis",
+        "en": "Damage event"
+      },
+      "value": {
+        "de": "23.06.2025: Schiebetür ersetzt (Reparaturrechnung vom 28.07.2025, bei ca. 25.000 km)",
+        "en": "23.06.2025: sliding door replaced (repair invoice dated 28.07.2025, at approx. 25,000 km)"
+      },
+      "group": "condition"
+    }
+  ],
+  "media": {
+    "hero": "Front-side.jpg",
+    "heroFocus": {
+      "x": 0.6,
+      "y": 0.45
+    },
+    "gallery": [
+      {
+        "file": "Front-side.jpg",
+        "alt": {
+          "de": "Dreiviertelansicht von vorn: der graue Multivan an einem Bordstein auf nasser Pflasterstraße, Schiebetür offen, Scheinwerfer und Kühlergrill",
+          "en": "Front three-quarter view of the grey Multivan at a kerb on a wet cobbled street, sliding door open, headlight and grille"
+        },
+        "tags": [
+          "exterior"
+        ],
+        "focus": {
+          "x": 0.6,
+          "y": 0.4
+        }
+      },
+      {
+        "file": "Side.jpg",
+        "alt": {
+          "de": "Seitenansicht des Multivan von links mit Schiebetür und Leichtmetallrädern",
+          "en": "Left side view of the Multivan with the sliding door and alloy wheels"
+        },
+        "tags": [
+          "exterior"
+        ]
+      },
+      {
+        "file": "Back.jpg",
+        "alt": {
+          "de": "Heck des Multivan mit geschlossener Heckklappe und dem Schriftzug Multivan",
+          "en": "Rear of the Multivan with the tailgate closed and the Multivan lettering"
+        },
+        "tags": [
+          "exterior"
+        ]
+      },
+      {
+        "file": "Interior.jpg",
+        "alt": {
+          "de": "Rücksitze in Grau und Beige mit Panorama-Glasdach darüber",
+          "en": "Rear seats in grey and beige with the panoramic glass roof above"
+        },
+        "tags": [
+          "interior",
+          "seats"
+        ]
+      },
+      {
+        "file": "Trunk.jpg",
+        "alt": {
+          "de": "Laderaum hinter den Rücksitzen, durch die geöffnete Heckklappe gesehen",
+          "en": "Luggage area behind the rear seats, seen through the open tailgate"
+        },
+        "tags": [
+          "interior",
+          "trunk"
+        ]
+      },
+      {
+        "file": "Steering-wheel-panel-zoomed.jpg",
+        "alt": {
+          "de": "Fahrerbereich mit Lenkrad, Touchscreen und Vordersitzen",
+          "en": "Driver area with the steering wheel, touchscreen and front seats"
+        },
+        "tags": [
+          "interior",
+          "dashboard"
+        ]
+      },
+      {
+        "file": "Interior-panel.jpg",
+        "alt": {
+          "de": "Armaturenbrett mit zentralem Touchscreen, Getriebewahlschalter und Klimabedienung",
+          "en": "Dashboard with the central touchscreen, gear selector and climate controls"
+        },
+        "tags": [
+          "interior",
+          "dashboard",
+          "controls"
+        ],
+        "focus": {
+          "x": 0.5,
+          "y": 0.4
+        }
+      },
+      {
+        "file": "Driving_Panel.jpg",
+        "alt": {
+          "de": "Digitales Kombiinstrument mit Ganganzeige, Reichweite und Geschwindigkeit",
+          "en": "Digital instrument cluster showing the gear position, range and speed"
+        },
+        "tags": [
+          "dashboard"
+        ]
+      },
+      {
+        "file": "mileage.jpg",
+        "alt": {
+          "de": "Anzeige des Gesamtkilometerstands: 37115 km",
+          "en": "Display showing the total distance driven: 37115 km"
+        },
+        "tags": [
+          "dashboard",
+          "mileage"
+        ]
+      },
+      {
+        "file": "Handbrake-charging-ports.jpg",
+        "alt": {
+          "de": "Schalter für Parkbremse und Auto-Hold, zwei USB-C-Anschlüsse und ein Ablagefach",
+          "en": "Parking brake and auto-hold switches, two USB-C ports and a storage compartment"
+        },
+        "tags": [
+          "interior",
+          "controls",
+          "details"
+        ]
+      },
+      {
+        "file": "Wheel-rim.jpg",
+        "alt": {
+          "de": "Nahaufnahme eines silbernen Leichtmetallrads mit Reifen",
+          "en": "Close-up of a silver alloy wheel with its tyre"
+        },
+        "tags": [
+          "exterior",
+          "wheels"
+        ],
+        "focus": {
+          "x": 0.5,
+          "y": 0.52
+        }
+      },
+      {
+        "file": "Side-door.jpg",
+        "alt": {
+          "de": "Geöffnete Fahrertür mit Türverkleidung, Fensterhebern und Außenspiegel",
+          "en": "Open driver door with the door panel, window switches and the mirror"
+        },
+        "tags": [
+          "interior",
+          "door"
+        ],
+        "focus": {
+          "x": 0.5,
+          "y": 0.7
+        }
+      }
+    ],
+    "background": null,
+    "video": null
+  },
+  "gallery": {
+    "autoplaySeconds": null
+  },
+  "faq": [
+    {
+      "q": {
+        "de": "Besichtigung und Probefahrt",
+        "en": "Viewing and test drive"
+      },
+      "a": {
+        "de": "Besichtigungen sind Montag bis Samstag von 10:00 bis 18:00 Uhr möglich und dauern etwa 30 Minuten. Eine Probefahrt ist nur gemeinsam mit einem der Eigentümer möglich; bitte bringen Sie Führerschein und Ausweis mit. Die Adresse nennen wir auf Anfrage.",
+        "en": "Viewings are possible Monday to Saturday from 10:00 to 18:00 and take about 30 minutes. A test drive is only possible together with one of the owners; please bring your driving licence and an ID. We give the address on request."
+      }
+    },
+    {
+      "q": {
+        "de": "Ist das Fahrzeug geleast?",
+        "en": "Is the car leased?"
+      },
+      "a": {
+        "de": "Das Fahrzeug ist geleast. Der Verkäufer beendet den Leasingvertrag beim Kauf direkt, sodass Sie die Fahrzeugpapiere frei von Belastungen erhalten.",
+        "en": "The car is leased. The seller closes the lease directly at purchase, so you receive the vehicle papers free of encumbrance."
+      }
+    },
+    {
+      "q": {
+        "de": "Finanzierung oder Inzahlungnahme?",
+        "en": "Financing or trade-in?"
+      },
+      "a": {
+        "de": "Wir bieten weder Finanzierung noch Leasing noch die Inzahlungnahme eines Fahrzeugs an.",
+        "en": "We do not offer financing, leasing or the trade-in of a vehicle."
+      }
+    },
+    {
+      "q": {
+        "de": "Ist der Preis verhandelbar?",
+        "en": "Is the price negotiable?"
+      },
+      "a": {
+        "de": "Ein kleiner Verhandlungsspielraum ist möglich. Die Entscheidung treffen die Eigentümer.",
+        "en": "A small negotiation is possible. The owners decide."
+      }
+    },
+    {
+      "q": {
+        "de": "Wie ist der Zustand, gibt es Vorschäden?",
+        "en": "What is the condition, is there a damage history?"
+      },
+      "a": {
+        "de": "Das Fahrzeug ist technisch in gutem Zustand und zeigt leichte Gebrauchsspuren (Schrammen, kleine Kratzer). Am 23.06.2025 gab es ein Schadensereignis, bei dem die Schiebetür ersetzt wurde (Reparaturrechnung vom 28.07.2025). Weitere Informationen geben wir auf Anfrage.",
+        "en": "The car is technically in good condition and shows minor signs of use (scuffs, small scratches). On 23.06.2025 there was a damage event in which the sliding door was replaced (repair invoice dated 28.07.2025). We give further information on request."
+      }
+    },
+    {
+      "q": {
+        "de": "Was gehört zum Fahrzeug?",
+        "en": "What comes with the car?"
+      },
+      "a": {
+        "de": "Zum Fahrzeug gehören ein zusätzlicher Satz Sommerreifen, ein vollwertiges Reserverad und vier Schlüssel. Die Ausstattung finden Sie unter Technische Daten.",
+        "en": "The car comes with an additional set of summer tyres, a full-size spare wheel and four keys. You find the equipment under Specifications."
+      }
+    }
+  ],
+  "blocks": [
+    "hero",
+    "gallery",
+    "video",
+    "specs",
+    "offer",
+    "faq",
+    "contact"
+  ]
+}

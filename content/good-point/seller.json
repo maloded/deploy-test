@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "displayName": "Good Point",
+  "legalNote": {
+    "en": "Information on this page is indicative and does not constitute a binding offer.",
+    "de": "Die Angaben auf dieser Seite sind unverbindlich und stellen kein verbindliches Angebot dar."
+  },
+  "contact": {
+    "email": "contact@example.invalid"
+  },
+  "languages": [
+    "de",
+    "en"
+  ],
+  "defaultLanguage": "de",
+  "theme": "light-editorial",
+  "consentText": {
+    "de": "Ich bin damit einverstanden, dass Good Point meine Angaben verarbeitet, um meine Anfrage zu beantworten und mich dazu zu kontaktieren. Die Angaben werden nur zu diesem Zweck gespeichert. Mehr dazu in der Datenschutzerklärung (#privacy).",
+    "en": "I agree that Good Point processes my details to answer my enquiry and to contact me about it. The details are stored for this purpose only. More in the privacy notice (#privacy)."
+  }
+}

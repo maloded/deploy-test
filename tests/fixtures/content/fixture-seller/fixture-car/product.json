@@ -1,0 +1,215 @@
+{
+  "schemaVersion": 1,
+  "slug": "fixture-car",
+  "productType": "car",
+  "offerType": "lease_takeover",
+  "title": {
+    "en": "Fixture Car eHybrid (test fixture)",
+    "de": "Fixture Car eHybrid (Testdaten)"
+  },
+  "tagline": {
+    "en": "Take over a running lease on a seven-seat family van. Example text.",
+    "de": "Übernehmen Sie einen laufenden Leasingvertrag für einen Siebensitzer. Beispieltext."
+  },
+  "price": {
+    "amount": 589,
+    "currency": "EUR",
+    "per": "month",
+    "note": {
+      "en": "Example price. All numbers on this page are fake.",
+      "de": "Beispielpreis. Alle Zahlen auf dieser Seite sind erfunden."
+    }
+  },
+  "lease": {
+    "termMonthsLeft": 18,
+    "endDate": "2028-04-30",
+    "takeoverFee": 1500,
+    "residualValue": 31000,
+    "mileageLimitPerYear": 15000,
+    "mileageUsed": 21400,
+    "leasingCompany": "Example Leasing GmbH",
+    "transferApprovalRequired": true,
+    "notes": {
+      "en": "Example: the leasing company must approve the transfer. Fake terms."
+    }
+  },
+  "specs": [
+    {
+      "key": "year",
+      "label": {
+        "en": "Year",
+        "de": "Baujahr"
+      },
+      "value": "2023",
+      "group": "body"
+    },
+    {
+      "key": "power",
+      "label": {
+        "en": "Power",
+        "de": "Leistung"
+      },
+      "value": "150 kW (204 PS)",
+      "group": "engine"
+    },
+    {
+      "key": "fuel",
+      "label": {
+        "en": "Fuel",
+        "de": "Kraftstoff"
+      },
+      "value": {
+        "en": "Plug-in hybrid",
+        "de": "Plug-in-Hybrid"
+      },
+      "group": "engine"
+    },
+    {
+      "key": "gearbox",
+      "label": {
+        "en": "Gearbox",
+        "de": "Getriebe"
+      },
+      "value": {
+        "en": "Automatic (DSG)",
+        "de": "Automatik (DSG)"
+      },
+      "group": "engine"
+    },
+    {
+      "key": "seats",
+      "label": {
+        "en": "Seats",
+        "de": "Sitze"
+      },
+      "value": "7",
+      "group": "interior"
+    },
+    {
+      "key": "colour",
+      "label": {
+        "en": "Colour",
+        "de": "Farbe"
+      },
+      "value": {
+        "en": "Example grey",
+        "de": "Beispielgrau"
+      },
+      "group": "body"
+    }
+  ],
+  "media": {
+    "hero": "hero.jpg",
+    "heroFocus": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "gallery": [
+      {
+        "file": "photo-1.jpg",
+        "alt": {
+          "en": "Fixture photo one",
+          "de": "Testfoto eins"
+        }
+      },
+      {
+        "file": "photo-2.jpg",
+        "alt": {
+          "en": "Fixture photo two"
+        },
+        "focus": {
+          "x": 0.25,
+          "y": 0.75
+        }
+      },
+      {
+        "file": "photo-3.jpg",
+        "alt": {
+          "en": "Fixture photo three"
+        }
+      },
+      {
+        "file": "photo-4.jpg",
+        "alt": {
+          "en": "Fixture photo four"
+        }
+      },
+      {
+        "file": "sideways.jpg",
+        "alt": {
+          "en": "Fixture photo five, stored sideways"
+        },
+        "focus": {
+          "x": 0.5,
+          "y": 0.6
+        }
+      }
+    ],
+    "background": null,
+    "video": null
+  },
+  "faq": [
+    {
+      "q": {
+        "en": "Who approves the transfer? (example)",
+        "de": "Wer genehmigt die Übernahme? (Beispiel)"
+      },
+      "a": {
+        "en": "Example answer: the leasing company reviews the new lessee. Fake text."
+      }
+    },
+    {
+      "q": {
+        "en": "What happens at the end of the lease? (example)"
+      },
+      "a": {
+        "en": "Example answer: the van is returned or bought at the residual value. Fake text."
+      }
+    }
+  ],
+  "blocks": [
+    "hero",
+    "gallery",
+    "video",
+    "specs",
+    "offer",
+    "faq",
+    "contact"
+  ],
+  "gallery": {
+    "autoplaySeconds": null
+  },
+  "hero": {
+    "eyebrow": [
+      {
+        "en": "Fixture listing",
+        "de": "Fixture-Anzeige"
+      }
+    ],
+    "headline": {
+      "en": "Fixture Car",
+      "de": "Fixture Car"
+    },
+    "description": {
+      "en": "Fixture description: take over a running lease. Example text.",
+      "de": "Fixture-Beschreibung: laufenden Leasingvertrag übernehmen. Beispieltext."
+    },
+    "highlights": [
+      "power",
+      "fuel",
+      "seats"
+    ],
+    "trust": [
+      {
+        "en": "Fixture: documented service history",
+        "de": "Fixture: Servicehistorie"
+      },
+      {
+        "en": "Fixture: documented ownership"
+      },
+      {
+        "en": "Fixture: transfer support"
+      }
+    ]
+  }
+}

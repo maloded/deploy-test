@@ -1,0 +1,15 @@
+node_modules
+.next
+next-env.d.ts
+*.tsbuildinfo
+# web-sized copies of <content root>/<slug>/media, made by npm run images
+public/media
+.test-tmp
+.playwright-mcp
+.env*.local
+# the template never tracks client photos: neither the originals (GPS tags, readable plates and faces) nor the processed
+# web copies (npm run images:export -> media-web). The snapshot reads content from the file system, not from git.
+content/**/media/
+content/**/media-web/
+# private: sensitive strings that must never appear in the repository (see tests/content-scan.test.ts)
+.private/

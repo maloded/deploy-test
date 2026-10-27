@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "displayName": "Example Seller",
+  "legalNote": {
+    "en": "Information on this page is indicative and does not constitute a binding offer."
+  },
+  "contact": {
+    "email": "example@example.com"
+  },
+  "languages": [
+    "en"
+  ],
+  "defaultLanguage": "en",
+  "theme": "light-editorial",
+  "consentText": {
+    "en": "Example: I agree that my details are used to answer my enquiry."
+  }
+}
