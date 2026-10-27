@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { clientWordHits, clientWords, contentScanFiles, loadTermsFile, matchingLines, productFolders, readFiles, scanContentRoot } from "../scripts/lib/content-scan.mjs";
 import { CLAIM_PHRASES, claimHits, VAT_PHRASES } from "../scripts/lib/forbidden-claims.mjs";
 import { listProducts } from "../src/lib/content-root";
+import { languageReport } from "../scripts/lib/language-report.mjs";
 
 const root = process.cwd();
 
@@ -26,6 +27,13 @@ const productDirs = content
   : [path.join(root, "examples"), path.join(root, "tests", "fixtures", "content")].flatMap((r) => listProducts(r).map((ref) => path.join(r, ref)));
 
 describe("content scan", () => {
+  it("prints the translation coverage per product; a missing translation is a warning, never a failure", () => {
+    const report = languageReport(content ?? path.join(root, "examples"));
+    expect(report.lines.length).toBeGreaterThan(0);
+    for (const line of report.lines) expect(line).toMatch(/: (de|en) \d+% \(\d+\/\d+\)/);
+    console.info(["translation coverage:", ...report.lines.map((l) => "  " + l), ...report.warnings.map((w) => "  WARNING " + w)].join("\n"));
+  });
+
   it("finds at least one product folder: the content root's (examples/ excluded), or the fake samples when there is no real content", () => {
     expect(productDirs.length, `no product.json to scan (content root: ${content ?? "none"})`).toBeGreaterThan(0);
     for (const dir of productDirs) expect(listed.map(rel), dir).toContain(rel(path.join(dir, "product.json")));

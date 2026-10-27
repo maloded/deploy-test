@@ -105,7 +105,7 @@ describe("noindex everywhere", () => {
   });
 
   it("has a noindex meta tag in the page metadata", () => {
-    const src = fs.readFileSync(path.join(process.cwd(), "src", "app", "layout.tsx"), "utf8");
+    const src = fs.readFileSync(path.join(process.cwd(), "src", "app", "[lang]", "layout.tsx"), "utf8");
     expect(src).toMatch(/robots:\s*\{\s*index:\s*false,\s*follow:\s*false/);
   });
 

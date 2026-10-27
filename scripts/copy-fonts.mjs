@@ -5,7 +5,7 @@ import path from "node:path";
 
 const root = process.cwd();
 
-// theme -> [{ pkg, weights }]. Latin only for now; cyrillic is added in step 5 (languages).
+// theme -> [{ pkg, weights }]. Latin only: de and en need nothing else. For a language with another subset see "Add a language" in PROJECT.md.
 const FONTS = {
   "light-editorial": [
     { pkg: "source-serif-4", weights: [300] },

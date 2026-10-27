@@ -16,7 +16,7 @@ import type { Site } from "./blocks";
  */
 export function Hero({ site }: { site: Site }) {
   const { product, images, typeFields } = site;
-  const lang = product.defaultLanguage;
+  const { lang } = site;
   const { amount, currency, per, note } = product.price;
   const image = images[product.media.hero];
   const background = product.media.background ? images[product.media.background] : undefined;

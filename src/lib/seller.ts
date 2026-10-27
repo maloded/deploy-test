@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { formatIssues, LANGUAGES, localizedSchema, type Localized } from "./schema";
+import { formatIssues, languageSchema, localizedSchema, type Localized } from "./schema";
 
 /**
  * The seller: everything that is the same for all of a seller's products (name, contact, languages, default theme,
@@ -27,9 +27,9 @@ export const sellerShape = {
   legalNote: localizedSchema.optional(),
   contact: sellerContactSchema,
   /** Languages the seller's pages are offered in. */
-  languages: z.array(z.enum(LANGUAGES)).min(1),
+  languages: z.array(languageSchema).min(1),
   /** The page language. It is not implied by the order of `languages`; it must be one of them. */
-  defaultLanguage: z.enum(LANGUAGES),
+  defaultLanguage: languageSchema,
   /** The default theme of the seller's products (a product may override it). */
   theme: z.string().min(1),
   /** The seller is the data controller: this is the consent text of the contact form, per language. */

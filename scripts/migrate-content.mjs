@@ -20,6 +20,8 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { LANGUAGES } from "../src/lib/languages.ts";
+import { localizedFields } from "../src/lib/localized.ts";
 
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const MOVED = ["brand", "contact", "languages", "theme"];
@@ -27,10 +29,9 @@ const MOVED = ["brand", "contact", "languages", "theme"];
 const FORMER_FOOTER_LEGAL = {
   en: "Information on this page is indicative and does not constitute a binding offer.",
   de: "Die Angaben auf dieser Seite sind unverbindlich und stellen kein verbindliches Angebot dar.",
-  ru: "Информация на этой странице носит ориентировочный характер и не является обязательным предложением.",
-  uk: "Інформація на цій сторінці є орієнтовною і не є обов’язковою пропозицією.",
 };
-const LANGUAGE_ORDER = ["en", "de", "ru", "uk"];
+// Only the languages of the registry (src/lib/languages.ts) exist; a former "ru" or "uk" text is not carried over.
+const LANGUAGE_ORDER = ["en", "de"];
 
 // ---- JSON text surgery ---------------------------------------------------------------------------------------------
 
@@ -206,15 +207,24 @@ export function migrate(options) {
   if (extraContact.length) throw new Error(`contact has fields the migration does not know: ${extraContact.join(", ")}.`);
   if (!Array.isArray(first.languages) || first.languages.length === 0) throw new Error("languages must be a non-empty list.");
 
+  // Only registry languages survive. The old rule made the first language the page language, but only English was
+  // required; now the default language must have a text in EVERY localized field, so the first language that has one
+  // everywhere becomes defaultLanguage (the former first language when it qualifies).
+  const languages = first.languages.filter((l) => LANGUAGES.includes(l));
+  if (languages.length === 0) throw new Error(`None of the languages (${first.languages.join(", ")}) is supported. Supported: ${LANGUAGES.join(", ")}.`);
+  const fields = [...products.flatMap((p) => localizedFields(data.get(p))), ...localizedFields({ consentText: first.contact.consentText })];
+  const complete = languages.filter((l) => fields.every((f) => f.text[l]));
+  if (complete.length === 0) throw new Error(`No language has a text in every localized field (${languages.join(", ")}); complete one of them in the products first.`);
+  const defaultLanguage = complete[0];
   const legalNote = {};
-  for (const lang of LANGUAGE_ORDER) if (lang === "en" || first.languages.includes(lang)) legalNote[lang] = FORMER_FOOTER_LEGAL[lang];
+  for (const lang of LANGUAGE_ORDER) if (lang === "en" || languages.includes(lang)) legalNote[lang] = FORMER_FOOTER_LEGAL[lang];
   const sellerJson = {
     schemaVersion: 1,
     displayName,
     legalNote,
     contact: { email: first.contact.email },
-    languages: first.languages,
-    defaultLanguage: first.languages[0], // the old rule: the first language was the page language
+    languages,
+    defaultLanguage,
     theme: defaultTheme,
     consentText: first.contact.consentText,
   };
@@ -227,7 +237,7 @@ export function migrate(options) {
   log(`products: ${products.length} (${products.join(", ")})`);
   log(`files: ${fileCount} (including ${products.length} product.json)`);
   log(`fields moved to seller.json: ${MOVED.join(", ")} (identical in all products; theme overrides kept in ${overrides.length} product(s))`);
-  log(`seller.json gets: ${Object.keys(sellerJson).join(", ")} (legalNote carries the former footer line, defaultLanguage is the former first language)`);
+  log(`seller.json gets: ${Object.keys(sellerJson).join(", ")} (legalNote carries the former footer line, defaultLanguage is the former first language when it has a text everywhere, otherwise the first language that has; only that language must have a text in every localized field, the others fall back to it: run npm run check:languages afterwards)`);
   log(`seller folder: ${seller}`);
 
   if (!write) {

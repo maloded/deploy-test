@@ -11,7 +11,7 @@ export type Provenance = InferFields<typeof provenanceFields>;
 /** Plain data only (no functions). */
 export const fields = {
   id: "watch",
-  label: { en: "Watch", de: "Uhr", ru: "Часы", uk: "Годинник" },
+  label: { en: "Watch", de: "Uhr" },
   allowedOfferTypes: ["sale"],
   media: { heroRatio: "1 / 1", galleryRatio: "1 / 1" },
   specGroups: [

@@ -32,10 +32,12 @@ describe("product schema", () => {
     expect(issuesFor(p).join("\n")).toMatch(/^title:/m);
   });
 
-  it("rejects a title without English", () => {
+  it("rejects a title with no text in any language (which language is required depends on the seller)", () => {
     const p = sample();
+    p.title = {};
+    expect(issuesFor(p).join("\n")).toMatch(/title: needs a text in at least one language/);
     p.title = { de: "Nur Deutsch" };
-    expect(issuesFor(p).join("\n")).toMatch(/title\.en/);
+    expect(issuesFor(p)).toEqual([]);
   });
 
   it("rejects an unknown block id", () => {

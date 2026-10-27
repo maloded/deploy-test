@@ -9,8 +9,7 @@ import type { Site } from "./blocks";
  * "#contact" buttons need a target. Move the id to the contact section in step 4.
  */
 export function Footer({ site }: { site: Site }) {
-  const { product, seller } = site;
-  const lang = product.defaultLanguage;
+  const { seller, lang } = site;
   return (
     <footer className="site-footer" id="contact" data-block="footer">
       <div className="site-footer__inner container">

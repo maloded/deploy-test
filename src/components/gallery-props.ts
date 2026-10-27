@@ -7,7 +7,7 @@ export type GallerySlide = { src: string; width: number; height: number; alt: st
 /** Serializable props for the client gallery. Photos whose file is missing (dev only) are left out. */
 export function galleryProps(site: Site) {
   const { product, images } = site;
-  const lang = product.defaultLanguage;
+  const { lang } = site;
   const slides: GallerySlide[] = product.media.gallery.flatMap((g) => {
     const image = images[g.file];
     return image

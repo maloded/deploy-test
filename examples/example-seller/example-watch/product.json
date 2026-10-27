@@ -5,23 +5,27 @@
   "offerType": "sale",
   "theme": "dark-premium",
   "title": {
-    "en": "Example chronograph watch"
+    "en": "Example chronograph watch",
+    "de": "Beispiel-Chronograph"
   },
   "tagline": {
-    "en": "Fake example listing for a watch."
+    "en": "Fake example listing for a watch.",
+    "de": "Erfundenes Beispielangebot für eine Uhr."
   },
   "price": {
     "amount": 8900,
     "currency": "EUR",
     "note": {
-      "en": "Example price. All data on this page is fake."
+      "en": "Example price. All data on this page is fake.",
+      "de": "Beispielpreis. Alle Angaben auf dieser Seite sind erfunden."
     }
   },
   "specs": [
     {
       "key": "movement",
       "label": {
-        "en": "Movement"
+        "en": "Movement",
+        "de": "Uhrwerk"
       },
       "value": "Example automatic caliber",
       "group": "movement"
@@ -29,7 +33,8 @@
     {
       "key": "caseDiameter",
       "label": {
-        "en": "Case diameter"
+        "en": "Case diameter",
+        "de": "Gehäusedurchmesser"
       },
       "value": "40 mm",
       "group": "case"
@@ -37,7 +42,8 @@
     {
       "key": "strap",
       "label": {
-        "en": "Strap"
+        "en": "Strap",
+        "de": "Armband"
       },
       "value": "Example steel bracelet",
       "group": "strap"
@@ -55,17 +61,20 @@
       "box": true,
       "papers": true,
       "serviceHistory": {
-        "en": "Example: serviced in 2024."
+        "en": "Example: serviced in 2024.",
+        "de": "Beispiel: 2024 gewartet."
       }
     }
   },
   "hero": {
     "trust": [
       {
-        "en": "Example: box and papers"
+        "en": "Example: box and papers",
+        "de": "Beispiel: Box und Papiere"
       },
       {
-        "en": "Example: serviced in 2024"
+        "en": "Example: serviced in 2024",
+        "de": "Beispiel: 2024 gewartet"
       }
     ]
   }

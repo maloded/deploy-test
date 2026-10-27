@@ -56,6 +56,19 @@ export function footerText(html) {
   return m ? squash(decodeEntities(m[1].replace(/<[^>]*>/g, " "))) : null;
 }
 
+/** The <link rel="alternate" hreflang="..." href="..."> tags: [{ hreflang, href }]. */
+export function hreflangLinks(html) {
+  return [...html.matchAll(/<link\b[^>]*>/gi)]
+    .filter((m) => attr(m[0], "rel")?.toLowerCase() === "alternate" && attr(m[0], "hreflang"))
+    .map((m) => ({ hreflang: attr(m[0], "hreflang"), href: attr(m[0], "href") }));
+}
+
+/** The href of <link rel="canonical">, or null. */
+export function canonicalHref(html) {
+  const tag = [...html.matchAll(/<link\b[^>]*>/gi)].find((m) => attr(m[0], "rel")?.toLowerCase() === "canonical");
+  return tag ? attr(tag[0], "href") : null;
+}
+
 /** Whether robots.txt says "User-agent: *" followed by "Disallow: /". */
 export function robotsDisallowsAll(text) {
   let applies = false;
@@ -86,8 +99,10 @@ export const pageText = (html) => squash(decodeEntities(html));
 // ---- the checks ----------------------------------------------------------------------------------------------------
 
 /**
- * @param {{ url: string, expected?: { title: string, displayName: string } | null, expectedProblem?: string, auth?: string, fetchImpl?: typeof fetch }} options
- * `expected` is read from the local content root by the command (title in the page language, seller's displayName).
+ * @param {{ url: string, expected?: { title: string, displayName: string, languages?: string[], defaultLanguage?: string, titles?: Record<string, string> } | null, expectedProblem?: string, auth?: string, fetchImpl?: typeof fetch }} options
+ * `expected` is read from the local content root by the command (title in the default language, seller's displayName;
+ * and the seller's languages, default language and the title per language). With `languages` and `defaultLanguage`
+ * the language routes are checked too: "/" redirects to "/<default>" and every "/<lang>" is a page in that language.
  * @returns {Promise<{ name: string, ok: boolean, reason: string }[]>}
  */
 export async function verifyDeploy({ url, expected = null, expectedProblem, auth, fetchImpl = fetch }) {
@@ -96,6 +111,7 @@ export async function verifyDeploy({ url, expected = null, expectedProblem, auth
   const record = (name, ok, reason = "") => results.push({ name, ok, reason });
   const headers = (target) => (auth && new URL(target).origin === base.origin ? { authorization: `Basic ${Buffer.from(auth).toString("base64")}` } : {});
   const get = (target) => fetchImpl(target, { headers: headers(target), redirect: "follow" });
+  const getManual = (target) => fetchImpl(target, { headers: headers(target), redirect: "manual" });
   const guard = async (name, fn) => {
     try {
       await fn();
@@ -153,5 +169,43 @@ export async function verifyDeploy({ url, expected = null, expectedProblem, auth
   const footer = footerText(html);
   if (!expected) record("footer shows the seller's displayName", false, expectedProblem ?? "no local seller to compare with");
   else record("footer shows the seller's displayName", footer !== null && footer.includes(squash(expected.displayName)), footer === null ? "the page has no <footer>" : footer.includes(squash(expected.displayName)) ? "" : "the footer does not contain seller.displayName");
+
+  if (expected?.languages?.length && expected.defaultLanguage) await verifyLanguages({ base, expected, get, getManual, record, guard });
   return results;
+}
+
+/** The language routes: "/" redirects to "/<default>", and every "/<lang>" answers in its own language. */
+async function verifyLanguages({ base, expected, get, getManual, record, guard }) {
+  const { languages, defaultLanguage, titles = {} } = expected;
+  const redirectName = `"/" redirects to "/${defaultLanguage}"`;
+  await guard(redirectName, async () => {
+    const r = await getManual(new URL("/", base).href);
+    await r.arrayBuffer();
+    const location = r.headers.get("location");
+    const target = location ? new URL(location, base) : null;
+    const ok = [301, 302, 303, 307, 308].includes(r.status) && target !== null && target.pathname === `/${defaultLanguage}`;
+    record(redirectName, ok, ok ? "" : r.status < 300 || r.status > 399 ? `status ${r.status} (no redirect)` : `redirects to ${target ? target.pathname : "(no location)"}`);
+  });
+
+  for (const lang of languages) {
+    const name = `GET /${lang} is 200, html lang is "${lang}", hreflang links present`;
+    await guard(name, async () => {
+      const r = await get(new URL(`/${lang}`, base).href);
+      const html = await r.text();
+      const problems = [];
+      if (r.status !== 200) problems.push(`status ${r.status}`);
+      else {
+        const found = htmlLang(html);
+        if (found !== lang) problems.push(`html lang is ${found ? `"${found}"` : "missing"}`);
+        const links = hreflangLinks(html);
+        const missing = [...languages, "x-default"].filter((l) => !links.some((k) => k.hreflang.toLowerCase() === l.toLowerCase()));
+        if (missing.length) problems.push(`no hreflang link for: ${missing.join(", ")}`);
+        const canonical = canonicalHref(html);
+        if (!canonical) problems.push("no canonical link");
+        else if (new URL(canonical, base).pathname !== `/${lang}`) problems.push(`canonical is ${new URL(canonical, base).pathname}`);
+        if (titles[lang] && !pageText(html).includes(squash(titles[lang]))) problems.push("the title in this language is not in the page");
+      }
+      record(name, problems.length === 0, problems.join("; "));
+    });
+  }
 }

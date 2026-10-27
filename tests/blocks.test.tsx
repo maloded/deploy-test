@@ -265,11 +265,7 @@ describe("hero layout", () => {
     // car default keys year, power, fuel, mileage: mileage does not exist as a spec; "(204 PS)" is cut; units stay
     expect(facts).toEqual([["2023", "Year"], ["150 kW", "Power"], ["Plug-in hybrid", "Fuel"]]);
 
-    const de = withProduct(site, (p) => {
-      delete p.hero.highlights;
-      p.languages = ["de", "en"];
-      p.defaultLanguage = "de";
-    });
+    const de = { ...withProduct(site, (p) => delete p.hero.highlights), lang: "de" as const };
     expect(html(<Hero site={de} />)).toContain('hero__fact-label">Leistung<');
 
     const none = withProduct(site, (p) => {
@@ -292,10 +288,7 @@ describe("hero layout", () => {
     expect(stage).not.toContain("hero__trust");
     const none = withProduct(site, (p) => delete p.hero.trust);
     expect(html(<Hero site={none} />)).not.toContain("hero__trust");
-    const de = withProduct(site, (p) => {
-      p.languages = ["de", "en"];
-      p.defaultLanguage = "de";
-    });
+    const de = { ...site, lang: "de" as const };
     expect(html(<Hero site={de} />)).toContain("<li>Fixture: Servicehistorie</li>");
   });
 
@@ -316,7 +309,7 @@ describe("hero layout", () => {
     expect(check(sampleJson("fixture-car").hero)).toEqual([]);
     expect(check({})).toEqual([]);
     expect(check({ trust: { en: "a single text is the old form" } })).toMatch(/hero\.trust/);
-    expect(check({ trust: [{ de: "kein Englisch" }] })).toMatch(/hero\.trust\.0\.en/);
+    expect(check({ trust: [{}] })).toMatch(/hero\.trust\.0: needs a text/);
     expect(check({ highlights: ["year", "power", "fuel", "gearbox", "seats"] })).toMatch(/hero\.highlights/); // at most 4
     expect(check({ highlights: [{ value: "150 kW", label: { en: "Power" } }] })).toMatch(/hero\.highlights\.0/); // the old { value, label } form is gone
     expect(check({ highlights: ["power", "nonsense"] })).toMatch(/hero\.highlights\.1: no spec with key "nonsense"\. Spec keys: year, power/);
@@ -546,13 +539,13 @@ describe("prototype note", () => {
     expect(html(<Footer site={site} />)).not.toContain("Prototype");
   });
 
-  it("is a UI string with drafts for de, ru and uk", () => {
+  it("is a UI string with a draft for de", () => {
     expect(ui("footer.prototype", "de")).toBe("Prototyp. Die Inhalte sind ein Entwurf und noch nicht vom Verkäufer bestätigt.");
   });
 });
 
 describe("ui strings", () => {
-  it("has every key in en, de, ru and uk", () => {
+  it("has every key in en and de", () => {
     for (const key of UI_KEYS) {
       const entry = uiEntry(key);
       for (const lang of ["en", ...AI_DRAFT_LANGUAGES] as const) expect(entry[lang], `${key}.${lang}`).toBeTruthy();
@@ -563,7 +556,7 @@ describe("ui strings", () => {
     expect(ui("header.cta", "de")).toBe("Kontakt aufnehmen");
   });
 
-  it("marks de, ru and uk as drafts in the source", () => {
+  it("marks de as a draft in the source", () => {
     const src = fs.readFileSync(path.join(process.cwd(), "src", "lib", "ui-strings.ts"), "utf8");
     expect(src).toMatch(/AI-WRITTEN DRAFTS/);
   });

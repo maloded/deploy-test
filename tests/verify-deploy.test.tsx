@@ -5,8 +5,10 @@ import ProductLayout from "@/components/ProductLayout";
 import {
   blockOrder,
   decodeEntities,
+  canonicalHref,
   footerText,
   hasNoindex,
+  hreflangLinks,
   htmlLang,
   imageRefs,
   pageText,
@@ -55,6 +57,14 @@ describe("parsing", () => {
       { src: "/plain.jpg", srcsetFirst: null },
     ]);
     expect(imageRefs("<p>no images</p>")).toEqual([]);
+  });
+
+  it("reads the hreflang alternates and the canonical link (React writes hrefLang)", () => {
+    const head = '<link rel="canonical" href="/de"/><link rel="alternate" hrefLang="en" href="/en"/><link rel="alternate" hreflang="x-default" href="/de"/><link rel="stylesheet" href="/a.css"/><link rel="alternate" href="/feed">';
+    expect(hreflangLinks(head)).toEqual([{ hreflang: "en", href: "/en" }, { hreflang: "x-default", href: "/de" }]);
+    expect(canonicalHref(head)).toBe("/de");
+    expect(canonicalHref("<p></p>")).toBeNull();
+    expect(hreflangLinks("<p></p>")).toEqual([]);
   });
 
   it("reads the footer text with entities decoded and spaces squashed", () => {
@@ -179,5 +189,67 @@ describe("verifyDeploy", () => {
     expect(own.every(([, a]) => a === `Basic ${Buffer.from("user:pw").toString("base64")}`)).toBe(true);
     expect(calls.filter(([h]) => h === "cdn.example").every(([, a]) => a === null)).toBe(true);
     expect(calls.some(([h]) => h === "cdn.example")).toBe(true);
+  });
+});
+
+// ---- the language routes ------------------------------------------------------------------------------------------
+
+const alt = (langs: string[], def: string) => langs.map((l) => `<link rel="alternate" hrefLang="${l}" href="/${l}"/>`).join("") + `<link rel="alternate" hrefLang="x-default" href="/${def}"/>`;
+const langPage = (lang: string, over: { lang?: string; links?: string; canonical?: string; title?: string } = {}) =>
+  PAGE.replace('<html lang="de"', `<html lang="${over.lang ?? lang}"`).replace("<title>T</title>", `<title>${over.title ?? "T"}</title>${over.links ?? alt(["de", "en"], "de")}<link rel="canonical" href="${over.canonical ?? `/${lang}`}"/>`);
+const NOINDEX = { "x-robots-tag": "noindex" };
+const TWO: Record<string, Route> = {
+  ...GOOD,
+  "/de": { body: langPage("de"), headers: NOINDEX },
+  "/en": { body: langPage("en"), headers: NOINDEX },
+};
+const multi: typeof expected & { languages: string[]; defaultLanguage: string; titles?: Record<string, string> } = { ...expected, languages: ["de", "en"], defaultLanguage: "de" };
+const redirectingFetch = (routes: Record<string, Route>, location: string | null = "/de", status = 307) => {
+  const base = fakeFetch(routes);
+  return (async (input: string | URL | Request, init?: RequestInit) => {
+    if (new URL(String(input)).pathname === "/" && init?.redirect === "manual") return new Response(null, { status, headers: location ? { location } : {} });
+    return base(input, init);
+  }) as typeof fetch;
+};
+const runLang = async (routes: Record<string, Route>, f = redirectingFetch(routes), exp = multi) => verifyDeploy({ url: "https://site.example/", expected: exp, fetchImpl: f });
+
+describe("verifyDeploy: the language routes", () => {
+  it("adds a redirect check and one check per language when the seller has languages", async () => {
+    const r = await runLang(TWO);
+    expect(r.map((x) => x.name).slice(8)).toEqual(['"/" redirects to "/de"', 'GET /de is 200, html lang is "de", hreflang links present', 'GET /en is 200, html lang is "en", hreflang links present']);
+    expect(failing(r)).toEqual([]);
+  });
+
+  it("adds nothing when the local product has no language information", async () => {
+    expect(await run(GOOD)).toHaveLength(8);
+  });
+
+  it("fails when / does not redirect, redirects elsewhere, or has no location", async () => {
+    expect(failing(await runLang(TWO, redirectingFetch(TWO, "/en")))).toEqual(['"/" redirects to "/de"']);
+    expect(failing(await runLang(TWO, redirectingFetch(TWO, null)))).toEqual(['"/" redirects to "/de"']);
+    expect(failing(await runLang(TWO, redirectingFetch(TWO, "/de", 200)))).toEqual(['"/" redirects to "/de"']);
+    expect((await runLang(TWO, redirectingFetch(TWO, "/de", 200))).find((x) => !x.ok)!.reason).toContain("status 200");
+  });
+
+  it("accepts an absolute Location on the site's own host", async () => {
+    expect(failing(await runLang(TWO, redirectingFetch(TWO, "https://site.example/de")))).toEqual([]);
+  });
+
+  it("fails a language route that is 404, has the wrong html lang, lacks hreflang links or a canonical", async () => {
+    const name = (l: string) => `GET /${l} is 200, html lang is "${l}", hreflang links present`;
+    expect(failing(await runLang({ ...TWO, "/en": { status: 404 } }))).toEqual([name("en")]);
+    expect(failing(await runLang({ ...TWO, "/en": { body: langPage("en", { lang: "de" }), headers: NOINDEX } }))).toEqual([name("en")]);
+    expect(failing(await runLang({ ...TWO, "/de": { body: langPage("de", { links: alt(["de"], "de") }), headers: NOINDEX } }))).toEqual([name("de")]);
+    expect(failing(await runLang({ ...TWO, "/de": { body: langPage("de", { links: alt(["de", "en"], "de").replace(/<link rel="alternate" hrefLang="x-default"[^>]*>/, "") }), headers: NOINDEX } }))).toEqual([name("de")]);
+    expect(failing(await runLang({ ...TWO, "/de": { body: langPage("de", { canonical: "/en" }), headers: NOINDEX } }))).toEqual([name("de")]);
+    const reasons = (await runLang({ ...TWO, "/en": { body: langPage("en", { lang: "de", links: "" }), headers: NOINDEX } })).find((x) => !x.ok)!.reason;
+    expect(reasons).toContain('html lang is "de"');
+    expect(reasons).toContain("no hreflang link for: de, en, x-default");
+  });
+
+  it("checks the title in each language when the command passes it", async () => {
+    const titles = { de: "Titel DE", en: "Title EN" };
+    const routes = { ...TWO, "/de": { body: langPage("de", { title: "x" }).replace("<h1>", "<h1>Titel DE "), headers: NOINDEX }, "/en": { body: langPage("en"), headers: NOINDEX } };
+    expect(failing(await runLang(routes, undefined, { ...multi, titles }))).toEqual(['GET /en is 200, html lang is "en", hreflang links present']);
   });
 });

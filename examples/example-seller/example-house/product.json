@@ -4,23 +4,27 @@
   "productType": "house",
   "offerType": "sale",
   "title": {
-    "en": "Example villa with garden"
+    "en": "Example villa with garden",
+    "de": "Beispiel-Villa mit Garten"
   },
   "tagline": {
-    "en": "Fake example listing for a house."
+    "en": "Fake example listing for a house.",
+    "de": "Erfundenes Beispielangebot für ein Haus."
   },
   "price": {
     "amount": 890000,
     "currency": "EUR",
     "note": {
-      "en": "Example price. All data on this page is fake."
+      "en": "Example price. All data on this page is fake.",
+      "de": "Beispielpreis. Alle Angaben auf dieser Seite sind erfunden."
     }
   },
   "specs": [
     {
       "key": "bedrooms",
       "label": {
-        "en": "Bedrooms"
+        "en": "Bedrooms",
+        "de": "Schlafzimmer"
       },
       "value": "4",
       "group": "rooms"
@@ -28,7 +32,8 @@
     {
       "key": "heating",
       "label": {
-        "en": "Heating"
+        "en": "Heating",
+        "de": "Heizung"
       },
       "value": "Example heat pump",
       "group": "energy"
@@ -36,7 +41,8 @@
     {
       "key": "location",
       "label": {
-        "en": "Location"
+        "en": "Location",
+        "de": "Lage"
       },
       "value": "Example town",
       "group": "location"
@@ -61,10 +67,12 @@
   "hero": {
     "trust": [
       {
-        "en": "Example: energy certificate available"
+        "en": "Example: energy certificate available",
+        "de": "Beispiel: Energieausweis vorhanden"
       },
       {
-        "en": "Example: viewing by appointment"
+        "en": "Example: viewing by appointment",
+        "de": "Beispiel: Besichtigung nach Vereinbarung"
       }
     ]
   }

@@ -10,7 +10,7 @@ import { VideoFacade } from "./VideoFacade";
  */
 export function Video({ site }: { site: Site }) {
   const { product, images } = site;
-  const lang = product.defaultLanguage;
+  const { lang } = site;
   const source = product.media.video;
   if (!source) return null;
   const video = parseVideo(source);

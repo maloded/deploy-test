@@ -1,8 +1,9 @@
 import { z } from "zod";
 import type { SellerContact } from "./seller";
+import { isLanguage, unsupportedLanguageMessage, type Language } from "./languages";
 import { parseVideo } from "./video";
 
-export const LANGUAGES = ["en", "de", "ru", "uk"] as const;
+export { LANGUAGES, type Language } from "./languages";
 
 /**
  * The ONE list of block ids, in the default page order. The value says whether a component renders the block:
@@ -11,21 +12,27 @@ export const LANGUAGES = ["en", "de", "ru", "uk"] as const;
  */
 export const BLOCKS = { hero: true, gallery: true, video: true, specs: true, offer: true, faq: true, contact: false } as const;
 
-export type Language = (typeof LANGUAGES)[number];
 export type BlockId = keyof typeof BLOCKS;
 export const BLOCK_IDS = Object.keys(BLOCKS) as [BlockId, ...BlockId[]];
 export const IMPLEMENTED_BLOCKS: readonly BlockId[] = BLOCK_IDS.filter((id) => BLOCKS[id]);
 
-/** Per-language text. English is required and is the fallback for every other language. */
+/** A language code of the registry (src/lib/languages.ts); anything else fails with the list of supported ones. */
+export const languageSchema = z.custom<Language>(isLanguage, { error: (issue) => unsupportedLanguageMessage(issue.input) });
+
+/**
+ * Per-language text: at least one language of the registry. That the seller's default language is present, and the
+ * fallback of the others to it, is decided where the seller is known (loadProduct in content.ts, localized.ts).
+ */
 export const localizedSchema = z
-  .object({
-    en: z.string().min(1),
-    de: z.string().min(1).optional(),
-    ru: z.string().min(1).optional(),
-    uk: z.string().min(1).optional(),
+  .record(z.string(), z.string().min(1))
+  .superRefine((value, ctx) => {
+    for (const key of Object.keys(value)) {
+      if (!isLanguage(key)) ctx.addIssue({ code: "custom", path: [key], message: unsupportedLanguageMessage(key) });
+    }
+    if (Object.keys(value).length === 0) ctx.addIssue({ code: "custom", message: "needs a text in at least one language" });
   })
-  .strict();
-export type Localized = z.infer<typeof localizedSchema>;
+  .transform((value) => value as Partial<Record<Language, string>>);
+export type Localized = Partial<Record<Language, string>>;
 
 /** Focus point of a photo, as fractions of its width and height. Used as CSS object-position when cropping. */
 export const focusSchema = z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) }).strict();

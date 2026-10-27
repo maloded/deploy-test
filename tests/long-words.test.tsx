@@ -93,7 +93,7 @@ describe.skipIf(!hasRealContent)("long words in the German sample", () => {
   });
 
   it("the page language reaches <html lang> (hyphens: auto needs it)", () => {
-    const layout = fs.readFileSync(path.join(process.cwd(), "src", "app", "layout.tsx"), "utf8");
-    expect(layout).toMatch(/<html lang=\{product\.defaultLanguage\}/);
+    const layout = fs.readFileSync(path.join(process.cwd(), "src", "app", "[lang]", "layout.tsx"), "utf8");
+    expect(layout).toMatch(/<html lang=\{lang\}/); // the route's language (see tests/routes.test.tsx)
   });
 });

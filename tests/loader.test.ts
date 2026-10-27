@@ -113,12 +113,11 @@ describe("language fallback", () => {
   });
 
   it("falls back to English when the language is missing", () => {
-    expect(pick(product.title, "ru")).toBe(product.title.en);
-    expect(pick(product.faq[0].a, "de")).toBe(product.faq[0].a.en);
+    expect(pick({ en: "only English" }, "de")).toBe("only English");
   });
 
   it("passes plain strings through", () => {
-    expect(pick("2023", "uk")).toBe("2023");
+    expect(pick("2023", "de")).toBe("2023");
   });
 
   it("formats the price for the language", () => {

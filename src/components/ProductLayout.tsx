@@ -14,6 +14,7 @@ export default function ProductLayout({ site }: { site: Site }) {
   return (
     <div
       className={`pt pt-${site.product.productType}`}
+      data-lang={site.lang}
       data-block-order={renderedBlocks(site).join(" ")}
       style={{ "--media-ratio": media.heroRatio, "--gallery-ratio": media.galleryRatio } as CSSProperties}
     >

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { contentRoot, splitRef } from "./content-root";
 import { readImageSize } from "./image-size";
+import { completeLocalized, mergeCoverage, reportLocalized, type Coverage } from "./localized";
 import { defaultBlocksFor, type ProductTypeFields } from "./fields";
 import type { BlockId, Product } from "./schema";
 import { validateSeller, type SellerFile } from "./seller";
@@ -33,6 +34,10 @@ export type LoadedProduct = {
   blocks: BlockId[];
   /** Images that exist, keyed by file name. A missing file is absent here. */
   images: Record<string, MediaImage>;
+  /** Translations that are missing and fall back to the default language: "<file>: <field path>: ...". Warnings, never errors. */
+  translationWarnings: string[];
+  /** Per offered language: localized fields of the product and the seller that have a text, out of all of them. */
+  coverage: Coverage[];
   /** Missing media files, only reported (instead of thrown) when `strictMedia` is false. */
   warnings: string[];
 };
@@ -64,7 +69,12 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
 
   const sellerResult = validateSeller(readJson(path.join(/*turbopackIgnore: true*/ sellerDir, "seller.json"), `${sellerSlug}/seller.json`));
   if (!sellerResult.ok) throw new ContentError(`${sellerSlug}/seller.json`, sellerResult.issues);
-  const seller = sellerResult.seller;
+  const { languages, defaultLanguage } = sellerResult.seller;
+  const sellerReport = reportLocalized(sellerResult.seller, languages, defaultLanguage);
+  if (sellerReport.missingDefault.length) {
+    throw new ContentError(`${sellerSlug}/seller.json`, sellerReport.missingDefault.map((p) => `${p}: no text in the default language "${defaultLanguage}" (only the default language is required)`));
+  }
+  const seller = completeLocalized(sellerResult.seller, languages, defaultLanguage);
 
   const result = validateProduct(readJson(path.join(/*turbopackIgnore: true*/ dir, "product.json"), `${ref}/product.json`), options.registries ?? defaultRegistries);
   if (!result.ok) throw new ContentError(`${ref}/product.json`, result.issues);
@@ -72,6 +82,8 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
   const file = result.product;
 
   const issues: string[] = [];
+  const report = reportLocalized(file, languages, defaultLanguage);
+  for (const p of report.missingDefault) issues.push(`${p}: no text in the default language "${defaultLanguage}" (only the default language is required)`);
   if (file.slug !== slug) issues.push(`slug: is "${file.slug}" but the folder is named "${slug}"`);
 
   const refs: { where: string; file: string }[] = [{ where: "media.hero", file: file.media.hero }];
@@ -105,12 +117,17 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
   }
 
   if (issues.length) throw new ContentError(`${ref}/product.json`, issues);
+  const translationWarnings = [
+    ...Object.entries(report.missing).flatMap(([lang, paths]) => paths!.map((p) => `${ref}/product.json: ${p}: no "${lang}" text, shows the "${defaultLanguage}" text`)),
+    ...Object.entries(sellerReport.missing).flatMap(([lang, paths]) => paths!.map((p) => `${sellerSlug}/seller.json: ${p}: no "${lang}" text, shows the "${defaultLanguage}" text`)),
+  ];
   const product: Product = {
-    ...file,
+    ...completeLocalized(file, languages, defaultLanguage),
     theme: file.theme ?? seller.theme,
     languages: seller.languages,
     defaultLanguage: seller.defaultLanguage,
     contact: seller.contact,
   };
-  return { ref, seller, product, typeFields, blocks: [...(file.blocks ?? defaultBlocksFor(typeFields))], images, warnings };
+  const coverage = mergeCoverage([report.coverage, sellerReport.coverage]);
+  return { ref, seller, product, typeFields, blocks: [...(file.blocks ?? defaultBlocksFor(typeFields))], images, translationWarnings, coverage, warnings };
 }

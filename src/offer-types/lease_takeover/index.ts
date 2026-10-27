@@ -17,7 +17,7 @@ export type Lease = InferFields<typeof leaseFields>;
 
 export const leaseTakeover = {
   id: "lease_takeover",
-  label: { en: "Lease takeover", de: "Leasingübernahme", ru: "Передача лизинга", uk: "Передача лізингу" },
+  label: { en: "Lease takeover", de: "Leasingübernahme" },
   variant: "lease",
   detailsKey: "lease",
   detailsFields: leaseFields,

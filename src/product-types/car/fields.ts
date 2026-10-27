@@ -3,7 +3,7 @@ import type { ProductTypeFields } from "@/lib/fields";
 /** Plain data only (no functions). */
 export const fields = {
   id: "car",
-  label: { en: "Car", de: "Auto", ru: "Автомобиль", uk: "Автомобіль" },
+  label: { en: "Car", de: "Auto" },
   allowedOfferTypes: ["sale", "lease_takeover"],
   media: { heroRatio: "3 / 2", galleryRatio: "3 / 2" },
   specGroups: [

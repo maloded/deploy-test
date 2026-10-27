@@ -4,23 +4,27 @@
   "productType": "bag",
   "offerType": "sale",
   "title": {
-    "en": "Example leather handbag"
+    "en": "Example leather handbag",
+    "de": "Beispiel-Lederhandtasche"
   },
   "tagline": {
-    "en": "Fake example listing for a bag."
+    "en": "Fake example listing for a bag.",
+    "de": "Erfundenes Beispielangebot für eine Tasche."
   },
   "price": {
     "amount": 2400,
     "currency": "EUR",
     "note": {
-      "en": "Example price. All data on this page is fake."
+      "en": "Example price. All data on this page is fake.",
+      "de": "Beispielpreis. Alle Angaben auf dieser Seite sind erfunden."
     }
   },
   "specs": [
     {
       "key": "material",
       "label": {
-        "en": "Material"
+        "en": "Material",
+        "de": "Material"
       },
       "value": "Example calfskin",
       "group": "material"
@@ -28,7 +32,8 @@
     {
       "key": "dimensions",
       "label": {
-        "en": "Dimensions"
+        "en": "Dimensions",
+        "de": "Maße"
       },
       "value": "30 x 22 x 12 cm",
       "group": "dimensions"
@@ -36,7 +41,8 @@
     {
       "key": "condition",
       "label": {
-        "en": "Condition"
+        "en": "Condition",
+        "de": "Zustand"
       },
       "value": "Example: very good",
       "group": "condition"
@@ -59,10 +65,12 @@
   "hero": {
     "trust": [
       {
-        "en": "Example: authenticity certificate"
+        "en": "Example: authenticity certificate",
+        "de": "Beispiel: Echtheitszertifikat"
       },
       {
-        "en": "Example: purchase receipt"
+        "en": "Example: purchase receipt",
+        "de": "Beispiel: Kaufbeleg"
       }
     ]
   }

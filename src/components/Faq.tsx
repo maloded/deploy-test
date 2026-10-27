@@ -4,7 +4,8 @@ import type { Site } from "./blocks";
 
 /** FAQ as native <details>/<summary>: works without JavaScript. The plus/minus is drawn with CSS. */
 export function Faq({ site }: { site: Site }) {
-  const { faq, defaultLanguage: lang } = site.product;
+  const { faq } = site.product;
+  const { lang } = site;
   if (faq.length === 0) return null;
 
   return (

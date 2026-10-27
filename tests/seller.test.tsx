@@ -50,10 +50,11 @@ describe("seller.json", () => {
     s.languages = ["en", "de"];
     s.defaultLanguage = "de";
     expect(issues(s)).toEqual([]);
-    s.defaultLanguage = "uk";
-    expect(issues(s).join("\n")).toMatch(/^defaultLanguage: must be one of languages \(en, de\)/m);
     s.defaultLanguage = "xx";
-    expect(issues(s).join("\n")).toMatch(/^defaultLanguage:/m);
+    expect(issues(s).join("\n")).toMatch(/^defaultLanguage: unsupported language "xx"/m);
+    s.languages = ["en"];
+    s.defaultLanguage = "de"; // a supported language, but not one the seller offers
+    expect(issues(s).join("\n")).toMatch(/^defaultLanguage: must be one of languages \(en\)/m);
   });
 
   it("rejects an empty or repeated language list, a bad email, an unknown field and a bad link", () => {
@@ -65,8 +66,9 @@ describe("seller.json", () => {
     expect(issues({ ...seller(), displayName: "x".repeat(41) }).join("\n")).toMatch(/^displayName:/m);
   });
 
-  it("the consent text is per language and English is required", () => {
-    expect(issues({ ...seller(), consentText: { de: "nur deutsch" } }).join("\n")).toMatch(/^consentText\.en:/m);
+  it("the consent text is per language; the default language is checked by the loader, not here", () => {
+    expect(issues({ ...seller(), consentText: {} }).join("\n")).toMatch(/^consentText: needs a text/m);
+    expect(issues({ ...seller(), consentText: { de: "nur deutsch" } })).toEqual([]);
   });
 
   it("has a descriptor for every field of the schema, and only those", () => {
@@ -139,7 +141,7 @@ describe("header and footer read the seller", () => {
 
   it("shows seller.legalNote in the page language, and no legal line without it", () => {
     expect(html(<Footer site={site} />)).toContain(`<p class="site-footer__legal">${site.seller.legalNote!.en}</p>`);
-    const de = { ...site, product: { ...site.product, defaultLanguage: "de" as const } };
+    const de = { ...site, lang: "de" as const };
     expect(html(<Footer site={de} />)).toContain(`<p class="site-footer__legal">${site.seller.legalNote!.de ?? site.seller.legalNote!.en}</p>`);
     const none = { ...site, seller: { ...site.seller, legalNote: undefined } };
     expect(html(<Footer site={none} />)).not.toContain("site-footer__legal");

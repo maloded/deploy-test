@@ -2,7 +2,7 @@ import type { OfferTypeDef } from "@/lib/fields";
 
 export const sale = {
   id: "sale",
-  label: { en: "Sale", de: "Verkauf", ru: "Продажа", uk: "Продаж" },
+  label: { en: "Sale", de: "Verkauf" },
   variant: "price",
   detailsKey: null,
   detailsFields: [],

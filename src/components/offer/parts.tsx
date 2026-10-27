@@ -19,7 +19,7 @@ export function OfferShell({
   children?: ReactNode;
 }) {
   const { product } = site;
-  const lang = product.defaultLanguage;
+  const { lang } = site;
   const { amount, currency, per, note } = product.price;
   return (
     <section className="offer" id="offer" data-block="offer" aria-label={ui("section.offer", lang)}>
@@ -54,7 +54,7 @@ export function DetailsList({
   fields: readonly FieldDescriptor[];
   values: Record<string, unknown> | undefined;
 }) {
-  const lang = site.product.defaultLanguage;
+  const { lang } = site;
   const rows = fields.filter((f) => values?.[f.key] !== undefined);
   return (
     <dl className="details">

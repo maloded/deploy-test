@@ -99,7 +99,7 @@ describe("migrating a content root", () => {
     migrate({ root, seller: "dummy-seller", write: true });
     const seller = JSON.parse(fs.readFileSync(path.join(root, "dummy-seller", "seller.json"), "utf8"));
     expect(validateSeller(seller).ok).toBe(true);
-    expect(seller).toMatchObject({ schemaVersion: 1, displayName: OLD.brand, contact: { email: OLD.contact.email }, languages: ["de", "en"], defaultLanguage: "de", theme: OLD.theme, consentText: OLD.contact.consentText });
+    expect(seller).toMatchObject({ schemaVersion: 1, displayName: OLD.brand, contact: { email: OLD.contact.email }, languages: ["de", "en"], defaultLanguage: "en", theme: OLD.theme, consentText: OLD.contact.consentText });
     expect(seller.legalNote.en).toMatch(/does not constitute a binding offer/);
     expect(seller.legalNote.de).toMatch(/verbindliches Angebot/);
 
@@ -122,7 +122,7 @@ describe("migrating a content root", () => {
     expect(loaded.product).toMatchObject(rest);
     expect(loaded.product.theme).toBe(theme);
     expect(loaded.product.languages).toEqual(languages);
-    expect(loaded.product.defaultLanguage).toBe(languages[0]);
+    expect(loaded.product.defaultLanguage).toBe("en"); // "de" was first, but the fixture has texts that are English only: the default must be complete
     expect(loaded.product.contact.email).toBe(contact.email);
     expect(loaded.seller.displayName).toBe(brand);
     expect(loaded.seller.consentText).toEqual(contact.consentText);

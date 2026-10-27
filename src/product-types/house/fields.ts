@@ -13,7 +13,7 @@ export type Property = InferFields<typeof propertyFields>;
 /** Plain data only (no functions). */
 export const fields = {
   id: "house",
-  label: { en: "House", de: "Haus", ru: "Дом", uk: "Будинок" },
+  label: { en: "House", de: "Haus" },
   allowedOfferTypes: ["sale", "rent"],
   media: { heroRatio: "16 / 9", galleryRatio: "16 / 9" },
   specGroups: [

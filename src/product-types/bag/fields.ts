@@ -11,7 +11,7 @@ export type Authenticity = InferFields<typeof authenticityFields>;
 /** Plain data only (no functions). */
 export const fields = {
   id: "bag",
-  label: { en: "Bag", de: "Tasche", ru: "Сумка", uk: "Сумка" },
+  label: { en: "Bag", de: "Tasche" },
   allowedOfferTypes: ["sale"],
   media: { heroRatio: "4 / 5", galleryRatio: "4 / 5" },
   specGroups: [

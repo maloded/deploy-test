@@ -13,7 +13,7 @@ export type Rent = InferFields<typeof rentFields>;
 
 export const rent = {
   id: "rent",
-  label: { en: "Rent", de: "Miete", ru: "Аренда", uk: "Оренда" },
+  label: { en: "Rent", de: "Miete" },
   variant: "rent",
   detailsKey: "rent",
   detailsFields: rentFields,

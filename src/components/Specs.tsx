@@ -4,7 +4,7 @@ import type { Site } from "./blocks";
 
 /** Specs grouped by the product type's spec groups: a small label and a definition list per group. */
 export function Specs({ site }: { site: Site }) {
-  const lang = site.product.defaultLanguage;
+  const { lang } = site;
   const groups = groupSpecs(site.product.specs, site.typeFields, lang);
   if (groups.length === 0) return null;
 

@@ -9,6 +9,7 @@
     "start": "next start",
     "fonts": "node scripts/copy-fonts.mjs",
     "check:themes": "node scripts/run.mjs scripts/check-themes.ts",
+    "check:languages": "node scripts/run.mjs scripts/check-languages.mjs",
     "check:template-clean": "node scripts/run.mjs scripts/check-template-clean.mjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
