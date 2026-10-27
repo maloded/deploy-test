@@ -12,6 +12,11 @@ describe(".github/workflows/ci.yml", () => {
     expect(code).not.toMatch(/schedule:|workflow_dispatch:|release:/);
   });
 
+  it("runs on a pinned runner image, not ubuntu-latest", () => {
+    expect(code).toContain("runs-on: ubuntu-24.04");
+    expect(code).not.toMatch(/-latest/);
+  });
+
   it("uses Node 22.x and installs with npm ci", () => {
     expect(code).toContain("node-version: 22.x");
     expect(code).toContain("run: npm ci");

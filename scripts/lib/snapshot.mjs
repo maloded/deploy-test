@@ -4,7 +4,8 @@
 // A whitelist: the snapshot holds
 //   1. the tracked template files of the current commit (git archive HEAD), minus any content/ folder they carry and
 //      the development notes (PROJECT.md, PROGRESS.md, docs/), which stay in the working repository; README.md and
-//      DEPLOY.md are kept,
+//      DEPLOY.md are kept; .github/ is dropped too (the host builds the deployment repository, and the workflow tests
+//      the examples, not the product; export:template keeps it),
 //   2. <content root>/<seller>/<product> (everything in it except the originals folder media/; media-web is the
 //      processed export) and the files of <content root>/<seller> (seller.json), but no other product of the seller,
 //   3. examples/ and tests/fixtures (fake data the tests need; they are tracked template files).
@@ -27,7 +28,7 @@ export class SnapshotRefused extends Error {
 
 const REF = /^[a-z0-9]+(-[a-z0-9]+)*\/[a-z0-9]+(-[a-z0-9]+)*$/;
 const REQUIRED_TEMPLATE = ["examples", "tests/fixtures"];
-const DEV_NOTES = ["PROJECT.md", "PROGRESS.md", "docs"];
+const DEV_NOTES = ["PROJECT.md", "PROGRESS.md", "docs", ".github"];
 const git = (cwd, ...a) => execFileSync("git", a, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
 
 /** Checks the product reference and that its folders exist; returns the pieces. Throws a message, never a stack of paths. */

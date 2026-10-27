@@ -40,6 +40,7 @@ async function setup() {
   put(project, ".gitignore", "content/**/media/\ncontent/**/media-web/\n"); // as in the template
   for (const note of ["PROJECT.md", "PROGRESS.md", "README.md", "DEPLOY.md", "docs/audit.md"]) put(project, note, "notes\n");
   put(project, "src/a.ts", "export {};\n");
+  put(project, ".github/workflows/ci.yml", "name: ci\n");
   put(project, "examples/ex-seller/ex/product.json", "{}");
   put(project, "tests/fixtures/content/f-seller/f/product.json", "{}");
   put(project, "content/tracked-seller/tracked/product.json", "{}"); // content tracked in the template (transitional): must not travel
@@ -86,6 +87,13 @@ describe("snapshot of one product", () => {
     const all = names(s.dest);
     for (const gone of ["PROJECT.md", "PROGRESS.md", "docs/audit.md"]) expect(all).not.toContain(gone);
     for (const kept of ["README.md", "DEPLOY.md"]) expect(all).toContain(kept);
+  });
+
+  it("drops .github/ (the host builds the deployment repository; the workflow tests the examples)", async () => {
+    const s = await setup();
+    await snapshot(s);
+    expect(names(s.dest).filter((f) => f === ".github" || f.startsWith(".github/"))).toEqual([]);
+    expect(names(s.dest)).toContain("src/a.ts");
   });
 
   it("does not carry a second seller, a second product of the same seller, or content tracked in the template", async () => {

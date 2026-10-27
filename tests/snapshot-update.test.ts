@@ -28,6 +28,7 @@ async function setup() {
   put(project, ".gitignore", "content/**/media/\ncontent/**/media-web/\n");
   put(project, "README.md", "readme\n");
   put(project, "src/a.ts", "export {};\n");
+  put(project, ".github/workflows/ci.yml", "name: ci\n");
   put(project, "examples/ex-seller/ex/product.json", "{}");
   put(project, "tests/fixtures/content/f-seller/f/product.json", "{}");
   git(project, "init", "-q", "-b", "main");
@@ -53,6 +54,19 @@ const commitTemplate = (s: Setup, rel: string, text: string) => {
 };
 
 describe("snapshot --update", () => {
+  it("a snapshot made before .github/ was dropped loses exactly the workflow files, and nothing else in the template", async () => {
+    const s = await setup();
+    expect(fs.existsSync(path.join(s.dest, ".github"))).toBe(false); // a new snapshot has none
+    put(s.dest, ".github/workflows/ci.yml", "name: ci\n"); // as in an older snapshot
+    put(s.dest, ".github/dependabot.yml", "version: 2\n");
+    git(s.dest, "add", "-A");
+    git(s.dest, "commit", "-q", "-m", "Update: older snapshot with the workflow");
+    const r = await update(s);
+    expect(r.templateChanged.sort()).toEqual([".github/dependabot.yml", ".github/workflows/ci.yml"]);
+    expect(r.changed.sort()).toEqual([".github/dependabot.yml", ".github/workflows/ci.yml"]);
+    expect(fs.existsSync(path.join(s.dest, ".github"))).toBe(false);
+  });
+
   it("changing only product.json adds one commit, changes no template path and keeps the history linear", async () => {
     const s = await setup();
     const before = git(s.dest, "rev-parse", "HEAD");
