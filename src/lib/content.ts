@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { contentRoot, splitRef } from "./content-root";
 import { readImageSize } from "./image-size";
+import { checkViewing, mergeViewing, missingViewingFields, type ViewingConfig, type ViewingSettings } from "./viewing";
 import { completeLocalized, mergeCoverage, reportLocalized, type Coverage } from "./localized";
 import { defaultBlocksFor, type ProductTypeFields } from "./fields";
 import type { BlockId, Product } from "./schema";
@@ -30,7 +31,9 @@ export type LoadedProduct = {
   /** product.json merged with the seller (languages, defaultLanguage, contact, and the theme when the product has none). */
   product: Product;
   typeFields: ProductTypeFields;
-  /** Block order: the product's "blocks", or the product type's default. */
+  /** The seller's viewing settings with the product's laid over them, field by field; null when neither has any (then viewing and test drive requests are not offered). */
+  viewing: ViewingConfig | null;
+  /** Block order: the product's "blocks", or the product type's default; "contact" is always there (last when not listed). */
   blocks: BlockId[];
   /** Images that exist, keyed by file name. A missing file is absent here. */
   images: Record<string, MediaImage>;
@@ -116,18 +119,32 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
     }
   }
 
+  const completed = completeLocalized(file, languages, defaultLanguage);
+  const merged = mergeViewing(seller.viewing as ViewingSettings | undefined, completed.viewing as ViewingSettings | undefined);
+  let viewing: ViewingConfig | null = null;
+  if (merged) {
+    const missing = missingViewingFields(merged);
+    if (missing.length) issues.push(`viewing: incomplete after merging the seller's and the product's settings, missing: ${missing.join(", ")}`);
+    for (const problem of checkViewing(merged)) issues.push(`viewing.${problem}`);
+    if (!missing.length && !issues.some((i) => i.startsWith("viewing."))) viewing = merged as ViewingConfig;
+  }
+
   if (issues.length) throw new ContentError(`${ref}/product.json`, issues);
   const translationWarnings = [
     ...Object.entries(report.missing).flatMap(([lang, paths]) => paths!.map((p) => `${ref}/product.json: ${p}: no "${lang}" text, shows the "${defaultLanguage}" text`)),
     ...Object.entries(sellerReport.missing).flatMap(([lang, paths]) => paths!.map((p) => `${sellerSlug}/seller.json: ${p}: no "${lang}" text, shows the "${defaultLanguage}" text`)),
   ];
   const product: Product = {
-    ...completeLocalized(file, languages, defaultLanguage),
+    ...completed,
     theme: file.theme ?? seller.theme,
     languages: seller.languages,
     defaultLanguage: seller.defaultLanguage,
     contact: seller.contact,
   };
   const coverage = mergeCoverage([report.coverage, sellerReport.coverage]);
-  return { ref, seller, product, typeFields, blocks: [...(file.blocks ?? defaultBlocksFor(typeFields))], images, translationWarnings, coverage, warnings };
+  // the contact block is never left out: the page's "#contact" buttons need it, so a product that lists its own blocks
+  // without it gets it last (listing "contact" only decides where it goes)
+  const listed = file.blocks ?? defaultBlocksFor(typeFields);
+  const blocks: BlockId[] = listed.includes("contact") ? [...listed] : [...listed, "contact"];
+  return { ref, seller, product, typeFields, blocks, viewing, images, translationWarnings, coverage, warnings };
 }

@@ -39,6 +39,8 @@ export const OPTIONAL_VARS = [
   "--hero-headline-size",
   "--hero-frame-min-ratio",
   "--hero-frame-max-ratio",
+  "--radius-dialog",
+  "--radius-control",
 ];
 
 export const THEMES_DIR = path.join(process.cwd(), "public", "themes");

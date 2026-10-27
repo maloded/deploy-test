@@ -12,4 +12,5 @@ export const fields = {
   heroHighlights: [],
   detailsKey: null,
   detailsFields: [],
+  requestTypes: ["question", "offer"],
 } as const satisfies ProductTypeFields;

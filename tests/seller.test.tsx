@@ -147,8 +147,8 @@ describe("header and footer read the seller", () => {
     expect(html(<Footer site={none} />)).not.toContain("site-footer__legal");
   });
 
-  it("links the privacy page from the seller, with #privacy as the placeholder", () => {
-    expect(html(<Footer site={site} />)).toContain('href="#privacy"');
+  it("links the privacy page only when the seller has set one (no placeholder anchor)", () => {
+    expect(html(<Footer site={site} />)).not.toContain("#privacy");
     const own = { ...site, seller: { ...site.seller, privacyUrl: "/datenschutz" } };
     expect(html(<Footer site={own} />)).toContain('href="/datenschutz"');
   });

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { formatIssues, languageSchema, localizedSchema, type Localized } from "./schema";
+import { formatIssues, languageSchema, localizedSchema, viewingSchema, type Localized } from "./schema";
 
 /**
  * The seller: everything that is the same for all of a seller's products (name, contact, languages, default theme,
@@ -34,6 +34,8 @@ export const sellerShape = {
   theme: z.string().min(1),
   /** The seller is the data controller: this is the consent text of the contact form, per language. */
   consentText: localizedSchema,
+  /** Optional viewing settings, the default for the seller's products (a product may override single fields). */
+  viewing: viewingSchema.optional(),
   /** Placeholders until the seller supplies the real pages. */
   privacyUrl: link.optional(),
   imprintUrl: link.optional(),
@@ -65,7 +67,7 @@ export type SellerFieldDescriptor = {
   key: keyof typeof sellerShape;
   label: Localized;
   required: boolean;
-  type: "version" | "text" | "localized" | "contact" | "languages" | "language" | "theme" | "link";
+  type: "version" | "text" | "localized" | "contact" | "languages" | "language" | "theme" | "link" | "viewing";
 };
 
 export const SELLER_FIELDS = [
@@ -78,6 +80,7 @@ export const SELLER_FIELDS = [
   { key: "defaultLanguage", label: { en: "Default language", de: "Standardsprache" }, required: true, type: "language" },
   { key: "theme", label: { en: "Default theme", de: "Standard-Theme" }, required: true, type: "theme" },
   { key: "consentText", label: { en: "Consent text of the contact form", de: "Einwilligungstext des Kontaktformulars" }, required: true, type: "localized" },
+  { key: "viewing", label: { en: "Viewing settings (default)", de: "Besichtigungseinstellungen (Standard)" }, required: false, type: "viewing" },
   { key: "privacyUrl", label: { en: "Privacy page (placeholder)", de: "Datenschutzseite (Platzhalter)" }, required: false, type: "link" },
   { key: "imprintUrl", label: { en: "Imprint page (placeholder)", de: "Impressum (Platzhalter)" }, required: false, type: "link" },
 ] as const satisfies readonly SellerFieldDescriptor[];

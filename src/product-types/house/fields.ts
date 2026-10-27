@@ -33,4 +33,5 @@ export const fields = {
   heroHighlights: ["area", "bedrooms", "plot", "location"],
   detailsKey: "property",
   detailsFields: propertyFields,
+  requestTypes: ["viewing", "question", "offer"],
 } as const satisfies ProductTypeFields;

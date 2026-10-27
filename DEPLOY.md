@@ -58,7 +58,7 @@ git push -u origin main
 | `CONTENT_PRODUCT` | (optional) | `<seller>/<product>`: which product is the page (it replaces the old `CONTENT_SLUG`, which now stops with an error). A snapshot holds a single product, so the variable is optional there: the only product is used. |
 | `CONTENT_DIR` | (leave unset) | The content root. The snapshot always has its content in `./content`, so a deployment does not set it. |
 | `REVIEW_PASSWORD` | a long random string | When set, **every** request (pages, images, static files, API) needs HTTP Basic auth: any user name, this password. Without it nothing is protected. Only `/robots.txt` stays open so crawlers read "disallow all". **Known problem (found with `verify:deploy`): with the password set, the image optimizer's internal request for a local photo carries no `Authorization` header, gets the 401, and `/_next/image` answers 404, so the photos do not show. A deployment for the pipeline test therefore sets no password (`noindex` is always sent).** |
-| `NEXT_PUBLIC_PROTOTYPE_NOTE` | `1` | Shows the footer line "Prototype. Content is a draft and not yet confirmed by the seller." (German: "Prototyp. Die Inhalte sind ein Entwurf und noch nicht vom Verkäufer bestätigt."). Leave it out to hide it. |
+| `NEXT_PUBLIC_PROTOTYPE_NOTE` | `1` | Shows the footer line "Prototype. Content is a draft and not yet confirmed by the seller." (German: "Prototyp. Die Inhalte sind ein Entwurf und noch nicht vom Verkäufer bestätigt."). Leave it out to hide it. It also puts one honest line next to the submit button of the contact dialog: "Prototype: requests are not delivered yet." (German: "Prototyp: Anfragen werden noch nicht zugestellt."), because until a lead store is configured (see "Leads") nothing is delivered. Without the variable nothing changes; with no store the API still answers 503 and the form shows the seller's e-mail link, never a success. |
 | `REVIEW_THEME_SWITCHER` | `1` (optional) | Shows the small theme switcher in production, so the reviewer can compare the two themes. **Must not be set for a final public release.** It also makes the page render per request instead of being static. **Observation, not a proven cause:** on a Vercel deployment, setting `REVIEW_THEME_SWITCHER=1` made the page render at request time and the loader then failed with "file not found in media-web/" (the production build had passed); after removing the variable the page was static and worked. Recommendation: do not set `REVIEW_THEME_SWITCHER` on a host until this is fixed. |
 
 A demo that was deployed from an older snapshot keeps working on that snapshot (it is self-contained and still reads `CONTENT_SLUG`) until you build a new snapshot and update the deployment; only a new snapshot uses `CONTENT_PRODUCT` and the seller layout.
@@ -76,12 +76,29 @@ Always on, whatever the variables are: `X-Robots-Tag: noindex, nofollow` on ever
 
 ## Known limits of this demo
 
-- **The contact form is not built.** "Get in touch" and "Request details" scroll to the footer. Nothing is sent or stored.
+- **Leads need a store.** The contact form answers honestly when no store works: with `LEADS_STORE` unset (or a store that fails, such as a read-only file system) the API answers 503 and the form shows the seller's e-mail address; it never claims to have saved anything. See "Leads" below.
 - **The content is a draft, not confirmed by the seller.** Prices and contact details may be placeholders, an address or imprint may be missing, and translated texts are AI drafts.
 - **The photos may not be cleaned.** Before a snapshot is shared, check them for readable third-party license plates, faces and reflections of people. GPS and camera data are removed in the web copies (a guard refuses any image that still has EXIF).
 - No analytics, no cookies, no third-party requests on page load (unless the product uses an embedded video).
 
 `npm run export:template -- --out <folder>` makes the clean template repository for the deployment of the examples below (see PROJECT.md; it prints no push command and adds no remote).
+
+## Leads (the contact form)
+
+The form posts to `POST /api/lead` (same origin only). A host with a read-only file system (Vercel) cannot use the file store; use a webhook, or the form answers 503 and shows the seller's e-mail address.
+
+| Variable | Value | Effect |
+|---|---|---|
+| `LEADS_STORE` | `file` or `webhook` | Where leads go. **Not set (or anything else): the API answers 503**; nothing is stored and the form says so. |
+| `LEADS_DIR` | (optional, `file` only) | Folder for the lead files; default `./data/leads` (git-ignored; the snapshot guard refuses it). Must be writable. |
+| `LEADS_WEBHOOK_URL` | an `https://` URL (`webhook` only) | Receives each lead as JSON (`POST`, 5 second timeout). Anything but a 2xx answer counts as a failure (503). Treat the URL as a secret. |
+
+Read at run time (not build time), so a change needs a redeploy only because the host restarts. What the API knows about the site (product, languages, consent text hashes) is computed at build time and inlined, so the function needs no content files.
+
+- **Region.** Function code runs in the host's default region. For a seller in the EU set the project's **Function Region** to a European one in the host's project settings (Vercel: Settings > Functions). It is a project setting; do not add config files for it that have not been verified.
+- **Rate limit.** In memory, 5 posts per client per 10 minutes: every server instance counts for itself, so on a host with several instances the real limit is higher. It is a prototype safeguard; use the host's own rate limiting for a public site.
+- **Retention.** `npm run leads:purge [-- --days N] [--write]` deletes lead files older than N days (default 90; a dry run unless `--write`; `file` store only). A webhook's receiver has its own retention.
+- **Verify the honest failure:** with `LEADS_STORE` unset, `curl -s -X POST -H 'content-type: application/json' -H 'x-lead-request: 1' -d '{}' <url>/api/lead` must not answer 200.
 
 ## Check a deployment
 
@@ -89,7 +106,7 @@ Always on, whatever the variables are: `X-Robots-Tag: noindex, nofollow` on ever
 npm run verify:deploy -- <url> [--product <seller>/<product>] [--auth user:password]
 ```
 
-One GET of `/` (it follows the redirect to the default language) and a few more requests (fetch only). It prints PASS or FAIL with a reason for: status 200 and HTML; `lang` on `<html>`; `X-Robots-Tag: noindex`; the product title in the default language (read from the local content root, `CONTENT_DIR` also from `.env.local`; `--product` or `CONTENT_PRODUCT`) is in the HTML; every id in `data-block-order` has a `<section>`; every `<img>` src and the first `srcset` URL is 200 with an image type; `/robots.txt` disallows all; the footer shows the seller's `displayName`. Then, from the local `seller.json`, the language routes: **`/` redirects to `/<defaultLanguage>`** (a 3xx with that `Location`, not followed), and for **every language of the seller** `GET /<lang>` is 200, `<html lang>` equals the route, the page has `hreflang` links for every language and for `x-default`, a canonical link to itself, and the product title in that language. That is 8 checks plus 1 plus one per language (11 for the two-language examples). A language the product has no title for must show the default title. Exit code 1 on any FAIL. `--auth` is sent to the site's own host only.
+One GET of `/` (it follows the redirect to the default language) and a few more requests (fetch only). It prints PASS or FAIL with a reason for: status 200 and HTML; `lang` on `<html>`; `X-Robots-Tag: noindex`; the product title in the default language (read from the local content root, `CONTENT_DIR` also from `.env.local`; `--product` or `CONTENT_PRODUCT`) is in the HTML; every id in `data-block-order` has a `<section>`; every `<img>` src and the first `srcset` URL is 200 with an image type; `/robots.txt` disallows all; the footer shows the seller's `displayName`. Then, from the local `seller.json`, the language routes: **`/` redirects to `/<defaultLanguage>`** (a 3xx with that `Location`, not followed), and for **every language of the seller** `GET /<lang>` is 200, `<html lang>` equals the route, the page has `hreflang` links for every language and for `x-default`, a canonical link to itself, and the product title in that language. Finally one check that the footer's contact row (an element with `id="contact"`) exists on every language route, holds no form (the form lives only in the dialog) and has the seller's e-mail link. "contact" in `data-block-order` is the footer row, so it is not required to be a `<section>`. That is 8 checks plus 1 (the redirect) plus one per language plus 1 (the contact section): 12 for the two-language examples. A language the product has no title for must show the default title. Exit code 1 on any FAIL. `--auth` is sent to the site's own host only.
 
 The page routes are `/<lang>` (one static page per language of the seller; any other path is a 404). `/` answers with a 307 from the proxy (so it carries `X-Robots-Tag` and is behind `REVIEW_PASSWORD` like every other path); there is no redirect by `Accept-Language`.
 

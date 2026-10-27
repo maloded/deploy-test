@@ -13,7 +13,7 @@ describe("block ids: one source of truth", () => {
   it("BLOCK_IDS and IMPLEMENTED_BLOCKS are derived from BLOCKS", () => {
     expect(BLOCK_IDS).toEqual(Object.keys(BLOCKS));
     expect(IMPLEMENTED_BLOCKS).toEqual(BLOCK_IDS.filter((id) => BLOCKS[id]));
-    expect(BLOCK_IDS.filter((id) => !BLOCKS[id])).toEqual(["contact"]); // the only block that is valid but not built yet
+    expect(BLOCK_IDS.filter((id) => !BLOCKS[id])).toEqual([]); // every block id has a component now (contact included)
   });
 
   it("every product type's default order is made of known block ids, and any explicit list names implemented ones only", () => {

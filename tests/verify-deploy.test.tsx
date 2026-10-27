@@ -6,6 +6,7 @@ import {
   blockOrder,
   decodeEntities,
   canonicalHref,
+  contactRow,
   footerText,
   hasNoindex,
   hreflangLinks,
@@ -25,7 +26,7 @@ const PAGE = `<!DOCTYPE html><html lang="de" data-theme="x"><head><title>T</titl
 <img alt="a" src="/_next/image?url=%2Fmedia%2Fa.png&amp;w=3840&amp;q=75" srcSet="/_next/image?url=%2Fmedia%2Fa.png&amp;w=640&amp;q=75 640w, /_next/image?url=%2Fmedia%2Fa.png&amp;w=750&amp;q=75 750w"/>
 <img src='/plain.jpg'></section>
 <section id="gallery"></section><section class="specs" id="specs"></section><section id="offer"></section></main>
-<footer class="site-footer" id="contact"><p class="site-footer__name">Zorbo &amp; Co</p><p>Mail:&nbsp;<a href="mailto:a@b.co">a@b.co</a></p></footer></div></body></html>`;
+<footer class="site-footer"><p class="site-footer__name">Zorbo &amp; Co</p><div class="site-footer__contact" id="contact" data-block="contact"><p>Mail:&nbsp;<a href="mailto:a@b.co">a@b.co</a></p><dialog class="contact-dialog"></dialog></div></footer></div></body></html>`;
 
 describe("parsing", () => {
   it("decodes named, decimal and hexadecimal entities and leaves unknown ones", () => {
@@ -98,7 +99,9 @@ describe("parsing", () => {
     const html = renderToStaticMarkup(<ProductLayout site={site} />);
     const order = blockOrder(html);
     expect(order.length).toBeGreaterThan(2);
-    for (const id of order) expect(sectionIds(html), id).toContain(id);
+    for (const id of order.filter((i) => i !== "contact")) expect(sectionIds(html), id).toContain(id);
+    expect(order).toContain("contact"); // listed, but it is the footer's row, not a section
+    expect(contactRow(html)).toBe(true);
     expect(footerText(html)).toContain(site.seller.displayName);
     expect(imageRefs(html).length).toBeGreaterThan(0);
   });
@@ -195,8 +198,8 @@ describe("verifyDeploy", () => {
 // ---- the language routes ------------------------------------------------------------------------------------------
 
 const alt = (langs: string[], def: string) => langs.map((l) => `<link rel="alternate" hrefLang="${l}" href="/${l}"/>`).join("") + `<link rel="alternate" hrefLang="x-default" href="/${def}"/>`;
-const langPage = (lang: string, over: { lang?: string; links?: string; canonical?: string; title?: string } = {}) =>
-  PAGE.replace('<html lang="de"', `<html lang="${over.lang ?? lang}"`).replace("<title>T</title>", `<title>${over.title ?? "T"}</title>${over.links ?? alt(["de", "en"], "de")}<link rel="canonical" href="${over.canonical ?? `/${lang}`}"/>`);
+const langPage = (lang: string, over: { lang?: string; links?: string; canonical?: string; title?: string; noContact?: boolean } = {}) =>
+  (over.noContact ? PAGE.replace('id="contact"', 'id="elsewhere"') : PAGE).replace('<html lang="de"', `<html lang="${over.lang ?? lang}"`).replace("<title>T</title>", `<title>${over.title ?? "T"}</title>${over.links ?? alt(["de", "en"], "de")}<link rel="canonical" href="${over.canonical ?? `/${lang}`}"/>`);
 const NOINDEX = { "x-robots-tag": "noindex" };
 const TWO: Record<string, Route> = {
   ...GOOD,
@@ -214,9 +217,9 @@ const redirectingFetch = (routes: Record<string, Route>, location: string | null
 const runLang = async (routes: Record<string, Route>, f = redirectingFetch(routes), exp = multi) => verifyDeploy({ url: "https://site.example/", expected: exp, fetchImpl: f });
 
 describe("verifyDeploy: the language routes", () => {
-  it("adds a redirect check and one check per language when the seller has languages", async () => {
+  it("adds a redirect check, one check per language and one contact check when the seller has languages", async () => {
     const r = await runLang(TWO);
-    expect(r.map((x) => x.name).slice(8)).toEqual(['"/" redirects to "/de"', 'GET /de is 200, html lang is "de", hreflang links present', 'GET /en is 200, html lang is "en", hreflang links present']);
+    expect(r.map((x) => x.name).slice(8)).toEqual(['"/" redirects to "/de"', 'GET /de is 200, html lang is "de", hreflang links present', 'GET /en is 200, html lang is "en", hreflang links present', "the contact row (#contact) exists on every language route, holds no form and has the e-mail link"]);
     expect(failing(r)).toEqual([]);
   });
 
@@ -245,6 +248,33 @@ describe("verifyDeploy: the language routes", () => {
     const reasons = (await runLang({ ...TWO, "/en": { body: langPage("en", { lang: "de", links: "" }), headers: NOINDEX } })).find((x) => !x.ok)!.reason;
     expect(reasons).toContain('html lang is "de"');
     expect(reasons).toContain("no hreflang link for: de, en, x-default");
+  });
+
+  const CONTACT = "the contact row (#contact) exists on every language route, holds no form and has the e-mail link";
+
+  it("fails the contact check when the contact element holds a form (the form belongs in the dialog)", async () => {
+    const withForm = langPage("en").replace('data-block="contact">', 'data-block="contact"><form><input name="name"></form>');
+    expect(failing(await runLang({ ...TWO, "/en": { body: withForm, headers: NOINDEX } }))).toEqual([CONTACT]);
+  });
+
+  it("fails the contact check when the footer row has no e-mail link", async () => {
+    const noMail = langPage("en").replace('<a href="mailto:a@b.co">a@b.co</a>', "a@b.co");
+    const r = await runLang({ ...TWO, "/en": { body: noMail, headers: NOINDEX } });
+    expect(failing(r)).toEqual([CONTACT]);
+  });
+
+  it("finds the e-mail link and the form only inside the contact element (nested tags of the same kind are matched)", () => {
+    expect(contactRow('<div id="contact"><div><a href="MAILTO:a@b.co">a</a></div><div></div></div><form></form>')).toBe(true); // the form is outside
+    expect(contactRow('<div id="contact"><div><a href="mailto:a@b.co">a</a></div><div><input></div></div>')).toBe(false);
+    expect(contactRow('<footer><a href="mailto:a@b.co">a</a></footer><div id="contact"></div>')).toBe(false); // the link is outside
+    expect(contactRow("<p>nothing</p>")).toBe(false);
+  });
+
+  it("fails the contact check, naming the routes, when a language route has no #contact element", async () => {
+    const r = await runLang({ ...TWO, "/en": { body: langPage("en", { noContact: true }), headers: NOINDEX } });
+    expect(failing(r)).toEqual([CONTACT]);
+    expect(r.find((x) => !x.ok)!.reason).toBe("no form-free #contact with the e-mail link on: /en");
+    expect(failing(await runLang({ ...TWO, "/de": { status: 404 }, "/en": { body: langPage("en", { noContact: true }), headers: NOINDEX } }))).toContain(CONTACT);
   });
 
   it("checks the title in each language when the command passes it", async () => {

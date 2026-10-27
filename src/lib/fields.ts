@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { RequestType } from "./request-types";
 import { BLOCK_IDS, localizedSchema, type BlockId, type Localized } from "./schema";
 
 /**
@@ -61,6 +62,8 @@ export type ProductTypeFields = {
   /** Key inside product.details for this type's extra data, or null when the type has none. */
   detailsKey: string | null;
   detailsFields: readonly FieldDescriptor[];
+  /** The kinds of request the contact form offers for this type (see request-types.ts); must include the default, "question". */
+  requestTypes: readonly RequestType[];
 };
 
 /** The block order for a product that has no "blocks": the type's own, or the one list of block ids. */

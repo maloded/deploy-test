@@ -1137,6 +1137,309 @@ img {
 }
 
 /* footer */
+/* contact: the footer's contact row is the target of every #contact link; the form lives in a native modal dialog.
+   Colours, radius and spacing come from the theme. */
+.site-footer__contact {
+  scroll-margin-top: var(--space-6);
+}
+
+.contact__note,
+.contact__count,
+.contact__optional {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.contact__field--type {
+  margin-top: var(--space-3);
+}
+
+.contact__slots {
+  min-width: 0;
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.contact__slots legend {
+  padding-inline: var(--space-2);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.contact__viewing {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-1) var(--space-3);
+  margin: 0 0 var(--space-3);
+}
+
+.contact__viewing dt {
+  color: var(--muted);
+}
+
+.contact__viewing dd {
+  margin: 0;
+}
+
+/* narrow dialog: date, time and the remove button stack; side by side from 40em */
+.contact__slot {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2) var(--space-3);
+  align-items: end;
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+@media (min-width: 40em) {
+  .contact__slot {
+    grid-template-columns: 1fr 1fr auto;
+    margin-top: var(--space-3);
+    padding-top: 0;
+    border-top: 0;
+  }
+}
+
+.contact__slot .contact__error {
+  grid-column: 1 / -1;
+}
+
+.contact__slot-remove {
+  justify-self: start;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.contact__slot-add {
+  margin-top: var(--space-3);
+  cursor: pointer;
+}
+
+.contact__grid {
+  display: grid;
+  gap: var(--space-3);
+  margin-block: var(--space-3);
+}
+
+/* two columns for name and e-mail, three for phone, channel and best time, one for the message */
+@media (min-width: 40em) {
+  .contact__grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .contact__grid > .contact__field {
+    grid-column: span 3;
+  }
+
+  .contact__grid > .contact__field--third {
+    grid-column: span 2;
+    justify-content: flex-end; /* a label that wraps (German) must not push its input out of line with the others */
+  }
+
+  .contact__grid > .contact__field--wide {
+    grid-column: 1 / -1;
+  }
+}
+
+/* the message label and its character counter share one row */
+.contact__label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.contact__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.contact__field label,
+.contact__consent label {
+  font-size: 0.95rem;
+}
+
+.contact__field input,
+.contact__field select,
+.contact__field textarea {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control, var(--radius));
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.contact__field textarea {
+  resize: vertical;
+}
+
+.contact__field [aria-invalid="true"],
+.contact__consent [aria-invalid="true"] {
+  border: 2px solid var(--accent-line, var(--accent));
+  outline-offset: 2px;
+}
+
+.contact__error {
+  padding-inline-start: var(--space-2);
+  border-inline-start: 3px solid var(--accent-line, var(--accent));
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.contact__summary {
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid var(--accent-line, var(--accent));
+  border-radius: var(--radius);
+}
+
+.contact__summary-title {
+  font-weight: 600;
+}
+
+.contact__summary ul {
+  margin: var(--space-2) 0 0;
+  padding-inline-start: var(--space-4);
+}
+
+.contact__consent {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-1) var(--space-2);
+  align-items: start;
+  margin-bottom: var(--space-4);
+}
+
+.contact__consent input {
+  margin-top: 0.3rem;
+}
+
+.contact__consent .contact__error {
+  grid-column: 2;
+}
+
+/* the honeypot is off screen (not display: none, which some bots skip) */
+.contact__hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.contact__prototype {
+  margin-bottom: var(--space-3);
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+.contact__form button[type="submit"] {
+  cursor: pointer;
+}
+
+.contact__form button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.contact__success {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--accent-line, var(--accent));
+  border-radius: var(--radius);
+}
+
+.contact__success-title {
+  margin-bottom: var(--space-2);
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+}
+
+.contact__success .button {
+  margin-top: var(--space-3);
+}
+
+.contact-dialog {
+  width: min(40rem, calc(100vw - 2 * var(--space-3)));
+  max-height: calc(100dvh - 2 * var(--space-3)); /* never taller than the window; margin: auto centres it */
+  margin: auto;
+  padding: 0;
+  overflow: hidden; /* clips the content to the rounded box; only .contact-dialog__body scrolls */
+  border: 1px solid var(--border);
+  border-radius: var(--radius-dialog, var(--radius));
+  background: var(--bg);
+  color: var(--text);
+}
+
+.contact-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+/* all content sits in this box, so a click on the dialog element itself can only be a click on the backdrop */
+.contact-dialog__box {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* the title row never scrolls away: it is outside the scrolling body, a fixed first row of the box */
+.contact-dialog__bar {
+  display: flex;
+  flex: none;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4) var(--space-2);
+}
+
+/* the only scroll area: thin scrollbar in theme colours, and the page behind does not scroll with it */
+.contact-dialog__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 var(--space-4) var(--space-4);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) var(--bg);
+}
+
+.contact-dialog::backdrop {
+  background: color-mix(in srgb, var(--text, currentColor) 55%, transparent);
+}
+
+.contact-dialog__title {
+  font-size: 1.6rem;
+}
+
+.contact-dialog__close {
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
 .site-footer {
   padding-block: var(--space-5);
   border-top: 1px solid var(--border);

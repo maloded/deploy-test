@@ -13,3 +13,6 @@ content/**/media/
 content/**/media-web/
 # private: sensitive strings that must never appear in the repository (see tests/content-scan.test.ts)
 .private/
+
+# visitor data (contact form leads, file store)
+data/leads/

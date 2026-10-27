@@ -129,7 +129,7 @@ describe("video block", () => {
     const site = withVideo(YT);
     const Layout = await loadLayout("car");
     const out = html(<Layout site={site} />);
-    expect(out).toContain('data-block-order="hero gallery video specs offer faq"');
+    expect(out).toContain('data-block-order="hero gallery video specs offer faq contact"');
     expect(out.indexOf('id="gallery"')).toBeLessThan(out.indexOf('id="video"'));
     expect(out.indexOf('id="video"')).toBeLessThan(out.indexOf('id="specs"'));
     expect(out).not.toContain("<iframe");

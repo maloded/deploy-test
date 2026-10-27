@@ -8,6 +8,7 @@ import { validateSeller } from "@/lib/seller";
 import { productTypes } from "@/product-types";
 import { offerTypes } from "@/offer-types";
 import { UI_KEYS, uiEntry } from "@/lib/ui-strings";
+import { REQUEST_TYPES } from "@/lib/request-types";
 import { SELLER_FIELDS } from "@/lib/seller";
 import type { FieldDescriptor, SpecField, SpecGroup } from "@/lib/fields";
 import { sampleJson } from "./helpers";
@@ -56,6 +57,7 @@ describe("every registry language is complete", () => {
       fieldList(`${id} details`, o.detailsFields as readonly FieldDescriptor[]);
     }
     SELLER_FIELDS.forEach((f) => labels(`seller ${f.key}`, f.label as L, all));
+    for (const [id, r] of Object.entries(REQUEST_TYPES)) labels(`request type ${id}`, r.label as L, all);
     expect(all.length).toBeGreaterThan(20);
     for (const lang of LANGUAGES) for (const [what, l] of all) expect(l?.[lang], `${what}.${lang}`).toBeTruthy();
   });

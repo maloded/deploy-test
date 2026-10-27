@@ -29,4 +29,5 @@ export const fields = {
   heroHighlights: ["movement", "caseDiameter", "strap"],
   detailsKey: "provenance",
   detailsFields: provenanceFields,
+  requestTypes: ["viewing", "question", "offer"],
 } as const satisfies ProductTypeFields;

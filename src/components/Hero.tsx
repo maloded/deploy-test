@@ -5,6 +5,7 @@ import { formatPrice, pick } from "@/lib/i18n";
 import { ui } from "@/lib/ui-strings";
 import { getOfferType } from "@/offer-types";
 import type { Site } from "./blocks";
+import { presetFor } from "./request-presets";
 
 /**
  * Hero, one section. On wide, tall windows it is exactly one screen with three zones: the TITLE ZONE (eyebrow and
@@ -84,7 +85,7 @@ export function Hero({ site }: { site: Site }) {
                 {note && <span className="hero__note">{pick(note, lang)}</span>}
               </p>
               <div className="hero__actions">
-                <a className="button" href="#contact">
+                <a className="button" href="#contact" data-request-type={presetFor("hero", site)}>
                   {ui("hero.cta", lang)}
                 </a>
                 <a className="button button--outline" href="#specs">

@@ -83,11 +83,13 @@ describe.skipIf(!hasRealContent)("the vw-multivan sample is a sale in German and
     expect(faq).toMatch(/free of encumbrance/);
   });
 
-  it("uses the contact placeholder and a draft consent text that mentions #privacy", () => {
+  it("uses the contact placeholder and a draft consent text that mentions the privacy notice in words (no literal anchor)", () => {
     const s = content.sellerJson();
     expect(s.contact.email).toBe("contact@example.invalid");
     for (const lang of ["de", "en"]) expect(s.consentText[lang]).toContain(`${s.displayName} `); // names the seller
-    for (const lang of ["de", "en"]) expect(s.consentText[lang]).toContain("#privacy");
+    expect(s.consentText.de).toMatch(/Datenschutzerklärung/);
+    expect(s.consentText.en).toMatch(/privacy notice/);
+    for (const lang of ["de", "en"]) expect(s.consentText[lang]).not.toContain("#privacy"); // the privacy link is added by the page when the seller has a privacyUrl
   });
 
   it("shows only the brand in the footer", () => {

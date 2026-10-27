@@ -16,6 +16,7 @@
     "test": "vitest run",
     "images": "node scripts/run.mjs scripts/make-web-images.mjs",
     "images:export": "node scripts/run.mjs scripts/export-media-web.mjs",
+    "leads:purge": "node scripts/run.mjs scripts/leads-purge.mjs",
     "export:template": "node scripts/run.mjs scripts/export-template.mjs",
     "verify:deploy": "node scripts/run.mjs scripts/verify-deploy.mjs",
     "snapshot": "node scripts/run.mjs scripts/make-demo-snapshot.mjs"

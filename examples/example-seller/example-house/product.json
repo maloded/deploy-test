@@ -75,5 +75,24 @@
         "de": "Beispiel: Besichtigung nach Vereinbarung"
       }
     ]
+  },
+  "viewing": {
+    "address": {
+      "en": "Example Street 1, 1010 Example Town (fake address, example.invalid)",
+      "de": "Beispielstraße 1, 1010 Beispielstadt (erfundene Adresse, example.invalid)"
+    },
+    "days": [
+      "tue",
+      "thu",
+      "sat"
+    ],
+    "from": "10:00",
+    "to": "16:00",
+    "durationMinutes": 60,
+    "timezone": "Europe/Vienna",
+    "notes": {
+      "en": "Please bring a photo ID. (fake example)",
+      "de": "Bitte bringen Sie einen Lichtbildausweis mit. (erfundenes Beispiel)"
+    }
   }
 }

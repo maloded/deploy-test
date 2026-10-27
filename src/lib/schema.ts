@@ -2,15 +2,15 @@ import { z } from "zod";
 import type { SellerContact } from "./seller";
 import { isLanguage, unsupportedLanguageMessage, type Language } from "./languages";
 import { parseVideo } from "./video";
+import { checkViewing, DAYS, MAX_DURATION, MIN_DURATION, isTime, isTimeZone, type ViewingSettings } from "./viewing";
 
 export { LANGUAGES, type Language } from "./languages";
 
 /**
- * The ONE list of block ids, in the default page order. The value says whether a component renders the block:
- * "contact" is valid in product.json but renders nothing until the contact block exists. The implemented set and
- * the default order of every product type are derived from this (see defaultBlocksFor in fields.ts).
+ * The ONE list of block ids, in the default page order. The value says whether a component renders the block. The
+ * implemented set and the default order of every product type are derived from this (see defaultBlocksFor in fields.ts).
  */
-export const BLOCKS = { hero: true, gallery: true, video: true, specs: true, offer: true, faq: true, contact: false } as const;
+export const BLOCKS = { hero: true, gallery: true, video: true, specs: true, offer: true, faq: true, contact: true } as const;
 
 export type BlockId = keyof typeof BLOCKS;
 export const BLOCK_IDS = Object.keys(BLOCKS) as [BlockId, ...BlockId[]];
@@ -33,6 +33,26 @@ export const localizedSchema = z
   })
   .transform((value) => value as Partial<Record<Language, string>>);
 export type Localized = Partial<Record<Language, string>>;
+
+/**
+ * Viewing settings (seller.json: the default; product.json: the override, merged field by field). Every field is
+ * optional here; the merged result must be complete (the loader checks it). Formats and ranges are checked with
+ * checkViewing (viewing.ts), the same function a test or a tool can call on plain data.
+ */
+export const viewingSchema = z
+  .object({
+    address: localizedSchema.optional(),
+    days: z.array(z.enum(DAYS)).optional(),
+    from: z.string().refine(isTime, 'must be a time like "10:00"').optional(),
+    to: z.string().refine(isTime, 'must be a time like "17:00"').optional(),
+    durationMinutes: z.number().int().min(MIN_DURATION).max(MAX_DURATION).optional(),
+    timezone: z.string().refine(isTimeZone, 'must be an IANA time zone such as "Europe/Vienna"').optional(),
+    notes: localizedSchema.optional(),
+  })
+  .strict()
+  .superRefine((v, ctx) => {
+    for (const message of checkViewing(v as ViewingSettings)) ctx.addIssue({ code: "custom", path: [message.split(":")[0]], message: message.slice(message.indexOf(":") + 2) });
+  });
 
 /** Focus point of a photo, as fractions of its width and height. Used as CSS object-position when cropping. */
 export const focusSchema = z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) }).strict();
@@ -69,6 +89,8 @@ export const baseShape = {
   offerType: z.string().min(1),
   /** Optional override of the seller's default theme (seller.json "theme"). */
   theme: z.string().min(1).optional(),
+  /** Optional viewing settings that override the seller's (see viewingSchema). */
+  viewing: viewingSchema.optional(),
   title: localizedSchema,
   tagline: localizedSchema,
   price: priceSchema,

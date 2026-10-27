@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { BLOCKS, type BlockId } from "@/lib/schema";
 import type { buildSite } from "@/lib/site";
 import { OFFER_VARIANTS, getOfferType, type OfferVariant } from "@/offer-types";
+import { Contact } from "./Contact";
 import { Faq } from "./Faq";
 import { Gallery } from "./Gallery";
 import { galleryProps } from "./gallery-props";
@@ -47,6 +48,8 @@ export function renderBlock(id: BlockId, site: Site): ReactNode {
       return <Offer key={id} site={site} variant={offerVariant(site)} />;
     case "faq":
       return <Faq key={id} site={site} />;
+    case "contact":
+      return <Contact key={id} site={site} />;
     default:
       return null;
   }

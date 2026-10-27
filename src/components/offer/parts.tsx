@@ -4,6 +4,7 @@ import { formatFieldValue, formatPrice, pick } from "@/lib/i18n";
 import { ui } from "@/lib/ui-strings";
 import { getOfferType } from "@/offer-types";
 import type { Site } from "../blocks";
+import { presetFor } from "../request-presets";
 
 /**
  * Common frame of every offer variant: label, large price, price note, optional details, one primary
@@ -21,6 +22,7 @@ export function OfferShell({
   const { product } = site;
   const { lang } = site;
   const { amount, currency, per, note } = product.price;
+  const offerPreset = presetFor("offer", site); // "offer", or "question" when the product does not offer offers
   return (
     <section className="offer" id="offer" data-block="offer" aria-label={ui("section.offer", lang)}>
       <div className="offer__inner container">
@@ -31,8 +33,8 @@ export function OfferShell({
             <p className="offer__price">{formatPrice(amount, currency, per, lang)}</p>
             {note && <p className="offer__note">{pick(note, lang)}</p>}
             <p className="offer__action">
-              <a className="button" href="#contact">
-                {ui("offer.cta", lang)}
+              <a className="button" href="#contact" data-request-type={offerPreset}>
+                {ui(offerPreset === "offer" ? "offer.cta.offer" : "offer.cta", lang)}
               </a>
             </p>
           </div>

@@ -37,6 +37,30 @@ export function blockOrder(html) {
   return m ? m[1].split(/\s+/).filter(Boolean) : [];
 }
 
+/**
+ * Whether the page has an element with id="contact" (the footer's contact row), that element holds no form field, and
+ * it holds the seller's mailto link. The form exists only in the dialog, which the browser adds after the page has
+ * loaded, so the static HTML has the row with its links, never a form.
+ */
+export function contactRow(html) {
+  const open = [...html.matchAll(/<([a-z][a-z0-9]*)\b[^>]*>/gi)].find((m) => attr(m[0], "id") === "contact");
+  if (!open) return false;
+  const tag = open[1].toLowerCase();
+  let depth = 1;
+  let end = html.length;
+  const re = new RegExp(`<(/?)${tag}\\b[^>]*>`, "gi");
+  re.lastIndex = open.index + open[0].length;
+  for (let m = re.exec(html); m; m = re.exec(html)) {
+    depth += m[1] ? -1 : 1;
+    if (depth === 0) {
+      end = m.index;
+      break;
+    }
+  }
+  const body = html.slice(open.index, end);
+  return !/<(form|input|select|textarea)\b/i.test(body) && /<a\b[^>]*\shref\s*=\s*["']mailto:/i.test(body);
+}
+
 /** The ids of all <section> elements. */
 export function sectionIds(html) {
   return [...html.matchAll(/<section\b[^>]*>/gi)].map((m) => attr(m[0], "id")).filter(Boolean);
@@ -102,7 +126,7 @@ export const pageText = (html) => squash(decodeEntities(html));
  * @param {{ url: string, expected?: { title: string, displayName: string, languages?: string[], defaultLanguage?: string, titles?: Record<string, string> } | null, expectedProblem?: string, auth?: string, fetchImpl?: typeof fetch }} options
  * `expected` is read from the local content root by the command (title in the default language, seller's displayName;
  * and the seller's languages, default language and the title per language). With `languages` and `defaultLanguage`
- * the language routes are checked too: "/" redirects to "/<default>" and every "/<lang>" is a page in that language.
+ * the language routes are checked too: "/" redirects to "/<default>", every "/<lang>" is a page in that language, and each has the footer's contact row.
  * @returns {Promise<{ name: string, ok: boolean, reason: string }[]>}
  */
 export async function verifyDeploy({ url, expected = null, expectedProblem, auth, fetchImpl = fetch }) {
@@ -142,7 +166,8 @@ export async function verifyDeploy({ url, expected = null, expectedProblem, auth
 
   const order = blockOrder(html);
   const ids = new Set(sectionIds(html));
-  const missing = order.filter((id) => !ids.has(id));
+  // "contact" is the footer's contact row, not a <section>: it has its own check below
+  const missing = order.filter((id) => id !== "contact" && !ids.has(id));
   record("every block in data-block-order has a <section>", order.length > 0 && missing.length === 0, order.length === 0 ? "data-block-order is missing or empty" : missing.length ? `no <section id> for: ${missing.join(", ")}` : "");
 
   const urls = new Set();
@@ -187,11 +212,13 @@ async function verifyLanguages({ base, expected, get, getManual, record, guard }
     record(redirectName, ok, ok ? "" : r.status < 300 || r.status > 399 ? `status ${r.status} (no redirect)` : `redirects to ${target ? target.pathname : "(no location)"}`);
   });
 
+  const noContact = [];
   for (const lang of languages) {
     const name = `GET /${lang} is 200, html lang is "${lang}", hreflang links present`;
     await guard(name, async () => {
       const r = await get(new URL(`/${lang}`, base).href);
       const html = await r.text();
+      if (r.status === 200 && !contactRow(html)) noContact.push(lang);
       const problems = [];
       if (r.status !== 200) problems.push(`status ${r.status}`);
       else {
@@ -208,4 +235,7 @@ async function verifyLanguages({ base, expected, get, getManual, record, guard }
       record(name, problems.length === 0, problems.join("; "));
     });
   }
+
+  const contactName = "the contact row (#contact) exists on every language route, holds no form and has the e-mail link";
+  record(contactName, noContact.length === 0 && languages.length > 0, noContact.length ? `no form-free #contact with the e-mail link on: ${noContact.map((l) => `/${l}`).join(", ")}` : "");
 }

@@ -114,7 +114,7 @@ describe("/ redirects to the default language", () => {
   });
 
   it("next.config hands the seller's default language to the proxy", () => {
-    expect(nextConfig.env).toEqual(rootRedirectEnv());
+    expect(nextConfig.env).toMatchObject(rootRedirectEnv()); // next to the lead API's LEAD_CONTEXT
     const dir = sellerRoot((s) => {
       s.languages = ["de", "en"];
       s.defaultLanguage = "de";

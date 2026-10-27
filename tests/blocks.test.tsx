@@ -63,23 +63,27 @@ describe("car layout", () => {
     const site = siteFor("fixture-car", null);
     const noBlocks = { ...site, blocks: [...defaultBlocksFor(site.typeFields)] };
     // video is a default block but this product has no video, so it drops out
-    expect(renderedBlocks(noBlocks)).toEqual(["hero", "gallery", "specs", "offer", "faq"]);
+    expect(renderedBlocks(noBlocks)).toEqual(["hero", "gallery", "specs", "offer", "faq", "contact"]);
   });
 
   it("publishes the rendered block order and one anchored section per block", async () => {
     const out = await page(siteFor("fixture-car", null));
-    expect(out).toContain('data-block-order="hero gallery specs offer faq"');
+    expect(out).toContain('data-block-order="hero gallery specs offer faq contact"');
     for (const id of ["hero", "gallery", "specs", "offer", "faq"]) {
       expect(out).toMatch(new RegExp(`<section[^>]*id="${id}"[^>]*data-block="${id}"[^>]*aria-label="[^"]+"`));
     }
+    // "contact" is listed in the order, but it is the footer's contact row: an element with the id, not a section
+    expect(out).toMatch(/<footer[\s\S]*<div class="site-footer__contact" id="contact" data-block="contact">/);
+    expect(out).not.toMatch(/<section[^>]*id="contact"/);
   });
 
-  it("renders no video block without media.video, and exactly one #contact target (the footer, until step 4)", async () => {
+  it("renders no video block without media.video, and exactly one #contact target (the footer's contact row)", async () => {
     const out = await page(siteFor("fixture-car", null));
     expect(out).toContain('id="gallery"');
     expect(out).not.toContain('id="video"');
     expect(out.match(/id="contact"/g)).toHaveLength(1);
-    expect(out).toMatch(/<footer[^>]*id="contact"/);
+    expect(out).toMatch(/<div class="site-footer__contact" id="contact" data-block="contact"/);
+    expect(out).not.toMatch(/<footer[^>]*id=/);
     expect(out).toContain('href="#contact"');
   });
 
@@ -207,7 +211,7 @@ describe("hero layout", () => {
     const aside = /<div class="hero__intro-aside">([\s\S]*?)<\/div><\/div><\/div>/.exec(intro)?.[1] ?? "";
     expect(aside).toContain('<span class="hero__amount">€589 / month</span>');
     expect(aside).toContain('<span class="hero__note">Example price. All numbers');
-    const buttons = [...aside.matchAll(/<a class="(button[^"]*)" href="([^"]+)">([^<]+)<\/a>/g)].map((m) => ({ cls: m[1], href: m[2], text: m[3] }));
+    const buttons = [...aside.matchAll(/<a class="(button[^"]*)" href="([^"]+)"(?: data-request-type="[a-z_]+")?>([^<]+)<\/a>/g)].map((m) => ({ cls: m[1], href: m[2], text: m[3] }));
     expect(buttons).toEqual([
       { cls: "button", href: "#contact", text: "Request details" },
       { cls: "button button--outline", href: "#specs", text: "View specifications" },
@@ -519,10 +523,10 @@ describe("faq", () => {
 });
 
 describe("footer", () => {
-  it("has the product name, a mailto link, a legal line and a #privacy link", () => {
+  it("has the product name, a mailto link and a legal line, and no privacy link until the seller has one", () => {
     const out = html(<Footer site={siteFor("fixture-car", null)} />);
     expect(out).toContain('href="mailto:example@example.com"');
-    expect(out).toContain('href="#privacy"');
+    expect(out).not.toContain("#privacy");
     expect(out).toContain("does not constitute a binding offer");
   });
 });

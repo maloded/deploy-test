@@ -36,6 +36,8 @@
   --accent-contrast: #0b0f17;
   --border: #2a3345;
   --radius: 2px;
+  --radius-dialog: 0.75rem; /* optional: the contact dialog box */
+  --radius-control: 0.375rem; /* optional: text, e-mail and phone inputs, selects, the textarea, the date and time fields (never buttons) */
   --font-heading: "Cormorant Garamond", Georgia, "Times New Roman", serif;
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --base-size: 17px;
