@@ -1540,6 +1540,37 @@ img {
   min-height: 3.5rem;
 }
 
+/* placement "header": label and pill in the header's right group; the slot has a fixed height (no jump when the widget mounts) */
+.site-header__agent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1) var(--space-2);
+}
+
+/* one screen and up: the header is exactly --header-h (the hero below subtracts it) */
+@media (min-width: 56em) {
+  .site-header--agent {
+    height: var(--header-h, 4.25rem);
+  }
+
+  .site-header--agent .site-header__inner {
+    padding-block: 0;
+  }
+}
+
+.site-header__ask {
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.site-header__widget {
+  display: flex;
+  align-items: center;
+  min-height: 3.75rem;
+}
+
 /* placement "top": a slim strip in normal flow between the header and the hero (not fixed, not sticky) */
 .agent-strip--top {
   border-top: 0;

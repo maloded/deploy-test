@@ -47,6 +47,7 @@ const STRINGS = {
   "agent.heading": { en: "Talk to our voice assistant", de: "Sprechen Sie mit unserem Sprachassistenten" },
   "agent.start": { en: "Start call", de: "Gespräch starten" },
   "agent.top": { en: "Questions? Talk to our assistant.", de: "Fragen? Sprechen Sie mit unserem Assistenten." },
+  "agent.ask": { en: "Questions?", de: "Fragen?" },
   "agent.pill": { en: "Talk to our assistant", de: "Mit unserem Assistenten sprechen" },
   "agent.end": { en: "End call", de: "Gespräch beenden" },
   "agent.connecting": { en: "Connecting...", de: "Verbindung wird aufgebaut..." },

@@ -22,24 +22,28 @@ export type SellerContact = z.infer<typeof sellerContactSchema>;
  * has this object. `id` is the agent's embed id, so it belongs in the seller's own content folder, never in this repository.
  */
 export const AGENT_VARIANTS = ["inline", "pill", "floating"] as const;
-export const AGENT_PLACEMENTS = ["top", "bottom"] as const;
+export const AGENT_PLACEMENTS = ["header", "top", "bottom"] as const;
 export const DEFAULT_VOICE_SERVICE_URL = "https://voice.hanc.ai";
 export const sellerAgentSchema = z
   .object({
     id: z.string().regex(/^[A-Za-z0-9_-]{1,100}$/, "letters, digits, - and _ only"),
     /**
      * "inline": the large orb widget. "pill": the compact pill (orb and button in one row). "floating": a pill fixed in a corner,
-     * no strip. Left out: "pill" with placement "top", "inline" otherwise.
+     * no strip. Left out: "pill" with placement "top" or "header", "inline" otherwise.
      */
     variant: z.enum(AGENT_VARIANTS).optional(),
-    /** Where the assistant strip is: "bottom" above the footer (default), or "top" right below the header. "floating" ignores it. */
+    /**
+     * Where the assistant is: "bottom" the strip above the footer (default), "top" a slim strip right below the header, or
+     * "header" in the header itself (the pill, in place of the header's button; "inline" there behaves as "bottom").
+     * "floating" ignores it.
+     */
     placement: z.enum(AGENT_PLACEMENTS).default("bottom"),
     /** The widget's own theme name (optional; its default theme otherwise). */
     theme: z.string().regex(/^[a-z0-9-]{1,40}$/).optional(),
     voiceServiceUrl: z.url({ protocol: /^https$/ }).default(DEFAULT_VOICE_SERVICE_URL),
   })
   .strict()
-  .transform((agent) => ({ ...agent, variant: agent.variant ?? (agent.placement === "top" ? ("pill" as const) : ("inline" as const)) }));
+  .transform((agent) => ({ ...agent, variant: agent.variant ?? (agent.placement === "bottom" ? ("inline" as const) : ("pill" as const)) }));
 export type SellerAgent = z.infer<typeof sellerAgentSchema>;
 
 export const sellerShape = {

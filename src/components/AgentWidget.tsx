@@ -14,7 +14,7 @@ import { ui } from "@/lib/ui-strings";
  * from a CDN), so the prerendered HTML holds only the heading of the inline strip.
  *
  * Elements (hanc-webrtc-widgets 2.11.0): inline = <hanc-ai-inline-call>, pill = <hanc-ai-pill-call>, floating = <hanc-ai-pill-floating-call>.
- * placement "top": a slim strip below the header; "bottom" (default): the strip above the footer.
+ * placement "header": the pill in the header; "top": a slim strip below the header; "bottom" (default): the strip above the footer.
  */
 export function AgentWidget({ agent, lang, product }: { agent: SellerAgent; lang: Language; product: string }) {
   const [ready, setReady] = useState(false);
@@ -56,6 +56,10 @@ export function AgentWidget({ agent, lang, product }: { agent: SellerAgent; lang
       ? createElement("hanc-ai-pill-call", { ...common, "button-start-text": ui("agent.pill", lang), "button-end-text": ui("agent.end", lang), "orb-size": "36" })
       : createElement("hanc-ai-inline-call", top ? { ...common, size: "100", "container-padding": "8" } : { ...common, size: "220", "container-padding": "20" }));
 
+  if (agent.placement === "header" && agent.variant === "pill") {
+    // in the header (rendered by Header): just the widget in a slot of fixed height, so mounting it moves nothing
+    return <div className="site-header__widget">{widget}</div>;
+  }
   if (top) {
     // right below the header, in normal flow: the hero's height accounts for it (--agent-top-h, set by ProductLayout)
     return (

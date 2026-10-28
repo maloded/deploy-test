@@ -65,6 +65,7 @@ describe("agent object in seller.json", () => {
     expect(placement).toMatch(/^agent\.placement/m);
     expect(placement).toContain('"top"');
     expect(placement).toContain('"bottom"');
+    expect(placement).toContain('"header"');
     const variant = issues({ id: ID, variant: "banner" }).join("\n");
     for (const v of ["inline", "pill", "floating"]) expect(variant).toContain(`"${v}"`);
   });
@@ -115,6 +116,52 @@ describe("widget mounting", () => {
     expect(main).toBeLessThan(strip);
     expect(strip).toBeLessThan(footer);
     expect(html).toContain(ui("agent.heading", "en"));
+  });
+
+  it("placement header: accepted, and the pill is the default variant", () => {
+    expect(parsed({ id: ID, placement: "header" })).toMatchObject({ placement: "header", variant: "pill" });
+    expect(parsed({ id: ID, placement: "header", variant: "inline" })).toMatchObject({ placement: "header", variant: "inline" });
+  });
+
+  it("placement header: no header button and no strip; label and widget are inside the header; the form is still reachable through other #contact buttons", async () => {
+    const site = withAgent(parsed({ id: ID, placement: "header" }), "de");
+    const html = renderToStaticMarkup(<ProductLayout site={site} />);
+    const header = /<header[\s\S]*?<\/header>/.exec(html)![0];
+    expect(header).not.toContain("button");
+    expect(header).not.toContain("#contact");
+    expect(header).not.toContain(ui("header.cta", "de"));
+    expect(header).toContain(ui("agent.ask", "de"));
+    expect(header).toContain("site-header__widget");
+    expect(html).not.toContain("agent-strip");
+    expect(html).toContain("--header-h:5.5rem");
+    expect(header.indexOf("lang-switch")).toBeLessThan(header.indexOf(ui("agent.ask", "de"))); // order: language, label, widget
+    expect(header.indexOf(ui("agent.ask", "de"))).toBeLessThan(header.indexOf("site-header__widget"));
+    const outside = html.replace(header, "");
+    expect(outside).toMatch(/<a [^>]*href="#contact"/); // the hero and offer buttons stay
+    await mount(site);
+    const el = box!.querySelector("header hanc-ai-pill-call")!;
+    expect(el.getAttribute("agent-id")).toBe(ID);
+    expect(box!.querySelector("header a[href='#contact']")).toBeNull();
+    expect(box!.querySelectorAll("a[href='#contact']").length).toBeGreaterThan(0);
+  });
+
+  it("the header keeps its button without the header placement, and with the header placement for inline (bottom strip) and floating", () => {
+    const cta = ui("header.cta", "en");
+    const html = (agent: Record<string, unknown>) => renderToStaticMarkup(<ProductLayout site={withAgent(parsed(agent))} />);
+    for (const agent of [{ id: ID }, { id: ID, placement: "top" }, { id: ID, placement: "header", variant: "inline" }, { id: ID, placement: "header", variant: "floating" }]) {
+      const h = html(agent);
+      expect(/<header[\s\S]*?<\/header>/.exec(h)![0], JSON.stringify(agent)).toContain(cta);
+      expect(h).not.toContain("--header-h");
+    }
+    expect(html({ id: ID, placement: "header", variant: "inline" })).toContain('class="agent-strip"'); // inline behaves as bottom
+    expect(html({ id: ID, placement: "header", variant: "floating" })).not.toContain("agent-strip");
+  });
+
+  it("the hero follows the header: both use --header-h, and wide windows fix the header's height to it", () => {
+    const css = fs.readFileSync("src/app/globals.css", "utf8");
+    expect(css).toMatch(/min-height: calc\(100svh - var\(--header-h, 4\.25rem\)/);
+    expect(css).toMatch(/\.site-header--agent \{\s*height: var\(--header-h, 4\.25rem\);/);
+    expect(css).toMatch(/\.site-header__widget \{[^}]*min-height: 3\.75rem/);
   });
 
   it("the floating variant ignores placement: no strip, no top space", () => {
