@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { validateLead, type LeadErrors, type LeadField } from "@/lib/lead";
+import { FIELDS, validateLead, type LeadErrors, type LeadField } from "@/lib/lead";
 import { updateFormSnapshot } from "@/lib/form-snapshot";
 import { DEFAULT_REQUEST_TYPE, needsSlots, type RequestType } from "@/lib/request-types";
 import { MAX_SLOTS, slotProblem, type SlotProblem, type ViewingConfig } from "@/lib/viewing";
@@ -70,11 +70,20 @@ export function useContactModel({ lang, viewing, onSubmitted }: { lang: Language
   const sending = useRef(false);
   const tick = useRef(0);
 
+  // After a successful send the form is empty but the snapshot keeps the sent values; it stays frozen until the visitor edits a field.
+  const frozen = useRef(false);
+  /** An edit by the visitor: the outcome of the last send no longer describes the form. */
+  const edited = useCallback(() => {
+    frozen.current = false;
+    updateFormSnapshot({ submit: "none" });
+  }, []);
+
   const set = useCallback((name: keyof Values, value: string | boolean) => {
     if (startedAt.current === null) startedAt.current = Date.now(); // the fill time starts at the first keystroke
+    edited();
     setValues((v) => ({ ...v, [name]: value }));
     setErrors((e) => (name in e ? { ...e, [name]: undefined } : e));
-  }, []);
+  }, [edited]);
 
   /** The pressed button's preset: only the type select changes; what was typed stays, and the fill timer is not started by it. */
   const setPreset = useCallback((type: RequestType) => {
@@ -84,28 +93,37 @@ export function useContactModel({ lang, viewing, onSubmitted }: { lang: Language
 
   const setSlot = useCallback((index: number, part: keyof SlotInput, value: string) => {
     if (startedAt.current === null) startedAt.current = Date.now();
+    edited();
     setValues((v) => ({ ...v, slots: v.slots.map((s, i) => (i === index ? { ...s, [part]: value } : s)) }));
     setSlotErrors((e) => e.map((x, i) => (i === index ? null : x)));
     setErrors((e) => (e.preferredSlots ? { ...e, preferredSlots: undefined } : e));
-  }, []);
+  }, [edited]);
 
-  const addSlot = useCallback(() => setValues((v) => (v.slots.length < MAX_SLOTS ? { ...v, slots: [...v.slots, { date: "", time: "" }] } : v)), []);
+  const addSlot = useCallback(() => {
+    edited();
+    setValues((v) => (v.slots.length < MAX_SLOTS ? { ...v, slots: [...v.slots, { date: "", time: "" }] } : v));
+  }, [edited]);
 
   const removeSlot = useCallback((index: number) => {
+    edited();
     setValues((v) => ({ ...v, slots: v.slots.length > 1 ? v.slots.filter((_, i) => i !== index) : [{ date: "", time: "" }] }));
     setSlotErrors([]);
-  }, []);
+  }, [edited]);
 
   // The snapshot the page can show to the voice assistant (src/lib/form-snapshot.ts): updated on every change, kept after a
   // successful submit and after the dialog closes. The reset after a successful submit is not a change by the visitor.
-  const resetBySubmit = useRef(false);
   useEffect(() => {
-    if (resetBySubmit.current) {
-      resetBySubmit.current = false;
+    if (frozen.current) {
+      updateFormSnapshot({ language: lang });
       return;
     }
     const { wantsSlots, body } = leadBody(values, lang, viewing, 0);
-    const valid = validateLead(body).ok && !(wantsSlots && slotRowErrors(values.slots, viewing!).some(Boolean));
+    // one rule set: validateLead (now listing every blocking field at once) plus slotRowErrors for the slot rows; valid and missing both come from it
+    const checked = validateLead(body);
+    const blocking = new Set<string>(checked.ok ? [] : Object.keys(checked.errors));
+    if (wantsSlots && slotRowErrors(values.slots, viewing!).some(Boolean)) blocking.add("preferredSlots");
+    const valid = blocking.size === 0;
+    const missing = FIELDS.filter((f) => blocking.has(f));
     updateFormSnapshot({
       requestType: values.requestType,
       name: values.name.trim(),
@@ -118,6 +136,7 @@ export function useContactModel({ lang, viewing, onSubmitted }: { lang: Language
       language: lang,
       consentGiven: values.consent,
       valid,
+      missing,
     });
   }, [values, lang, viewing]);
 
@@ -162,7 +181,8 @@ export function useContactModel({ lang, viewing, onSubmitted }: { lang: Language
       sending.current = false;
       if (next === "ok") {
         setSentType(values.requestType);
-        resetBySubmit.current = true;
+        frozen.current = true;
+        updateFormSnapshot({ submit: "sent" });
         setValues(EMPTY);
         setSlotErrors([]);
         startedAt.current = null;
@@ -170,6 +190,7 @@ export function useContactModel({ lang, viewing, onSubmitted }: { lang: Language
         focus("success");
         onSubmitted();
       } else {
+        updateFormSnapshot({ submit: "failed" });
         if (next === "fields") setErrors(serverErrors);
         setFailure(next === "fields" ? null : next);
         setStatus("error");

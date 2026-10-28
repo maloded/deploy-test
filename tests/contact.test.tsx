@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ProductLayout from "@/components/ProductLayout";
 import type { ContactElement } from "@/components/ContactSection";
 import { buildSite } from "@/lib/site";
-import { ui } from "@/lib/ui-strings";
+import { ui, uiFmt } from "@/lib/ui-strings";
 import { FIXTURE_DIR, fixtures } from "./helpers";
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
@@ -280,11 +280,64 @@ describe("sending", () => {
     expect(submitted).not.toHaveBeenCalled();
     expect(section().querySelector(".contact__success")).toBeNull();
     const summary = inline().querySelector(".contact__summary") as HTMLElement;
-    expect(summary.textContent).toContain(ui(`contact.error.${kind}` as any, "en"));
+    // the "unavailable" text now carries the seller's address in place of {email}
+    expect(summary.textContent).toContain(uiFmt(`contact.error.${kind}` as any, "en", { email: site("en").seller.contact.email }));
     expect(document.activeElement).toBe(summary);
     const mail = summary.querySelector("a");
     if (kind === "unavailable" || kind === "rate") expect(mail?.getAttribute("href")).toBe(`mailto:${site("en").seller.contact.email}`);
     expect(field(inline(), "name").value).toBe("Test Person"); // nothing the visitor typed is lost
+  });
+
+  it.each([
+    ["en", "Please check the form and send it again."],
+    ["de", "Bitte prüfen Sie das Formular und senden Sie es erneut."],
+  ] as const)("a too-fast 422 and a validation 400 show the generic check-the-form text in %s, without a mailto link", async (lang, text) => {
+    for (const status of [422, 400]) {
+      mount(lang);
+      reply(status, { ok: false });
+      fill(inline());
+      await submit(inline());
+      const summary = inline().querySelector(".contact__summary") as HTMLElement;
+      expect(summary.textContent).toBe(text);
+      expect(summary.querySelector("a")).toBeNull();
+      act(() => root!.unmount());
+      box!.remove();
+    }
+  });
+
+  it.each([
+    ["en", "Your request could not be sent and was not saved. Please write to us by e-mail: "],
+    ["de", "Ihre Anfrage konnte nicht gesendet werden und wurde nicht gespeichert. Bitte schreiben Sie uns per E-Mail: "],
+  ] as const)("a 503 and a network failure show the could-not-be-sent text in %s with the seller's address as a mailto link inside it", async (lang, text) => {
+    const mail = site(lang).seller.contact.email;
+    for (const failure of [503, null] as const) {
+      mount(lang);
+      if (failure === null) vi.stubGlobal("fetch", vi.fn(async () => Promise.reject(new TypeError("offline"))));
+      else reply(failure, { ok: false });
+      fill(inline());
+      await submit(inline());
+      const summary = inline().querySelector(".contact__summary") as HTMLElement;
+      expect(summary.textContent).toBe(text + mail);
+      expect(summary.querySelectorAll("a")).toHaveLength(1);
+      expect(summary.querySelector("a")!.getAttribute("href")).toBe(`mailto:${mail}`);
+      act(() => root!.unmount());
+      box!.remove();
+    }
+  });
+
+  it("a seller without an address gets the could-not-be-sent text without a link", async () => {
+    const bare = site("en");
+    bare.seller.contact.email = "";
+    box = document.createElement("div");
+    document.body.appendChild(box);
+    root = createRoot(box);
+    act(() => root!.render(<ProductLayout site={bare} />));
+    reply(503, { ok: false });
+    fill(inline());
+    await submit(inline());
+    const summary = inline().querySelector(".contact__summary") as HTMLElement;
+    expect(summary.textContent).toBe(ui("contact.error.unavailableNoMail", "en"));
+    expect(summary.querySelector("a")).toBeNull();
   });
 
   it("shows field errors that the server names (400 with errors)", async () => {

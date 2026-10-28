@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { needsSlots, REQUEST_TYPE_IDS } from "./request-types";
+import { needsSlots, REQUEST_TYPE_IDS, type RequestType } from "./request-types";
 import { MAX_SLOTS } from "./viewing";
 import { languageSchema } from "./schema";
 
@@ -77,16 +77,20 @@ export function normalizeLead(raw: unknown): unknown {
 export type FieldErrorCode = "required" | "email" | "phone" | "max" | "consent" | "invalid";
 export type LeadErrors = Partial<Record<LeadField | "form", FieldErrorCode>>;
 
+/** Slots belong to the types that need them: at least one there, none anywhere else. */
+function slotRequirement(type: RequestType, count: number): FieldErrorCode | null {
+  if (needsSlots(type) && count === 0) return "required";
+  if (!needsSlots(type) && count > 0) return "invalid";
+  return null;
+}
+
 /** Validates a raw body: the clean data, or one error code per field (never the values). */
 export function validateLead(raw: unknown): { ok: true; data: LeadInput } | { ok: false; errors: LeadErrors } {
   const normalized = normalizeLead(raw) as Record<string, unknown>;
   const parsed = leadSchema.safeParse(normalized);
   if (parsed.success) {
-    // slots belong to the types that need them: at least one there, none anywhere else
-    const slots = parsed.data.preferredSlots?.length ?? 0;
-    if (needsSlots(parsed.data.requestType) && slots === 0) return { ok: false, errors: { preferredSlots: "required" } };
-    if (!needsSlots(parsed.data.requestType) && slots > 0) return { ok: false, errors: { preferredSlots: "invalid" } };
-    return { ok: true, data: parsed.data };
+    const slots = slotRequirement(parsed.data.requestType, parsed.data.preferredSlots?.length ?? 0);
+    return slots ? { ok: false, errors: { preferredSlots: slots } } : { ok: true, data: parsed.data };
   }
   const errors: LeadErrors = {};
   for (const issue of parsed.error.issues) {
@@ -105,6 +109,13 @@ export function validateLead(raw: unknown): { ok: true; data: LeadInput } | { ok
       else if (field === "email") code = "email";
     }
     errors[field] = code;
+  }
+  // the slot requirement is checked even when other fields failed, so one answer lists every blocking field
+  const type = normalized?.requestType;
+  if (!errors.preferredSlots && typeof type === "string" && (REQUEST_TYPE_IDS as readonly string[]).includes(type)) {
+    const given = Array.isArray(normalized.preferredSlots) ? normalized.preferredSlots.length : 0;
+    const slots = slotRequirement(type as RequestType, given);
+    if (slots) errors.preferredSlots = slots;
   }
   return { ok: false, errors };
 }

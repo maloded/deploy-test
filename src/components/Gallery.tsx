@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import type { Language } from "@/lib/schema";
 import { ui, uiFmt } from "@/lib/ui-strings";
 import type { GallerySlide } from "./gallery-props";
@@ -75,6 +76,8 @@ export function Gallery({ slides, lang, autoplaySeconds }: { slides: GallerySlid
     [clamp, count],
   );
   const closeLightbox = useCallback(() => setLightbox(null), []);
+  // The page API closes it synchronously: a caller that opens another dialog right after (the agent's #contact) must come after the focus return.
+  const closeLightboxNow = useCallback(() => flushSync(() => setLightbox(null)), []);
 
   useEffect(() => {
     const el = sectionRef.current as GalleryElement | null;
@@ -84,13 +87,13 @@ export function Gallery({ slides, lang, autoplaySeconds }: { slides: GallerySlid
       next: () => state.current.goTo(state.current.current + 1),
       previous: () => state.current.goTo(state.current.current - 1),
       openLightbox,
-      closeLightbox,
+      closeLightbox: closeLightboxNow,
     };
     Object.assign(el, api);
     return () => {
       for (const k of Object.keys(api)) delete (el as unknown as Record<string, unknown>)[k];
     };
-  }, [openLightbox, closeLightbox]);
+  }, [openLightbox, closeLightboxNow]);
 
   // "gallery-change" event on every change of the current photo
   useEffect(() => {

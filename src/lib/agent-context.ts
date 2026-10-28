@@ -3,12 +3,14 @@ import type { FormSnapshot } from "./form-snapshot";
 /**
  * The answer to the voice assistant's page_context question. Read-only: it describes the page, it is never a way to write
  * a field. The values the visitor typed are in it ONLY in the phase "complete" (valid and consented); in every other phase
- * the answer has no values at all. Never in it: the consent text, the honeypot, the timers.
+ * the answer has no values at all. Two keys carry no value and are in every phase: `submit` (none, sent, failed: whether
+ * the request really reached the seller) and `missing` (the NAMES of the fields that block completion, never a value or
+ * the content of a field; empty in the phase complete). Never in it: the consent text, the honeypot, the timers.
  */
 
 /**
- * For the case where the platform ignores keys it does not know: false cuts only the "form" key. Language, dialogOpen and
- * the phase stay (they are not personal data).
+ * For the case where the platform ignores keys it does not know: false cuts only the "form" key. Language, dialogOpen, the
+ * phase, submit and missing stay (they are not personal data: states and field names only).
  */
 export const AGENT_INCLUDE_FORM = true;
 
@@ -40,7 +42,7 @@ export type PageContextInput = { language: string; product: string; path: string
 
 export function buildPageContext({ language, product, path, title, snapshot }: PageContextInput, includeForm: boolean = AGENT_INCLUDE_FORM): Record<string, unknown> {
   const phase = phaseOf(snapshot);
-  const answer: Record<string, unknown> = { language, product, path, title, dialogOpen: snapshot.dialogOpen, phase };
+  const answer: Record<string, unknown> = { language, product, path, title, dialogOpen: snapshot.dialogOpen, phase, submit: snapshot.submit, missing: phase === "complete" ? [] : [...snapshot.missing] };
   if (includeForm && phase === "complete") {
     answer.form = {
       requestType: snapshot.requestType,

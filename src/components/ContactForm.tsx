@@ -125,8 +125,8 @@ export function ContactForm({
         <div className="contact__summary" ref={summaryRef} tabIndex={-1} role="alert">
           {failure ? (
             <>
-              <p>{ui(`contact.error.${failure}` as UiKey, lang)}</p>
-              {(failure === "unavailable" || failure === "rate") && (
+              {failure === "unavailable" ? <UnavailableText lang={lang} email={email} /> : <p>{ui(`contact.error.${failure}` as UiKey, lang)}</p>}
+              {failure === "rate" && (
                 <p>
                   {ui("contact.mailto", lang)} <a href={`mailto:${email}`}>{email}</a>
                 </p>
@@ -331,5 +331,18 @@ export function ContactForm({
         {ui(status === "sending" ? "contact.sending" : "contact.submit", lang)}
       </button>
     </form>
+  );
+}
+
+/** The "could not be sent" text with the seller's address as a mailto link; without an address, the text without a link. */
+function UnavailableText({ lang, email }: { lang: Language; email: string }) {
+  if (!email) return <p>{ui("contact.error.unavailableNoMail", lang)}</p>;
+  const [before, after] = ui("contact.error.unavailable", lang).split("{email}");
+  return (
+    <p>
+      {before}
+      <a href={`mailto:${email}`}>{email}</a>
+      {after}
+    </p>
   );
 }

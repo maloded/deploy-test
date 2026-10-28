@@ -92,10 +92,13 @@ const STRINGS = {
   "contact.error.phone": { en: "Please enter a valid phone number.", de: "Bitte geben Sie eine gültige Telefonnummer ein." },
   "contact.error.max": { en: "Please use at most {max} characters.", de: "Bitte höchstens {max} Zeichen verwenden." },
   "contact.error.consent": { en: "Please agree to continue.", de: "Bitte stimmen Sie zu, um fortzufahren." },
-  "contact.error.invalid": { en: "Some details could not be accepted. Please check the fields.", de: "Einige Angaben konnten nicht übernommen werden. Bitte prüfen Sie die Felder." },
-  "contact.error.tooFast": { en: "That was very quick. Please wait a moment and send the form again.", de: "Das ging sehr schnell. Bitte warten Sie einen Moment und senden Sie das Formular erneut." },
+  "contact.error.invalid": { en: "Please check the form and send it again.", de: "Bitte prüfen Sie das Formular und senden Sie es erneut." },
+  "contact.error.tooFast": { en: "Please check the form and send it again.", de: "Bitte prüfen Sie das Formular und senden Sie es erneut." },
   "contact.error.rate": { en: "Too many attempts. Please try again later or write to us directly.", de: "Zu viele Versuche. Bitte versuchen Sie es später erneut oder schreiben Sie uns direkt." },
-  "contact.error.unavailable": { en: "Your request could not be sent and was not saved. Please write to us directly.", de: "Ihre Anfrage konnte nicht gesendet werden und wurde nicht gespeichert. Bitte schreiben Sie uns direkt." },
+  // {email} is the seller's address, written as a mailto link by the form
+  "contact.error.unavailable": { en: "Your request could not be sent and was not saved. Please write to us by e-mail: {email}", de: "Ihre Anfrage konnte nicht gesendet werden und wurde nicht gespeichert. Bitte schreiben Sie uns per E-Mail: {email}" },
+  // the same, for a seller without an address
+  "contact.error.unavailableNoMail": { en: "Your request could not be sent and was not saved. Please write to us directly.", de: "Ihre Anfrage konnte nicht gesendet werden und wurde nicht gespeichert. Bitte schreiben Sie uns direkt." },
   "contact.preferredSlots": { en: "Preferred times", de: "Wunschtermine" },
   "contact.slots.address": { en: "Address", de: "Adresse" },
   "contact.slots.notes": { en: "Please bring", de: "Bitte mitbringen" },

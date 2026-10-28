@@ -57,7 +57,14 @@ function goToTop(): void {
   if (document.querySelector("dialog[open]")) return;
   document.querySelector<HTMLElement>("main")?.focus({ preventScroll: true });
 }
-type GalleryApi = { goToPhoto?: unknown };
+type GalleryApi = { goToPhoto?: unknown; closeLightbox?: unknown };
+
+/** Closes the gallery's lightbox when it is open (synchronously, focus returned to its opener). */
+function closeLightbox(): void {
+  if (!document.querySelector("dialog.lightbox[open]")) return;
+  const gallery = document.getElementById("gallery") as (HTMLElement & GalleryApi) | null;
+  if (typeof gallery?.closeLightbox === "function") (gallery.closeLightbox as () => void)();
+}
 
 /** Smooth scrolling unless the visitor asked for less motion. */
 const scrollBehavior = (): ScrollBehavior => (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth");
@@ -94,6 +101,8 @@ export function registerAgentBridge({ lang, answer }: { lang: Language; answer: 
         const contact = document.getElementById("contact") as (HTMLElement & ContactApi) | null;
         if (typeof contact?.open !== "function") return; // the page is not interactive yet
         event.preventDefault();
+        // already open: a no-op (open() is idempotent and leaves focus alone). A lightbox in the way is closed first, so the dialog opens on the page.
+        if (!document.querySelector("dialog.contact-dialog[open]")) closeLightbox();
         (contact.open as () => void)();
       } else if (target.kind === "top") {
         event.preventDefault();

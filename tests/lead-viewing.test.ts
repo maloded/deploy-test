@@ -193,3 +193,29 @@ describe("the lead record schema", () => {
     expect(sample.email).toMatch(/\.invalid$/);
   });
 });
+
+describe("one answer lists every blocking field (the slot requirement is not hidden by other errors)", () => {
+  it("validateLead: name missing and no slots give both in one answer", () => {
+    const r = validateLead({ ...BASE, name: "", preferredSlots: [] });
+    expect(r.ok).toBe(false);
+    expect(!r.ok && r.errors).toEqual({ name: "required", preferredSlots: "required" });
+  });
+
+  it("validateLead: a type that takes no slots, with another field failing, still reports the slots as invalid", () => {
+    const r = validateLead({ ...BASE, requestType: "question", name: "", preferredSlots: [{ date: "2026-06-16", time: "10:00" }] });
+    expect(!r.ok && r.errors).toEqual({ name: "required", preferredSlots: "invalid" });
+  });
+
+  it("validateLead: a slot error that the schema itself found is not overwritten", () => {
+    const r = validateLead({ ...BASE, name: "", preferredSlots: [{ date: "2026-06-16", time: "10:00", extra: 1 }] });
+    expect(!r.ok && r.errors).toMatchObject({ name: "required", preferredSlots: expect.any(String) });
+  });
+
+  it("the lead API answers 400 with both fields", async () => {
+    const e = env();
+    const res = await post({ ...BASE, name: "", preferredSlots: [] }, e);
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ ok: false, errors: { name: "required", preferredSlots: "required" } });
+    expect(stored(e)).toEqual([]);
+  });
+});

@@ -33,6 +33,24 @@ const dialogTitle = (type: RequestType, lang: Language): string =>
   type === "question" ? ui("contact.title", lang) : type === "offer" ? ui("contact.title.offer", lang) : REQUEST_TYPES[type].label[lang];
 
 /**
+ * Where focus goes when the dialog opens: the first required field that is still empty, in page order: name, e-mail, the
+ * date of the first preferred time (when the request type shows them), the consent box; the Name input when all are filled.
+ */
+function firstEmptyRequired(dialog: HTMLElement): HTMLElement | null {
+  const get = (selector: string) => dialog.querySelector<HTMLInputElement>(selector);
+  const name = get("[name=name]");
+  const empty = (el: HTMLInputElement | null): el is HTMLInputElement => el !== null && el.value.trim() === "";
+  const date = get(".contact__slot input[type=date]");
+  const consent = get("[name=consent]");
+  if (empty(name)) return name;
+  const email = get("[name=email]");
+  if (empty(email)) return email;
+  if (empty(date)) return date;
+  if (consent && !consent.checked) return consent;
+  return name;
+}
+
+/**
  * The contact block lives in the footer: its contact row (the seller's e-mail and phone, and the privacy and imprint
  * links when the seller has them) is the element with id="contact", and it hosts the agent interface. There is no
  * button of its own: the buttons of the page (header, hero, offer) are `#contact` links. With JavaScript they open the
@@ -77,8 +95,8 @@ export function ContactSection({ lang, email, phone, requestTypes, viewing, prot
       setModal(true);
       updateFormSnapshot({ dialogOpen: true, everOpened: true });
       emit("contact-open");
-      // focus goes to the Name input (not the select, not the close button)
-      if (!AUTOFOCUS_ONLY_WITH_FINE_POINTER || window.matchMedia?.("(pointer: fine)").matches) dialog.querySelector<HTMLElement>("[name=name]")?.focus();
+      // focus goes to the first empty required field (the Name input when all are empty; not the select, not the close button)
+      if (!AUTOFOCUS_ONLY_WITH_FINE_POINTER || window.matchMedia?.("(pointer: fine)").matches) firstEmptyRequired(dialog)?.focus();
       else dialog.querySelector<HTMLElement>(".contact-dialog__title")?.focus();
     },
     [emit, setPreset, requestTypes],

@@ -6,7 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import ProductLayout from "@/components/ProductLayout";
 import { buildSite } from "@/lib/site";
-import { ui } from "@/lib/ui-strings";
+import { ui, uiFmt } from "@/lib/ui-strings";
 import { FIXTURE_DIR, fixtures } from "./helpers";
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
@@ -74,7 +74,8 @@ describe("the prototype note in the dialog (NEXT_PUBLIC_PROTOTYPE_NOTE)", () => 
     await act(async () => void form().dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })));
     expect(box!.querySelector(".contact__success")).toBeNull();
     const summary = form().querySelector(".contact__summary")!;
-    expect(summary.textContent).toContain(ui("contact.error.unavailable", "en"));
+    // the text now carries the seller's address in place of {email} (the link is inside the message)
+    expect(summary.textContent).toContain(uiFmt("contact.error.unavailable", "en", { email: site("en").seller.contact.email }));
     expect(summary.querySelector("a")!.getAttribute("href")).toBe(`mailto:${site("en").seller.contact.email}`);
     expect(note()).toBeTruthy(); // the note stays: the request was not delivered
   });
