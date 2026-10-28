@@ -133,3 +133,8 @@ Nothing else is needed: no `REVIEW_PASSWORD` (the page is `noindex` anyway, see 
 ## Voice assistant widget
 
 The widget is configured in the seller's `seller.json` (`agent` object, see `docs/PAGE-API.md`), not in an environment variable, and the embed id is not stored in this repository. **The widget's domain restriction (which sites may load the agent) is a setting in the Hanc project, not code:** add the deployment's domain there, and `localhost` for a local try, or the widget will not connect. The package is pinned exactly and bundled with the page; nothing is loaded from a CDN.
+
+## Background music
+
+A product with a `music` object loads nothing until the visitor starts the music: no audio file is requested on page load (the audio element is created at the first start), and the music comes from the deployment itself, never from a third-party host. The audio files do add to the size of the deployed repository, because the snapshot carries `media-web/audio`. Advice: mp3 at about 128 kbps, at most 3 MB per track (the hard limit is 5 MB), and few tracks. A track needs a commercial licence; the proof stays in the content repository, not in the template.
+

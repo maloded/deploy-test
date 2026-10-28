@@ -619,5 +619,48 @@
     "offer",
     "faq",
     "contact"
-  ]
+  ],
+  "music": {
+    "tracks": [
+      {
+        "id": "calm",
+        "title": {
+          "de": "Ruhig",
+          "en": "Calm"
+        },
+        "file": "audio/calm.mp3",
+        "license": "TODO: source and licence"
+      },
+      {
+        "id": "background",
+        "title": {
+          "de": "Hintergrund",
+          "en": "Background"
+        },
+        "file": "audio/background.mp3",
+        "license": "TODO: source and licence"
+      },
+      {
+        "id": "piano",
+        "title": {
+          "de": "Klavier",
+          "en": "Piano"
+        },
+        "file": "audio/piano.mp3",
+        "license": "TODO: source and licence"
+      },
+      {
+        "id": "memories",
+        "title": {
+          "de": "Erinnerungen",
+          "en": "Memories"
+        },
+        "file": "audio/memories.mp3",
+        "license": "TODO: source and licence"
+      }
+    ],
+    "defaultTrack": "calm",
+    "volume": 0.12,
+    "autostart": "gesture"
+  }
 }

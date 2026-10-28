@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { contentRoot, splitRef } from "./content-root";
 import { readImageSize } from "./image-size";
+import { AUDIO_FILE, MAX_AUDIO_BYTES } from "./music";
 import { checkViewing, mergeViewing, missingViewingFields, type ViewingConfig, type ViewingSettings } from "./viewing";
 import { completeLocalized, mergeCoverage, reportLocalized, type Coverage } from "./localized";
 import { defaultBlocksFor, type ProductTypeFields } from "./fields";
@@ -96,6 +97,7 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
     refs.push({ where: "media.video", file: file.media.video });
   }
   if (file.media.videoPoster) refs.push({ where: "media.videoPoster", file: file.media.videoPoster });
+  file.music?.tracks.forEach((t, i) => refs.push({ where: `music.tracks.${i}.file`, file: t.file }));
 
   // the originals when they are here, otherwise the processed export (npm run images:export)
   const mediaDirName = fs.existsSync(/*turbopackIgnore: true*/ path.join(dir, "media")) ? "media" : "media-web";
@@ -107,6 +109,11 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
     if (!fs.existsSync(/*turbopackIgnore: true*/ abs)) {
       const msg = `${r.where}: file "${r.file}" not found in ${ref}/${mediaDirName}/`;
       (strictMedia ? issues : warnings).push(msg);
+      continue;
+    }
+    if (AUDIO_FILE.test(r.file)) {
+      const bytes = fs.statSync(/*turbopackIgnore: true*/ abs).size;
+      if (bytes > MAX_AUDIO_BYTES) issues.push(`${r.where}: file "${r.file}" is ${(bytes / 1048576).toFixed(1)} MB, more than the ${MAX_AUDIO_BYTES / 1048576} MB limit for a music track`);
       continue;
     }
     if (IMAGE_EXT.test(r.file) && !images[r.file]) {

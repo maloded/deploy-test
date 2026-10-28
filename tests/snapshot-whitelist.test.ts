@@ -4,7 +4,7 @@ import path from "node:path";
 import sharp from "sharp";
 import { afterAll, describe, expect, it } from "vitest";
 import { createSnapshot, SnapshotRefused } from "../scripts/lib/snapshot.mjs";
-import { walk } from "../scripts/lib/snapshot-guard.mjs";
+import { checkSnapshot, forbiddenReason, walk } from "../scripts/lib/snapshot-guard.mjs";
 
 // A temporary template (a real git repository) and a temporary content root with two sellers; the first has two products.
 const tmp = path.join(process.cwd(), ".test-tmp", "snapshot-whitelist");
@@ -196,5 +196,29 @@ describe("snapshot: content tracked in the template", () => {
     git(s.project, "commit", "-q", "-m", "oops");
     await snapshot(s);
     expect(names(s.dest).some((n) => n.startsWith("content/x-seller"))).toBe(false); // ...so it never travels
+  });
+});
+
+describe("audio in a snapshot", () => {
+  it("takes a used track from media-web, never the originals or an unused track, and the guard accepts it", async () => {
+    const s = await setup();
+    const dir = path.join(s.contentRoot, CHOSEN);
+    fs.writeFileSync(path.join(dir, "product.json"), JSON.stringify({ media: { hero: "a.jpg", gallery: [] }, music: { tracks: [{ id: "calm", title: { en: "Calm" }, file: "audio/calm.mp3", license: "test" }] } }));
+    put(s.contentRoot, `${CHOSEN}/media/audio/calm.mp3`, "not music, a test file");
+    put(s.contentRoot, `${CHOSEN}/media/audio/spare.mp3`, "not music either");
+    await snapshot(s);
+    const all = names(s.dest);
+    expect(all).toContain(`content/${CHOSEN}/media-web/audio/calm.mp3`);
+    expect(all.filter((n) => /spare\.mp3/.test(n))).toEqual([]);
+    expect(all.filter((n) => /^content\/.*\/media\//.test(n))).toEqual([]); // no originals folder
+    expect(fs.readFileSync(path.join(s.dest, "content", CHOSEN, "media-web", "audio", "calm.mp3"), "utf8")).toBe("not music, a test file");
+    expect((await checkSnapshot(s.dest)).filter((p) => !p.startsWith(".git/"))).toEqual([]);
+  });
+
+  it("the guard accepts audio in media-web and refuses audio in media (an original), of any size", () => {
+    expect(forbiddenReason("content/s/p/media-web/audio/calm.mp3", 3_000_000)).toBeNull();
+    expect(forbiddenReason("content/s/p/media/audio/calm.mp3", 10)).toMatch(/original audio/);
+    expect(forbiddenReason("content/p/media/audio/calm.wav", 10)).toMatch(/original audio/);
+    expect(forbiddenReason("examples/ex-seller/ex/media/audio/a.wav", 10)).toBeNull(); // the template's own fake examples are not content
   });
 });

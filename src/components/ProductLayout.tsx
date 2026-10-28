@@ -10,6 +10,12 @@ import type { Site } from "./blocks";
  * the type's default; "contact" is the footer's row), footer. What differs per type (media ratios, spec groups, details) comes from the type's
  * descriptor in site.typeFields. A type that needs its own frame is registered in product-types/layouts.ts.
  */
+/**
+ * With the music player in the header the header is as tall as the player's touch target (2.75rem, 44 px or more) plus the header's padding and
+ * hairline, a little taller than the theme's minimum; the hero's one-screen height subtracts the real value.
+ */
+const MUSIC_HEADER_H = "calc(2.75rem + 2 * var(--space-3) + 1px)";
+
 export default function ProductLayout({ site }: { site: Site }) {
   const { media } = site.typeFields;
   const agent = site.seller.agent;
@@ -21,7 +27,7 @@ export default function ProductLayout({ site }: { site: Site }) {
       className={`pt pt-${site.product.productType}`}
       data-lang={site.lang}
       data-block-order={renderedBlocks(site).join(" ")}
-      style={{ "--media-ratio": media.heroRatio, "--gallery-ratio": media.galleryRatio, ...(agentHeader ? { "--header-h": "5.5rem" } : {}), ...(agentTop ? { "--agent-top-h": agentTop.variant === "inline" ? "7rem" : "3.5rem" } : {}) } as CSSProperties}
+      style={{ "--media-ratio": media.heroRatio, "--gallery-ratio": media.galleryRatio, ...(agentHeader ? { "--header-h": "5.5rem" } : site.product.music ? { "--header-h": MUSIC_HEADER_H } : {}), ...(agentTop ? { "--agent-top-h": agentTop.variant === "inline" ? "7rem" : "3.5rem" } : {}) } as CSSProperties}
     >
       <Header site={site} agent={agentHeader} />
       {agentTop && <AgentWidget agent={agentTop} lang={site.lang} product={site.ref} />}

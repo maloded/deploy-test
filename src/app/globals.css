@@ -1540,6 +1540,62 @@ img {
   min-height: 3.5rem;
 }
 
+/* background music (only for a product with music): play/pause button and an optional track select, right after the language switcher */
+.music {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.music__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem; /* 44 px at the smallest theme size: the touch target */
+  min-height: 2.75rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 0);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.music__button[aria-pressed="true"] {
+  border-color: var(--accent-line, var(--accent));
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.music__button:disabled,
+.music__select:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.music__button:focus-visible,
+.music__select:focus-visible {
+  outline: 2px solid var(--accent-line, var(--accent));
+  outline-offset: 2px;
+}
+
+.music__select {
+  max-width: 9rem;
+  min-height: 2.75rem;
+  padding-inline: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 0);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.music__error {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
 /* placement "header": label and pill in the header's right group; the slot has a fixed height (no jump when the widget mounts) */
 .site-header__agent {
   display: flex;

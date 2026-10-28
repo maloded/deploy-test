@@ -4,6 +4,7 @@ import path from "node:path";
 import sharp from "sharp";
 
 const PHOTO_EXT = /\.(jpe?g|heic|heif|tiff?|raw|dng|cr2|nef|arw)$/i;
+const AUDIO_EXT = /\.(mp3|m4a|ogg|wav|flac|aac)$/i;
 const IMAGE_EXT = /\.(jpe?g|png|webp|gif|heic|heif|tiff?)$/i;
 const MAX_ORIGINAL_BYTES = 1024 * 1024;
 
@@ -17,6 +18,7 @@ export function forbiddenReason(rel, bytes = 0) {
   if (/(^|\/)data\/leads(\/|$)/.test(rel)) return "data/leads (visitor data)"; // at any depth, also inside a content folder
   if (base.startsWith(".env") && base !== ".env.example") return ".env file (secrets)"; // .env.example lists variable names only
   if (/^content\/[^/]+\/(?:[^/]+\/)?media\//.test(rel)) { // content/<seller>/<product>/media (and the layout from before seller folders)
+    if (AUDIO_EXT.test(base)) return "an original audio file (a music track belongs in media-web, exported by npm run images:export)";
     if (PHOTO_EXT.test(base)) return "an original photo (content/<seller>/<product>/media)";
     if (bytes > MAX_ORIGINAL_BYTES) return "a large file in content/<seller>/<product>/media (looks like an original)";
   }

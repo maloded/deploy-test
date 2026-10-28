@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { SellerContact } from "./seller";
+import { AUDIO_FILE, AUDIO_FILE_MESSAGE, AUTOSTART_MODES, DEFAULT_AUTOSTART, DEFAULT_VOLUME, MAX_TITLE_CHARS, MAX_TRACKS } from "./music";
 import { isLanguage, unsupportedLanguageMessage, type Language } from "./languages";
 import { parseVideo } from "./video";
 import { checkViewing, DAYS, MAX_DURATION, MIN_DURATION, isTime, isTimeZone, type ViewingSettings } from "./viewing";
@@ -59,6 +60,35 @@ export const focusSchema = z.object({ x: z.number().min(0).max(1), y: z.number()
 export type Focus = z.infer<typeof focusSchema>;
 
 const fileName = z.string().min(1).regex(/^[^/\\]+$/, "must be a plain file name inside media/, without folders");
+
+/**
+ * Optional background music. Not shown on the page: `license` is a note for whoever keeps the content (where the track is
+ * licensed from; the proof is kept next to the file in the content repository). The files are checked by the loader
+ * (they exist in media/, at most 5 MB each).
+ */
+const musicTrackSchema = z
+  .object({
+    id: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase letters, digits and dashes"),
+    title: localizedSchema.refine((t) => Object.values(t).every((v) => Array.from(v).length <= MAX_TITLE_CHARS), `at most ${MAX_TITLE_CHARS} characters per language`),
+    file: z.string().regex(AUDIO_FILE, AUDIO_FILE_MESSAGE),
+    license: z.string().min(1),
+  })
+  .strict();
+export const musicSchema = z
+  .object({
+    tracks: z.array(musicTrackSchema).min(1).max(MAX_TRACKS),
+    defaultTrack: z.string().min(1).optional(),
+    volume: z.number().min(0).max(1).default(DEFAULT_VOLUME),
+    autostart: z.enum(AUTOSTART_MODES).default(DEFAULT_AUTOSTART),
+  })
+  .strict()
+  .superRefine((m, ctx) => {
+    const ids = m.tracks.map((t) => t.id);
+    ids.forEach((id, i) => {
+      if (ids.indexOf(id) !== i) ctx.addIssue({ code: "custom", path: ["tracks", i, "id"], message: `"${id}" is used twice (ids must be unique)` });
+    });
+    if (m.defaultTrack !== undefined && !ids.includes(m.defaultTrack)) ctx.addIssue({ code: "custom", path: ["defaultTrack"], message: `"${m.defaultTrack}" is not a track id (${ids.join(", ")})` });
+  });
 
 /** A details object: its shape is checked later, against the product type or offer type. */
 const looseObject = z.record(z.string(), z.unknown());
@@ -145,6 +175,8 @@ export const baseShape = {
   /** Gallery options (the photos themselves are media.gallery). */
   gallery: z.object({ autoplaySeconds: z.number().min(2).max(60).nullable() }).strict().optional(),
   faq: z.array(z.object({ q: localizedSchema, a: localizedSchema })),
+  /** Optional background music (see musicSchema). Without it nothing is rendered or loaded. */
+  music: musicSchema.optional(),
   /** Optional: the product type's default block order is used when omitted. */
   blocks: z.array(z.enum(BLOCK_IDS)).min(1).optional(),
 };

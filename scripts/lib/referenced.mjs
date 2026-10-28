@@ -1,5 +1,5 @@
 // Which files of content/<slug>/media a product.json actually uses: hero, gallery photos, video poster,
-// background and a local video file. Plain JSON reading (no schema), so scripts need no build step.
+// background, a local video file and the music tracks. Plain JSON reading (no schema), so scripts need no build step.
 import fs from "node:fs";
 import path from "node:path";
 
@@ -12,6 +12,7 @@ export function referencedFiles(product) {
   add("media.videoPoster", media.videoPoster);
   add("media.background", media.background);
   if (typeof media.video === "string" && !/^https?:\/\//i.test(media.video)) add("media.video", media.video);
+  (product.music?.tracks ?? []).forEach((t, i) => add(`music.tracks.${i}.file`, t?.file)); // audio/<name>: a file in the media/audio folder
   // a file can be used twice (hero and gallery photo 1): keep one entry per file, remember every place
   const byFile = new Map();
   for (const { where, file } of list) byFile.set(file, [...(byFile.get(file) ?? []), where]);

@@ -1,13 +1,24 @@
 // Builds web-sized copies of <content root>/<seller>/<product>/media into public/media/<seller>/<product>:
 // rotation applied, EXIF (GPS included) stripped, long side limited (never enlarged), same file names.
-// The originals are only read. Results are cached: a file is redone only when its source is newer.
+// A music track in media/audio is copied as it is, and only when product.json uses it. The originals are only read. Results are cached: a file is redone only when its source is newer.
 import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
 import { listProducts } from "../../src/lib/content-root.ts";
+import { readProduct, referencedFiles } from "./referenced.mjs";
 
 const RESIZABLE = { ".jpg": "jpeg", ".jpeg": "jpeg", ".png": "png", ".webp": "webp" };
 const STAMP = ".web-images.json";
+
+/** Every file below `dir` as a relative path with forward slashes, sorted. */
+function filesBelow(dir, prefix = "") {
+  const list = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : 1))) {
+    if (entry.isDirectory()) list.push(...filesBelow(path.join(dir, entry.name), `${prefix}${entry.name}/`));
+    else if (entry.isFile()) list.push(`${prefix}${entry.name}`);
+  }
+  return list;
+}
 
 export async function makeWebImages({ contentDir, outDir, longSide = 2000, quality = 80, log = () => {} }) {
   const settings = { version: 2, longSide, quality }; // 2: public/media/<seller>/<product>/ (1 was <product>/)
@@ -35,10 +46,13 @@ export async function makeWebImages({ contentDir, outDir, longSide = 2000, quali
       }
       const out = path.join(outDir, slug);
       fs.mkdirSync(out, { recursive: true });
-      for (const file of fs.readdirSync(media).sort()) {
+      // music tracks (audio/<name>) are copied only when product.json uses them; the photos keep their old rule (every file)
+      const used = new Set(referencedFiles(readProduct(contentDir, slug) ?? {}).map((r) => r.file));
+      for (const file of filesBelow(media)) {
         const src = path.join(media, file);
-        if (!fs.statSync(src).isFile()) continue;
+        if (file.includes("/") && !alreadyProcessed && !used.has(file)) continue; // not used: never copied (pruned below)
         const dest = path.join(out, file);
+        fs.mkdirSync(path.dirname(dest), { recursive: true });
         wanted.add(dest);
 
         if (fs.existsSync(dest) && fs.statSync(dest).mtimeMs >= fs.statSync(src).mtimeMs) {

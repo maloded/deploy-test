@@ -94,5 +94,30 @@
       "en": "Please bring a photo ID. (fake example)",
       "de": "Bitte bringen Sie einen Lichtbildausweis mit. (erfundenes Beispiel)"
     }
+  },
+  "music": {
+    "tracks": [
+      {
+        "id": "calm",
+        "title": {
+          "en": "Calm",
+          "de": "Ruhe"
+        },
+        "file": "audio/calm.wav",
+        "license": "generated test tone, not music"
+      },
+      {
+        "id": "soft",
+        "title": {
+          "en": "Soft",
+          "de": "Sanft"
+        },
+        "file": "audio/soft.wav",
+        "license": "generated test tone, not music"
+      }
+    ],
+    "defaultTrack": "calm",
+    "volume": 0.15,
+    "autostart": "button"
   }
 }
