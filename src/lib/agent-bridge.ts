@@ -15,11 +15,12 @@ import type { Language } from "./schema";
 /** What the widget puts in the event's detail (documented: type, payload for navigate, respond). */
 type AgentCommandDetail = { type?: unknown; payload?: { path?: unknown } | null; respond?: unknown };
 
-export type NavigateTarget = { kind: "top" } | { kind: "contact" } | { kind: "hash"; id: string };
+/** "top" with `smooth` is the explicit #top; a plain "/" or "/<lang>" is the same target without it. */
+export type NavigateTarget = { kind: "top"; smooth?: true } | { kind: "contact" } | { kind: "hash"; id: string };
 
 /**
  * Which place on this page a navigate path means, or null when it is not one. Accepted: "/" or "/<page language>", with no
- * query and with an optional hash: #contact (the dialog), #<id of a block this page renders> or #gallery-<n>. The path is
+ * query and with an optional hash: #contact (the dialog), #<id of a block this page renders> or #gallery-<n> (1-based; the bridge ignores a number outside 1..count). The path is
  * parsed against the page origin; another origin, another language, a query or any other hash is null.
  */
 export function navigateTarget(path: unknown, lang: Language, origin: string, renderedBlocks: readonly string[]): NavigateTarget | null {
@@ -34,6 +35,7 @@ export function navigateTarget(path: unknown, lang: Language, origin: string, re
   const hash = url.hash;
   if (hash === "") return { kind: "top" };
   if (hash === "#contact") return { kind: "contact" };
+  if (hash === "#top") return { kind: "top", smooth: true };
   const id = hash.slice(1);
   if (id !== "contact" && renderedBlocks.includes(id)) return { kind: "hash", id };
   if (/^#gallery-[1-9]\d{0,2}$/.test(hash) && renderedBlocks.includes("gallery")) return { kind: "hash", id: hash.slice(1) };
@@ -44,6 +46,36 @@ export function navigateTarget(path: unknown, lang: Language, origin: string, re
 const renderedBlockIds = (): string[] => (document.querySelector<HTMLElement>("[data-block-order]")?.dataset.blockOrder ?? "").split(" ").filter(Boolean);
 
 type ContactApi = { open?: unknown };
+
+/**
+ * #top: smooth scroll to the top (instant with prefers-reduced-motion), then focus on the page's main landmark so the next Tab
+ * starts at the content, without scrolling again. When a dialog is open (the contact form or the lightbox) focus stays
+ * where it is: a modal dialog owns it. Never a page load, never the root redirect.
+ */
+function goToTop(): void {
+  window.scrollTo({ top: 0, behavior: scrollBehavior() });
+  if (document.querySelector("dialog[open]")) return;
+  document.querySelector<HTMLElement>("main")?.focus({ preventScroll: true });
+}
+type GalleryApi = { goToPhoto?: unknown };
+
+/** Smooth scrolling unless the visitor asked for less motion. */
+const scrollBehavior = (): ScrollBehavior => (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth");
+
+/**
+ * #gallery-<n> (1-based, as in the deep link): centres photo n of the carousel through the gallery's own goToPhoto(index)
+ * (0-based) and scrolls the gallery into view. No lightbox, no page load. false (nothing done) when the gallery is not
+ * interactive yet or n is outside 1..count.
+ */
+function showGalleryPhoto(n: number): boolean {
+  const gallery = document.getElementById("gallery") as (HTMLElement & GalleryApi) | null;
+  const count = Number(gallery?.dataset.count);
+  if (!gallery || typeof gallery.goToPhoto !== "function" || !(n >= 1 && n <= count)) return false;
+  (gallery.goToPhoto as (index: number) => void)(n - 1);
+  gallery.scrollIntoView?.({ behavior: scrollBehavior(), block: "start" });
+  window.history.replaceState(null, "", `#gallery-${n}`); // the URL stays a valid deep link; replaceState fires no hashchange
+  return true;
+}
 
 /**
  * Registers the handler on the document and returns the function that removes it. `product` is the
@@ -65,10 +97,17 @@ export function registerAgentBridge({ lang, answer }: { lang: Language; answer: 
         (contact.open as () => void)();
       } else if (target.kind === "top") {
         event.preventDefault();
-        window.scrollTo({ top: 0 });
+        if (target.smooth) goToTop();
+        else window.scrollTo({ top: 0 });
       } else {
-        event.preventDefault();
-        window.location.hash = target.id; // scrolls; a hash change never reloads the page
+        const photo = /^gallery-(\d+)$/.exec(target.id);
+        if (photo) {
+          if (!showGalleryPhoto(Number(photo[1]))) return; // out of range: not handled
+          event.preventDefault();
+        } else {
+          event.preventDefault();
+          window.location.hash = target.id; // scrolls; a hash change never reloads the page
+        }
       }
     } else if (detail.type === "page_context") {
       event.preventDefault();

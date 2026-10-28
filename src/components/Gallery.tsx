@@ -178,18 +178,18 @@ export function Gallery({ slides, lang, autoplaySeconds }: { slides: GallerySlid
     };
   }, [lightbox, align]);
 
-  // deep links: #gallery (native) and #gallery-3
+  // deep links: #gallery (native) and #gallery-3 (1-based; a number outside 1..count is ignored)
   useEffect(() => {
     const apply = () => {
       const m = /^#gallery-(\d+)$/.exec(window.location.hash);
-      if (!m) return;
+      if (!m || Number(m[1]) < 1 || Number(m[1]) > count) return;
       state.current.goTo(Number(m[1]) - 1, "auto");
       sectionRef.current?.scrollIntoView?.();
     };
     apply();
     window.addEventListener("hashchange", apply);
     return () => window.removeEventListener("hashchange", apply);
-  }, []);
+  }, [count]);
 
   // reduced motion and tab visibility
   useEffect(() => {
@@ -230,6 +230,7 @@ export function Gallery({ slides, lang, autoplaySeconds }: { slides: GallerySlid
       className="gallery"
       id="gallery"
       data-block="gallery"
+      data-count={count}
       data-autoplay={!autoplay ? "off" : paused ? "paused" : "on"}
       role="region"
       aria-roledescription="carousel"
