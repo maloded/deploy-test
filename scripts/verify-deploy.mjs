@@ -1,4 +1,4 @@
-// npm run verify:deploy -- <url> [--product <seller>/<product>] [--auth user:password]
+// npm run verify:deploy -- <url> [--product <seller>/<product>] [--auth user:password] [--expect-template <hash>]
 // Prints PASS or FAIL with a short reason for every check; exit code 1 on any FAIL. See scripts/lib/verify-deploy.mjs.
 // The expected product title, seller name and languages are read from the LOCAL content root (CONTENT_DIR, also from .env.local).
 import fs from "node:fs";
@@ -11,9 +11,9 @@ const opt = (name) => {
   const i = args.indexOf(name);
   return i >= 0 ? args[i + 1] : undefined;
 };
-const url = args.find((a, i) => !a.startsWith("--") && !["--product", "--auth"].includes(args[i - 1]));
+const url = args.find((a, i) => !a.startsWith("--") && !["--product", "--auth", "--expect-template"].includes(args[i - 1]));
 if (!url || !/^https?:\/\//i.test(url)) {
-  console.error("Usage: npm run verify:deploy -- <url> [--product <seller>/<product>] [--auth user:password]");
+  console.error("Usage: npm run verify:deploy -- <url> [--product <seller>/<product>] [--auth user:password] [--expect-template <hash>]");
   process.exit(1);
 }
 
@@ -39,8 +39,11 @@ try {
   expectedProblem = `cannot read the local product: ${e.message.split("\n")[0]}`;
 }
 
-const results = await verifyDeploy({ url, expected, expectedProblem, auth: opt("--auth") });
-for (const r of results) console.log(`${r.ok ? "PASS" : "FAIL"}  ${r.name}${r.ok || !r.reason ? "" : `: ${r.reason}`}`);
+const results = await verifyDeploy({ url, expected, expectedProblem, auth: opt("--auth"), expectTemplate: opt("--expect-template") });
+for (const r of results) {
+  const tag = !r.ok ? "FAIL" : r.level === "warn" ? "WARN" : r.level === "info" ? "INFO" : "PASS";
+  console.log(`${tag}  ${r.name}${(r.ok && !r.level) || !r.reason ? "" : `: ${r.reason}`}`);
+}
 const failed = results.filter((r) => !r.ok).length;
 console.log(failed ? `\n${failed} of ${results.length} checks FAILED` : `\nall ${results.length} checks passed`);
 process.exit(failed ? 1 : 0);

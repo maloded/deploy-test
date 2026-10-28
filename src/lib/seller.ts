@@ -17,6 +17,24 @@ export const sellerContactSchema = z
   .strict();
 export type SellerContact = z.infer<typeof sellerContactSchema>;
 
+/**
+ * The voice assistant widget (a public embed identifier, no secret). The widget element is mounted only when the seller
+ * has this object. `id` is the agent's embed id, so it belongs in the seller's own content folder, never in this repository.
+ */
+export const AGENT_VARIANTS = ["inline", "floating"] as const;
+export const DEFAULT_VOICE_SERVICE_URL = "https://voice.hanc.ai";
+export const sellerAgentSchema = z
+  .object({
+    id: z.string().regex(/^[A-Za-z0-9_-]{1,100}$/, "letters, digits, - and _ only"),
+    /** "inline": a small assistant strip above the footer. "floating": a pill fixed in a corner, no strip. */
+    variant: z.enum(AGENT_VARIANTS).default("inline"),
+    /** The widget's own theme name (optional; its default theme otherwise). */
+    theme: z.string().regex(/^[a-z0-9-]{1,40}$/).optional(),
+    voiceServiceUrl: z.url({ protocol: /^https$/ }).default(DEFAULT_VOICE_SERVICE_URL),
+  })
+  .strict();
+export type SellerAgent = z.infer<typeof sellerAgentSchema>;
+
 export const sellerShape = {
   schemaVersion: z.literal(1),
   /** The brand shown in the header and footer. */
@@ -36,6 +54,8 @@ export const sellerShape = {
   consentText: localizedSchema,
   /** Optional viewing settings, the default for the seller's products (a product may override single fields). */
   viewing: viewingSchema.optional(),
+  /** Optional voice assistant (see sellerAgentSchema). Nothing is loaded or registered without it. */
+  agent: sellerAgentSchema.optional(),
   /** Placeholders until the seller supplies the real pages. */
   privacyUrl: link.optional(),
   imprintUrl: link.optional(),
@@ -67,7 +87,7 @@ export type SellerFieldDescriptor = {
   key: keyof typeof sellerShape;
   label: Localized;
   required: boolean;
-  type: "version" | "text" | "localized" | "contact" | "languages" | "language" | "theme" | "link" | "viewing";
+  type: "version" | "text" | "localized" | "contact" | "languages" | "language" | "theme" | "link" | "viewing" | "agent";
 };
 
 export const SELLER_FIELDS = [
@@ -81,6 +101,7 @@ export const SELLER_FIELDS = [
   { key: "theme", label: { en: "Default theme", de: "Standard-Theme" }, required: true, type: "theme" },
   { key: "consentText", label: { en: "Consent text of the contact form", de: "Einwilligungstext des Kontaktformulars" }, required: true, type: "localized" },
   { key: "viewing", label: { en: "Viewing settings (default)", de: "Besichtigungseinstellungen (Standard)" }, required: false, type: "viewing" },
+  { key: "agent", label: { en: "Voice assistant widget (id, variant, theme)", de: "Sprachassistent-Widget (ID, Variante, Theme)" }, required: false, type: "agent" },
   { key: "privacyUrl", label: { en: "Privacy page (placeholder)", de: "Datenschutzseite (Platzhalter)" }, required: false, type: "link" },
   { key: "imprintUrl", label: { en: "Imprint page (placeholder)", de: "Impressum (Platzhalter)" }, required: false, type: "link" },
 ] as const satisfies readonly SellerFieldDescriptor[];

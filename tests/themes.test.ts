@@ -84,7 +84,7 @@ describe("components use theme variables only", () => {
     for (const f of files) {
       const src = fs.readFileSync(f, "utf8");
       for (const m of src.matchAll(/font-family:\s*([^;]+);/g)) {
-        expect(m[1].trim(), f).toMatch(/^var\(--font-(heading|body)\)$/);
+        expect(m[1].trim(), f).toMatch(/^var\(--font-(heading|body)\)$|^var\(--font-mono, monospace\)$/);
       }
     }
   });

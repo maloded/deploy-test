@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { validateLead, type LeadErrors, type LeadField } from "@/lib/lead";
+import { updateFormSnapshot } from "@/lib/form-snapshot";
 import { DEFAULT_REQUEST_TYPE, needsSlots, type RequestType } from "@/lib/request-types";
 import { MAX_SLOTS, slotProblem, type SlotProblem, type ViewingConfig } from "@/lib/viewing";
 import type { Language } from "@/lib/schema";
@@ -28,6 +29,25 @@ export type Values = {
   website: string;
 };
 const EMPTY: Values = { requestType: DEFAULT_REQUEST_TYPE, slots: [{ date: "", time: "" }], name: "", email: "", phone: "", channel: "", bestTime: "", message: "", consent: false, website: "" };
+
+/** The problem of each slot row, or null: blank rows are ignored; a half-filled row, or a row the slot rules refuse, is an error of that row. */
+function slotRowErrors(rows: SlotInput[], viewing: ViewingConfig): (SlotError | null)[] {
+  return rows.map((s, i) => {
+    if (!s.date && !s.time) return null;
+    if (!s.date || !s.time) return "missing";
+    const seen = rows.findIndex((o) => o.date === s.date && o.time === s.time);
+    return slotProblem(s, viewing) ?? (seen !== i ? "duplicate" : null);
+  });
+}
+
+/** The body the lead schema checks (the submit and the snapshot build it the same way). */
+function leadBody(values: Values, lang: Language, viewing: ViewingConfig | null, elapsedMs: number) {
+  const wantsSlots = needsSlots(values.requestType) && viewing !== null;
+  const complete = (wantsSlots ? values.slots : []).filter((s) => s.date && s.time);
+  const { slots: _slots, ...fields } = values;
+  void _slots;
+  return { wantsSlots, body: { ...fields, lang, ...(wantsSlots ? { preferredSlots: complete } : {}), elapsedMs } };
+}
 
 /** Where focus goes after a submit: the error summary, or the success panel. */
 export type Attention = { target: "summary" | "success"; n: number };
@@ -76,23 +96,37 @@ export function useContactModel({ lang, viewing, onSubmitted }: { lang: Language
     setSlotErrors([]);
   }, []);
 
+  // The snapshot the page can show to the voice assistant (src/lib/form-snapshot.ts): updated on every change, kept after a
+  // successful submit and after the dialog closes. The reset after a successful submit is not a change by the visitor.
+  const resetBySubmit = useRef(false);
+  useEffect(() => {
+    if (resetBySubmit.current) {
+      resetBySubmit.current = false;
+      return;
+    }
+    const { wantsSlots, body } = leadBody(values, lang, viewing, 0);
+    const valid = validateLead(body).ok && !(wantsSlots && slotRowErrors(values.slots, viewing!).some(Boolean));
+    updateFormSnapshot({
+      requestType: values.requestType,
+      name: values.name.trim(),
+      email: values.email.trim(),
+      phone: values.phone.trim(),
+      preferredChannel: values.channel,
+      bestTime: values.bestTime.trim(),
+      message: values.message.trim(),
+      preferredSlots: values.slots.filter((s) => s.date && s.time).map((s) => ({ date: s.date, time: s.time })),
+      language: lang,
+      consentGiven: values.consent,
+      valid,
+    });
+  }, [values, lang, viewing]);
+
   const submit = useCallback(
     async () => {
       if (sending.current) return;
       const focus = (target: Attention["target"]) => setAttention({ target, n: ++tick.current });
-      const wantsSlots = needsSlots(values.requestType) && viewing !== null;
-      // blank rows are ignored; a half-filled row, or a row the slot rules refuse, is an error of that row
-      const rows = wantsSlots ? values.slots : [];
-      const rowErrors: (SlotError | null)[] = rows.map((s, i) => {
-        if (!s.date && !s.time) return null;
-        if (!s.date || !s.time) return "missing";
-        const seen = rows.findIndex((o) => o.date === s.date && o.time === s.time);
-        return slotProblem(s, viewing!) ?? (seen !== i ? "duplicate" : null);
-      });
-      const complete = rows.filter((s) => s.date && s.time);
-      const { slots: _slots, ...fields } = values;
-      void _slots;
-      const body = { ...fields, lang, ...(wantsSlots ? { preferredSlots: complete } : {}), elapsedMs: startedAt.current === null ? 0 : Date.now() - startedAt.current };
+      const { wantsSlots, body } = leadBody(values, lang, viewing, startedAt.current === null ? 0 : Date.now() - startedAt.current);
+      const rowErrors = wantsSlots ? slotRowErrors(values.slots, viewing!) : [];
       const checked = validateLead(body);
       setSlotErrors(rowErrors);
       if (!checked.ok || rowErrors.some(Boolean)) {
@@ -128,6 +162,7 @@ export function useContactModel({ lang, viewing, onSubmitted }: { lang: Language
       sending.current = false;
       if (next === "ok") {
         setSentType(values.requestType);
+        resetBySubmit.current = true;
         setValues(EMPTY);
         setSlotErrors([]);
         startedAt.current = null;

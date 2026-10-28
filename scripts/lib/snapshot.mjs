@@ -17,6 +17,7 @@ import path from "node:path";
 import { DEFAULT_CONTENT_DIR, splitRef } from "../../src/lib/content-root.ts";
 import { exportMediaWeb } from "./export-media-web.mjs";
 import { checkSnapshot, walk } from "./snapshot-guard.mjs";
+import { buildVersionInfo } from "./version-info.mjs";
 
 /** The snapshot was refused: `problems` lists why. The folder is removed before this is thrown. */
 export class SnapshotRefused extends Error {
@@ -27,6 +28,8 @@ export class SnapshotRefused extends Error {
 }
 
 const REF = /^[a-z0-9]+(-[a-z0-9]+)*\/[a-z0-9]+(-[a-z0-9]+)*$/;
+/** Written into every snapshot; it changes with each build (its time), so the change counters leave it out. */
+export const VERSION_FILE = "version.json";
 const REQUIRED_TEMPLATE = ["examples", "tests/fixtures"];
 const DEV_NOTES = ["PROJECT.md", "PROGRESS.md", "docs", ".github"];
 const git = (cwd, ...a) => execFileSync("git", a, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
@@ -86,6 +89,9 @@ async function buildTree({ projectRoot, contentRoot, ref, dest, log }) {
   log("4. checking the tree ...");
   const problems = await checkSnapshot(dest);
   if (problems.length) refuse(problems);
+
+  // the build's own description (version, template and content commit, time): hashes, numbers and a date only
+  fs.writeFileSync(path.join(dest, VERSION_FILE), JSON.stringify(buildVersionInfo({ projectRoot, contentRoot }), null, 2) + "\n");
 }
 
 /**
@@ -188,7 +194,9 @@ export async function updateSnapshot({ projectRoot, contentRoot, product: ref, d
 
   git(dest, "add", "-A");
   git(dest, "add", "-f", "-A", DEFAULT_CONTENT_DIR);
-  const changed = git(dest, "diff", "--cached", "--name-only", "HEAD").split("\n").filter(Boolean);
+  const staged = git(dest, "diff", "--cached", "--name-only", "HEAD").split("\n").filter(Boolean);
+  // version.json differs in every build (its time): it is expected, goes along with a real change, and is not counted
+  const changed = staged.filter((p) => p !== VERSION_FILE);
   const templateChanged = changed.filter((p) => !p.startsWith(DEFAULT_CONTENT_DIR + "/"));
   const branch = git(dest, "rev-parse", "--abbrev-ref", "HEAD");
   const pushCommand = `git -C ${dest} push origin ${branch}`;
@@ -196,6 +204,8 @@ export async function updateSnapshot({ projectRoot, contentRoot, product: ref, d
   if (changed.length) {
     git(dest, "-c", "user.name=snapshot", "-c", "user.email=snapshot@invalid", "commit", "-q", "-m", updateSummary(changed));
     commit = git(dest, "rev-parse", "--short", "HEAD");
+  } else if (staged.length) {
+    git(dest, "reset", "-q", "--hard", "HEAD"); // only the new version.json: no commit, and the deploy folder stays clean
   }
   return { dest, commit, changed, templateChanged, branch, pushCommand };
 }

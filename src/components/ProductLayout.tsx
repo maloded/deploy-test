@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { AgentWidget } from "./AgentWidget";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
 import { renderBlock, renderedBlocks } from "./blocks";
@@ -21,6 +22,7 @@ export default function ProductLayout({ site }: { site: Site }) {
       <Header site={site} />
       {/* "contact" is rendered by the footer (its contact row), wherever the product lists it */}
       <main>{site.blocks.filter((id) => id !== "contact").map((id) => renderBlock(id, site))}</main>
+      {site.seller.agent && <AgentWidget agent={site.seller.agent} lang={site.lang} product={site.ref} />}
       <Footer site={site} />
     </div>
   );

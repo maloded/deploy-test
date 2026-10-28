@@ -75,6 +75,7 @@ describe("snapshot of one product", () => {
       "package.json",
       "src/a.ts",
       "tests/fixtures/content/f-seller/f/product.json",
+      "version.json",
     ]);
     expect(git(s.dest, "log", "--format=%s")).toBe("Demo snapshot");
     expect(git(s.dest, "remote")).toBe("");

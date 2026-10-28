@@ -17,5 +17,9 @@
   "consentText": {
     "de": "Ich bin damit einverstanden, dass Good Point meine Angaben verarbeitet, um meine Anfrage zu beantworten und mich dazu zu kontaktieren. Die Angaben werden nur zu diesem Zweck gespeichert. Mehr dazu in der Datenschutzerklärung.",
     "en": "I agree that Good Point processes my details to answer my enquiry and to contact me about it. The details are stored for this purpose only. More in the privacy notice."
+  },
+  "agent": {
+    "id": "6ae1eff96fd408fd48e34c14",
+    "variant": "inline"
   }
 }

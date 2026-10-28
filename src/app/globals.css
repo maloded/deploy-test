@@ -1465,6 +1465,13 @@ img {
   text-transform: uppercase;
 }
 
+.site-footer__version {
+  font-family: var(--font-mono, monospace); /* optional theme variable; a theme without it gets the browser's monospace */
+  font-size: 0.7rem;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
 .site-footer a {
   color: var(--text);
 }
@@ -1505,4 +1512,31 @@ img {
 .theme-switcher__warning {
   flex-basis: 100%;
   color: var(--muted);
+}
+
+/* The voice assistant (only for a seller with an agent): the inline strip above the footer, or room for the floating pill */
+.agent-strip {
+  border-top: 1px solid var(--border);
+  padding-block: var(--space-4);
+}
+
+.agent-strip__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.agent-strip__heading {
+  font-size: 1.25rem;
+}
+
+.agent-strip__widget {
+  min-height: 11rem; /* the widget loads after the page: no jump */
+}
+
+/* the floating pill is fixed in the bottom corner: room below the footer's last line so it never covers the links */
+.site-footer--agent-floating {
+  padding-bottom: calc(var(--space-5) + 5rem);
 }

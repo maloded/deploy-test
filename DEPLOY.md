@@ -129,3 +129,7 @@ Nothing else is needed: no `REVIEW_PASSWORD` (the page is `noindex` anyway, see 
 4. **Never reuse the snapshot for a public release.** It contains photos that may not be cleaned and unconfirmed draft content. A release is
    built from the real repository with cleaned photos, real data, no `REVIEW_PASSWORD`, no `REVIEW_THEME_SWITCHER`
    and no `NEXT_PUBLIC_PROTOTYPE_NOTE`, and the `noindex` settings are removed on purpose (not by accident).
+
+## Voice assistant widget
+
+The widget is configured in the seller's `seller.json` (`agent` object, see `docs/PAGE-API.md`), not in an environment variable, and the embed id is not stored in this repository. **The widget's domain restriction (which sites may load the agent) is a setting in the Hanc project, not code:** add the deployment's domain there, and `localhost` for a local try, or the widget will not connect. The package is pinned exactly and bundled with the page; nothing is loaded from a CDN.

@@ -53,6 +53,39 @@ const commitTemplate = (s: Setup, rel: string, text: string) => {
   git(s.project, "commit", "-q", "-m", `change ${rel}`);
 };
 
+describe("version.json in a snapshot", () => {
+  it("is written in the snapshot root with hashes, a version and a date, and is committed", async () => {
+    const s = await setup();
+    const info = JSON.parse(fs.readFileSync(path.join(s.dest, "version.json"), "utf8"));
+    expect(Object.keys(info).sort()).toEqual(["built", "content", "template", "version"]);
+    expect(info.template).toBe(git(s.project, "rev-parse", "--short", "HEAD"));
+    expect(info.built).toMatch(/^\d{4}-\d\d-\d\d \d\d:\d\d$/);
+    expect(git(s.dest, "ls-files")).toContain("version.json");
+  });
+
+  it("is not counted by --update: a real change goes along with a new version.json, which is not listed", async () => {
+    const s = await setup();
+    commitTemplate(s, "src/a.ts", "export const a = 1;\n");
+    const r = await update(s);
+    expect(r.changed).toEqual(["src/a.ts"]);
+    expect(r.templateChanged).toEqual(["src/a.ts"]);
+    expect(git(s.dest, "show", "--name-only", "--format=", "HEAD").split("\n").sort()).toEqual(["src/a.ts", "version.json"]);
+    expect(JSON.parse(fs.readFileSync(path.join(s.dest, "version.json"), "utf8")).template).toBe(git(s.project, "rev-parse", "--short", "HEAD"));
+  });
+
+  it("when only version.json would change there is no commit and the deploy folder stays clean", async () => {
+    const s = await setup();
+    const before = git(s.dest, "rev-parse", "HEAD");
+    const old = fs.readFileSync(path.join(s.dest, "version.json"), "utf8");
+    await new Promise((r) => setTimeout(r, 1100));
+    const r = await update(s);
+    expect(r).toMatchObject({ commit: null, changed: [], templateChanged: [] });
+    expect(git(s.dest, "rev-parse", "HEAD")).toBe(before);
+    expect(git(s.dest, "status", "--porcelain")).toBe("");
+    expect(fs.readFileSync(path.join(s.dest, "version.json"), "utf8")).toBe(old);
+  });
+});
+
 describe("snapshot --update", () => {
   it("a snapshot made before .github/ was dropped loses exactly the workflow files, and nothing else in the template", async () => {
     const s = await setup();

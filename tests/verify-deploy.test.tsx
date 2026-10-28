@@ -133,7 +133,7 @@ const failing = (r: { name: string; ok: boolean }[]) => r.filter((x) => !x.ok).m
 describe("verifyDeploy", () => {
   it("passes all eight checks for a good page", async () => {
     const r = await run(GOOD);
-    expect(r).toHaveLength(8);
+    expect(r).toHaveLength(9);
     expect(failing(r)).toEqual([]);
   });
 
@@ -219,12 +219,12 @@ const runLang = async (routes: Record<string, Route>, f = redirectingFetch(route
 describe("verifyDeploy: the language routes", () => {
   it("adds a redirect check, one check per language and one contact check when the seller has languages", async () => {
     const r = await runLang(TWO);
-    expect(r.map((x) => x.name).slice(8)).toEqual(['"/" redirects to "/de"', 'GET /de is 200, html lang is "de", hreflang links present', 'GET /en is 200, html lang is "en", hreflang links present', "the contact row (#contact) exists on every language route, holds no form and has the e-mail link"]);
+    expect(r.map((x) => x.name).slice(8)).toEqual(['"/" redirects to "/de"', 'GET /de is 200, html lang is "de", hreflang links present', 'GET /en is 200, html lang is "en", hreflang links present', "the contact row (#contact) exists on every language route, holds no form and has the e-mail link", "deployed version (/version.json)"]);
     expect(failing(r)).toEqual([]);
   });
 
   it("adds nothing when the local product has no language information", async () => {
-    expect(await run(GOOD)).toHaveLength(8);
+    expect(await run(GOOD)).toHaveLength(9);
   });
 
   it("fails when / does not redirect, redirects elsewhere, or has no location", async () => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import { updateFormSnapshot } from "@/lib/form-snapshot";
 import { DEFAULT_REQUEST_TYPE, REQUEST_TYPES, resolvePreset, type RequestType } from "@/lib/request-types";
 import type { ViewingConfig } from "@/lib/viewing";
 import type { Language } from "@/lib/schema";
@@ -74,6 +75,7 @@ export function ContactSection({ lang, email, phone, requestTypes, viewing, prot
       if (typeof dialog.showModal === "function") dialog.showModal();
       else dialog.setAttribute("open", "");
       setModal(true);
+      updateFormSnapshot({ dialogOpen: true, everOpened: true });
       emit("contact-open");
       // focus goes to the Name input (not the select, not the close button)
       if (!AUTOFOCUS_ONLY_WITH_FINE_POINTER || window.matchMedia?.("(pointer: fine)").matches) dialog.querySelector<HTMLElement>("[name=name]")?.focus();
@@ -89,6 +91,7 @@ export function ContactSection({ lang, email, phone, requestTypes, viewing, prot
     if (typeof dialog.close === "function") dialog.close();
     else dialog.removeAttribute("open");
     setModal(false);
+    updateFormSnapshot({ dialogOpen: false });
     emit("contact-close");
     const back = opener.current;
     opener.current = null;

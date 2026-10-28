@@ -1,6 +1,8 @@
 // Checks a running deployment (npm run verify:deploy -- <url> [--product <seller>/<product>] [--auth user:password]).
 // Only fetch, no dependency. The parsing functions are pure (tests/verify-deploy.test.ts); `verifyDeploy` does the requests.
 
+import { cleanVersionInfo, versionLine } from "../../src/lib/version.ts";
+
 const NAMED = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", shy: "­", ndash: "–", mdash: "—", hellip: "…", laquo: "«", raquo: "»",
   copy: "©", euro: "€", szlig: "ß", auml: "ä", ouml: "ö", uuml: "ü", Auml: "Ä", Ouml: "Ö", Uuml: "Ü", eacute: "é", egrave: "è", agrave: "à", aacute: "á", iacute: "í", oacute: "ó", uacute: "ú", ccedil: "ç", ntilde: "ñ" };
 
@@ -123,13 +125,14 @@ export const pageText = (html) => squash(decodeEntities(html));
 // ---- the checks ----------------------------------------------------------------------------------------------------
 
 /**
- * @param {{ url: string, expected?: { title: string, displayName: string, languages?: string[], defaultLanguage?: string, titles?: Record<string, string> } | null, expectedProblem?: string, auth?: string, fetchImpl?: typeof fetch }} options
+ * @param {{ url: string, expectTemplate?: string, expected?: { title: string, displayName: string, languages?: string[], defaultLanguage?: string, titles?: Record<string, string> } | null, expectedProblem?: string, auth?: string, fetchImpl?: typeof fetch }} options
  * `expected` is read from the local content root by the command (title in the default language, seller's displayName;
  * and the seller's languages, default language and the title per language). With `languages` and `defaultLanguage`
  * the language routes are checked too: "/" redirects to "/<default>", every "/<lang>" is a page in that language, and each has the footer's contact row.
- * @returns {Promise<{ name: string, ok: boolean, reason: string }[]>}
+ * `expectTemplate`: the short hash of the template commit the deployment must have been built from (see /version.json).
+ * @returns {Promise<{ name: string, ok: boolean, reason: string, level?: "info" | "warn" }[]>} `level` marks the version line: "info" prints it, "warn" is "version unknown" (a warning, not a failure)
  */
-export async function verifyDeploy({ url, expected = null, expectedProblem, auth, fetchImpl = fetch }) {
+export async function verifyDeploy({ url, expected = null, expectedProblem, auth, expectTemplate, fetchImpl = fetch }) {
   const base = new URL(url);
   const results = [];
   const record = (name, ok, reason = "") => results.push({ name, ok, reason });
@@ -196,6 +199,7 @@ export async function verifyDeploy({ url, expected = null, expectedProblem, auth
   else record("footer shows the seller's displayName", footer !== null && footer.includes(squash(expected.displayName)), footer === null ? "the page has no <footer>" : footer.includes(squash(expected.displayName)) ? "" : "the footer does not contain seller.displayName");
 
   if (expected?.languages?.length && expected.defaultLanguage) await verifyLanguages({ base, expected, get, getManual, record, guard });
+  await verifyVersion({ base, get, expectTemplate, results });
   return results;
 }
 
@@ -238,4 +242,23 @@ async function verifyLanguages({ base, expected, get, getManual, record, guard }
 
   const contactName = "the contact row (#contact) exists on every language route, holds no form and has the e-mail link";
   record(contactName, noContact.length === 0 && languages.length > 0, noContact.length ? `no form-free #contact with the e-mail link on: ${noContact.map((l) => `/${l}`).join(", ")}` : "");
+}
+
+/** The deployed version, read from /version.json. Without the file: "version unknown", a warning (a failure only when a template hash was expected). */
+async function verifyVersion({ base, get, expectTemplate, results }) {
+  const name = "deployed version (/version.json)";
+  let info = null;
+  try {
+    const r = await get(new URL("/version.json", base).href);
+    if (r.status === 200) info = cleanVersionInfo(await r.json());
+  } catch {
+    // no file, no JSON: unknown
+  }
+  if (!info) {
+    results.push(expectTemplate ? { name, ok: false, reason: `version unknown, cannot compare with --expect-template ${expectTemplate}` } : { name, ok: true, reason: "version unknown", level: "warn" });
+    return;
+  }
+  const line = versionLine(info);
+  if (expectTemplate && info.template !== expectTemplate) results.push({ name, ok: false, reason: `template is ${info.template ?? "unknown"}, expected ${expectTemplate} (${line})` });
+  else results.push({ name, ok: true, reason: line, level: expectTemplate ? undefined : "info" });
 }
