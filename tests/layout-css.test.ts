@@ -30,12 +30,12 @@ describe("one screen in three zones", () => {
     expect(rule(".hero", ONE_SCREEN).media).toBe(ONE_SCREEN);
   });
 
-  it("fills the viewport below the header: 100vh fallback first, then 100svh, both minus --header-h with a rem fallback", () => {
+  it("fills the viewport below the header: 100vh fallback first, then 100svh, both minus --header-h with a rem fallback and --agent-top-h (0 without a top strip)", () => {
     const hero = rule(".hero", ONE_SCREEN);
     const lines = hero.body.split(";").map((l) => l.trim()).filter((l) => l.startsWith("min-height"));
     expect(lines).toEqual([
-      "min-height: calc(100vh - var(--header-h, 4.25rem))",
-      "min-height: calc(100svh - var(--header-h, 4.25rem))",
+      "min-height: calc(100vh - var(--header-h, 4.25rem) - var(--agent-top-h, 0rem))",
+      "min-height: calc(100svh - var(--header-h, 4.25rem) - var(--agent-top-h, 0rem))",
     ]);
     expect(hero.body).toMatch(/flex-direction:\s*column/);
     expect(rule(".hero__stage", ONE_SCREEN).body).toMatch(/flex:\s*1/);

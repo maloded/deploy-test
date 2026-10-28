@@ -21,18 +21,25 @@ export type SellerContact = z.infer<typeof sellerContactSchema>;
  * The voice assistant widget (a public embed identifier, no secret). The widget element is mounted only when the seller
  * has this object. `id` is the agent's embed id, so it belongs in the seller's own content folder, never in this repository.
  */
-export const AGENT_VARIANTS = ["inline", "floating"] as const;
+export const AGENT_VARIANTS = ["inline", "pill", "floating"] as const;
+export const AGENT_PLACEMENTS = ["top", "bottom"] as const;
 export const DEFAULT_VOICE_SERVICE_URL = "https://voice.hanc.ai";
 export const sellerAgentSchema = z
   .object({
     id: z.string().regex(/^[A-Za-z0-9_-]{1,100}$/, "letters, digits, - and _ only"),
-    /** "inline": a small assistant strip above the footer. "floating": a pill fixed in a corner, no strip. */
-    variant: z.enum(AGENT_VARIANTS).default("inline"),
+    /**
+     * "inline": the large orb widget. "pill": the compact pill (orb and button in one row). "floating": a pill fixed in a corner,
+     * no strip. Left out: "pill" with placement "top", "inline" otherwise.
+     */
+    variant: z.enum(AGENT_VARIANTS).optional(),
+    /** Where the assistant strip is: "bottom" above the footer (default), or "top" right below the header. "floating" ignores it. */
+    placement: z.enum(AGENT_PLACEMENTS).default("bottom"),
     /** The widget's own theme name (optional; its default theme otherwise). */
     theme: z.string().regex(/^[a-z0-9-]{1,40}$/).optional(),
     voiceServiceUrl: z.url({ protocol: /^https$/ }).default(DEFAULT_VOICE_SERVICE_URL),
   })
-  .strict();
+  .strict()
+  .transform((agent) => ({ ...agent, variant: agent.variant ?? (agent.placement === "top" ? ("pill" as const) : ("inline" as const)) }));
 export type SellerAgent = z.infer<typeof sellerAgentSchema>;
 
 export const sellerShape = {
@@ -101,7 +108,7 @@ export const SELLER_FIELDS = [
   { key: "theme", label: { en: "Default theme", de: "Standard-Theme" }, required: true, type: "theme" },
   { key: "consentText", label: { en: "Consent text of the contact form", de: "Einwilligungstext des Kontaktformulars" }, required: true, type: "localized" },
   { key: "viewing", label: { en: "Viewing settings (default)", de: "Besichtigungseinstellungen (Standard)" }, required: false, type: "viewing" },
-  { key: "agent", label: { en: "Voice assistant widget (id, variant, theme)", de: "Sprachassistent-Widget (ID, Variante, Theme)" }, required: false, type: "agent" },
+  { key: "agent", label: { en: "Voice assistant widget (id, variant, placement, theme)", de: "Sprachassistent-Widget (ID, Variante, Platzierung, Theme)" }, required: false, type: "agent" },
   { key: "privacyUrl", label: { en: "Privacy page (placeholder)", de: "Datenschutzseite (Platzhalter)" }, required: false, type: "link" },
   { key: "imprintUrl", label: { en: "Imprint page (placeholder)", de: "Impressum (Platzhalter)" }, required: false, type: "link" },
 ] as const satisfies readonly SellerFieldDescriptor[];

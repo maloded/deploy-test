@@ -12,17 +12,20 @@ import type { Site } from "./blocks";
  */
 export default function ProductLayout({ site }: { site: Site }) {
   const { media } = site.typeFields;
+  const agent = site.seller.agent;
+  const agentTop = agent && agent.placement === "top" && agent.variant !== "floating" ? agent : null;
   return (
     <div
       className={`pt pt-${site.product.productType}`}
       data-lang={site.lang}
       data-block-order={renderedBlocks(site).join(" ")}
-      style={{ "--media-ratio": media.heroRatio, "--gallery-ratio": media.galleryRatio } as CSSProperties}
+      style={{ "--media-ratio": media.heroRatio, "--gallery-ratio": media.galleryRatio, ...(agentTop ? { "--agent-top-h": agentTop.variant === "inline" ? "7rem" : "3.5rem" } : {}) } as CSSProperties}
     >
       <Header site={site} />
+      {agentTop && <AgentWidget agent={agentTop} lang={site.lang} product={site.ref} />}
       {/* "contact" is rendered by the footer (its contact row), wherever the product lists it */}
       <main>{site.blocks.filter((id) => id !== "contact").map((id) => renderBlock(id, site))}</main>
-      {site.seller.agent && <AgentWidget agent={site.seller.agent} lang={site.lang} product={site.ref} />}
+      {agent && !agentTop && <AgentWidget agent={agent} lang={site.lang} product={site.ref} />}
       <Footer site={site} />
     </div>
   );

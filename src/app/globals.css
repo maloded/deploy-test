@@ -512,8 +512,8 @@ img {
   .hero {
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - var(--header-h, 4.25rem));
-    min-height: calc(100svh - var(--header-h, 4.25rem));
+    min-height: calc(100vh - var(--header-h, 4.25rem) - var(--agent-top-h, 0rem));
+    min-height: calc(100svh - var(--header-h, 4.25rem) - var(--agent-top-h, 0rem));
   }
 
   .hero__stage {
@@ -1534,6 +1534,51 @@ img {
 
 .agent-strip__widget {
   min-height: 11rem; /* the widget loads after the page: no jump */
+}
+
+.agent-strip--pill .agent-strip__widget {
+  min-height: 3.5rem;
+}
+
+/* placement "top": a slim strip in normal flow between the header and the hero (not fixed, not sticky) */
+.agent-strip--top {
+  border-top: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  padding-block: 0;
+}
+
+.agent-strip__inner--top {
+  justify-content: center;
+  gap: var(--space-1) var(--space-3);
+  min-height: var(--agent-top-h, 3.5rem);
+  padding-block: var(--space-2);
+}
+
+.agent-strip__text {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.agent-strip__widget--top {
+  min-height: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* the one-screen hero is the window below the header AND the strip */
+@media (min-width: 56em) {
+  .agent-strip--top {
+    height: var(--agent-top-h, 3.5rem); /* border included: the hero below subtracts exactly this */
+  }
+
+  .agent-strip__inner--top {
+    height: 100%;
+    flex-wrap: nowrap;
+    padding-block: 0;
+  }
 }
 
 /* the floating pill is fixed in the bottom corner: room below the footer's last line so it never covers the links */

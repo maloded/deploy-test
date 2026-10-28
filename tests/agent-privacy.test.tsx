@@ -66,7 +66,8 @@ describe("nothing the visitor typed is written anywhere but the answer", () => {
 describe("agent strings", () => {
   it("every agent.* string exists in German and English and is not empty", () => {
     const keys = UI_KEYS.filter((k) => k.startsWith("agent."));
-    expect(keys.length).toBeGreaterThanOrEqual(3);
+    expect(keys.length).toBeGreaterThanOrEqual(6);
+    for (const k of ["agent.top", "agent.pill", "agent.end"]) expect(keys).toContain(k);
     for (const key of keys) for (const lang of ["de", "en"] as const) expect(ui(key, lang).trim().length, `${key} ${lang}`).toBeGreaterThan(0);
     for (const key of keys) expect(ui(key, "de"), key).not.toBe(ui(key, "en"));
   });

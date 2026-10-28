@@ -20,6 +20,7 @@
   },
   "agent": {
     "id": "6ae1eff96fd408fd48e34c14",
-    "variant": "inline"
+    "variant": "pill",
+    "placement": "top"
   }
 }
