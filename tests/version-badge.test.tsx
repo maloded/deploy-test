@@ -76,8 +76,10 @@ describe("version info (scripts/lib/version-info.mjs)", () => {
     expect(buildVersionInfo({ projectRoot: project, contentRoot: path.join(tmp, "nullc", "missing"), now: NOW }).content).toBeNull();
   });
 
-  it("the real package version is 0.2.0", () => {
-    expect(JSON.parse(fs.readFileSync("package.json", "utf8")).version).toBe("0.2.0");
+  it("the real package version is what version-info reports (no literal: it follows npm version)", () => {
+    const version = JSON.parse(fs.readFileSync("package.json", "utf8")).version;
+    expect(version).toMatch(/^\d+\.\d+\.\d+/);
+    expect(buildVersionInfo({ projectRoot: process.cwd(), contentRoot: path.join(tmp, "no-content"), now: NOW }).version).toBe(version);
   });
 });
 
