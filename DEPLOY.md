@@ -89,15 +89,20 @@ The form posts to `POST /api/lead` (same origin only). A host with a read-only f
 
 | Variable | Value | Effect |
 |---|---|---|
-| `LEADS_STORE` | `file` or `webhook` | Where leads go. **Not set (or anything else): the API answers 503**; nothing is stored and the form says so. |
+| `LEADS_STORE` | `file`, `webhook` or `telegram` | Where leads go. **Not set (or anything else): the API answers 503**; nothing is stored and the form says so. |
 | `LEADS_DIR` | (optional, `file` only) | Folder for the lead files; default `./data/leads` (git-ignored; the snapshot guard refuses it). Must be writable. |
 | `LEADS_WEBHOOK_URL` | an `https://` URL (`webhook` only) | Receives each lead as JSON (`POST`, 5 second timeout). Anything but a 2xx answer counts as a failure (503). Treat the URL as a secret. |
+| `LEADS_NOTIFY` | `telegram` | Tells a Telegram chat AFTER another store accepted the lead; never changes the visitor's answer. A notifier alone is not a store (503). Not together with `LEADS_STORE=telegram`. |
+| `TELEGRAM_BOT_TOKEN` | the bot's token (**Sensitive**) | Set as a sensitive/encrypted host variable, never `NEXT_PUBLIC_`, never committed. |
+| `TELEGRAM_CHAT_ID` | the chat's numeric id or `@channel` | Find it with `npm run telegram:chats`. |
+| `TELEGRAM_DETAIL` | `full` or `short` | Default `full` for the store, `short` for the notifier (`full` there only when set explicitly). |
 
 Read at run time (not build time), so a change needs a redeploy only because the host restarts. What the API knows about the site (product, languages, consent text hashes) is computed at build time and inlined, so the function needs no content files.
 
 - **Region.** Function code runs in the host's default region. For a seller in the EU set the project's **Function Region** to a European one in the host's project settings (Vercel: Settings > Functions). It is a project setting; do not add config files for it that have not been verified.
 - **Rate limit.** In memory, 5 posts per client per 10 minutes: every server instance counts for itself, so on a host with several instances the real limit is higher. It is a prototype safeguard; use the host's own rate limiting for a public site.
 - **Retention.** `npm run leads:purge [-- --days N] [--write]` deletes lead files older than N days (default 90; a dry run unless `--write`; `file` store only). A webhook's receiver has its own retention.
+- **Telegram.** A host with a read-only file system (Vercel) can deliver to Telegram with no database: set `LEADS_STORE=telegram`, or keep another store and add `LEADS_NOTIFY=telegram`. Setup, token rotation (`/revoke`), the `telegram:chats` and `telegram:test` commands and the privacy notes (Telegram stores messages and processes data outside the EU; use `short` for real visitors): `docs/LEADS.md`. The notification is awaited before the answer (4 s for a notifier, 8 s for a store).
 - **Verify the honest failure:** with `LEADS_STORE` unset, `curl -s -X POST -H 'content-type: application/json' -H 'x-lead-request: 1' -d '{}' <url>/api/lead` must not answer 200.
 
 ## Check a deployment

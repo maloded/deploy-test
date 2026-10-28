@@ -1231,11 +1231,11 @@ main:focus-visible {
 
 .contact__grid {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-2) var(--space-3); /* tighter rows: with the contact window row the form must still fit 1440x800 in German */
   margin-block: var(--space-3);
 }
 
-/* two columns for name and e-mail, three for phone, channel and best time, one for the message */
+/* two columns for name and e-mail and for phone and channel; the contact window and the message each get a full row */
 @media (min-width: 40em) {
   .contact__grid {
     grid-template-columns: repeat(6, 1fr);
@@ -1245,22 +1245,24 @@ main:focus-visible {
     grid-column: span 3;
   }
 
-  .contact__grid > .contact__field--third {
-    grid-column: span 2;
-    justify-content: flex-end; /* a label that wraps (German) must not push its input out of line with the others */
-  }
-
   .contact__grid > .contact__field--wide {
     grid-column: 1 / -1;
   }
 }
 
-/* the message label and its character counter share one row */
+/* the message label and its character counter share one row; the counter drops to the next line before the label would wrap */
 .contact__label-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--space-2);
+  gap: 0 var(--space-2);
+}
+
+/* a field label is one line (the German ones are the long ones), at 390 px as at 1440 px */
+.contact__field > label,
+.contact__label-row > label {
+  white-space: nowrap;
 }
 
 .contact__field {
@@ -1289,6 +1291,13 @@ main:focus-visible {
 
 .contact__field textarea {
   resize: vertical;
+}
+
+/* the one-line note under a field (the seller's time zone) */
+.contact__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
 }
 
 .contact__field [aria-invalid="true"],

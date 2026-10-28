@@ -64,9 +64,9 @@ describe("form snapshot store", () => {
     type(field("email"), "person@example.invalid");
     type(field("phone"), "+43 1 000 000");
     type(field("channel"), "phone");
-    type(field("bestTime"), "mornings");
+    type(field("contactWindow"), "morning"); // the best-time text field became a contact window select
     check(field("consent"));
-    expect(getFormSnapshot()).toMatchObject({ email: "person@example.invalid", phone: "+43 1 000 000", preferredChannel: "phone", bestTime: "mornings", consentGiven: true, valid: true, requestType: "question" });
+    expect(getFormSnapshot()).toMatchObject({ email: "person@example.invalid", phone: "+43 1 000 000", preferredChannel: "phone", contactWindow: "morning", consentGiven: true, valid: true, requestType: "question" });
     type(field("email"), "not an address");
     expect(getFormSnapshot().valid).toBe(false);
     type(field("message"), "y".repeat(500));

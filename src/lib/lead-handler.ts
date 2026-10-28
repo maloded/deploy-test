@@ -1,8 +1,9 @@
+import { DEFAULT_CONTACT_WINDOWS, isWindowCode } from "./contact-windows";
 import { leadContext } from "./lead-context";
 import { MIN_FILL_MS, validateLead } from "./lead";
 import { needsSlots } from "./request-types";
 import { slotsProblem } from "./viewing";
-import { buildRecord, LeadStoreError, storeLead } from "./leads";
+import { buildRecord, checkDelivery, LeadStoreError, notifyLead, storeLead } from "./leads";
 import { leadLimiter } from "./rate-limit";
 
 /** The largest body accepted: the longest message plus every other field is far below this. */
@@ -35,7 +36,7 @@ function sameOrigin(request: Request): boolean {
  * POST /api/lead. In order: same-origin and custom header (403), JSON content type (415), rate limit (429), body size
  * (413), JSON (400), honeypot (a silent 200 that stores nothing), the shared schema (400 with one code per field), the
  * minimum fill time (422), the site context (503), the store (503 when none works). Only a stored lead answers 200 with
- * `{ ok: true }`. Nothing about the visitor is logged.
+ * `{ ok: true }`; a notification to the seller's chat (LEADS_NOTIFY) comes after that and never changes the answer. Nothing about the visitor is logged.
  * `env` and `fetchImpl` are for tests.
  */
 export async function handleLead(request: Request, env: Record<string, string | undefined> = process.env, fetchImpl: typeof fetch = fetch): Promise<Response> {
@@ -69,18 +70,28 @@ export async function handleLead(request: Request, env: Record<string, string | 
   // the request type must be one this product offers (a viewing for a product without viewing settings is refused)
   if (!context.requestTypes.includes(checked.data.requestType)) return json(400, { ok: false, error: "invalid", errors: { requestType: "invalid" } });
 
+  // the contact window must be one of the seller's codes
+  if (checked.data.contactWindow !== undefined && !isWindowCode(context.contactWindows ?? DEFAULT_CONTACT_WINDOWS, checked.data.contactWindow)) {
+    return json(400, { ok: false, error: "invalid", errors: { contactWindow: "invalid" } });
+  }
+
   // viewing and test drive: every slot is checked again against the seller's settings (allowed day and hours, a future
   // day inside the horizon, the seller's calendar, daylight saving). One generic answer whatever is wrong.
   if (needsSlots(checked.data.requestType) && (!context.viewing || slotsProblem(checked.data.preferredSlots, context.viewing, new Date()) !== null)) {
     return json(400, { ok: false, error: "invalid", errors: { preferredSlots: "invalid" } });
   }
 
+  const owner = { lang: context.defaultLanguage ?? context.languages[0], windows: context.contactWindows, productTitle: context.productTitle };
+  const record = buildRecord(checked.data, context, request.headers.get("user-agent"));
   try {
-    await storeLead(buildRecord(checked.data, context, request.headers.get("user-agent")), env, fetchImpl);
+    const wrong = checkDelivery(env);
+    if (wrong) throw wrong;
+    await storeLead(record, env, fetchImpl, process.cwd(), owner);
   } catch (e) {
-    // the reason (for example "file: EROFS") holds no personal data
+    // the reason (for example "file: EROFS" or the NAMES of bad variables) holds no personal data
     console.error(`lead not stored (${e instanceof LeadStoreError ? e.reason : "error"})`);
     return refuse(503, "unavailable");
   }
+  await notifyLead(record, env, fetchImpl, owner); // after the store; it cannot change the answer
   return json(200, { ok: true });
 }

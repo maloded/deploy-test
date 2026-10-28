@@ -2,7 +2,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
+import { ANYTIME, CODE_PATTERN } from "./contact-windows";
 import { CHANNELS, type LeadInput } from "./lead";
+import { ownerMessage, type OwnerContext } from "./owner-message";
+import { NOTIFY_TIMEOUT_MS, sendTelegram, STORE_TIMEOUT_MS, TelegramError } from "./telegram";
+import { notifyChoice, telegramSetup } from "./telegram-config";
 import { sha256, type LeadContext } from "./lead-context";
 import type { Language } from "./languages";
 import { REQUEST_TYPE_IDS, type RequestType } from "./request-types";
@@ -25,7 +29,10 @@ export type LeadRecord = {
   email: string;
   phone?: string;
   channel?: string;
-  bestTime?: string;
+  /** The code of the contact window ("anytime" when none was chosen). */
+  contactWindow: string;
+  /** The seller's time zone when the record was made (IANA); absent when the seller has none. */
+  timezone?: string;
   message?: string;
   /** Viewing and test drive requests: 1 to 3 preferred times, seller-local (the seller's time zone is in the viewing settings). */
   preferredSlots?: { date: string; time: string }[];
@@ -47,7 +54,8 @@ export const leadRecordSchema = z
     email: z.email(),
     phone: z.string().optional(),
     channel: z.enum(CHANNELS).optional(),
-    bestTime: z.string().optional(),
+    contactWindow: z.string().regex(CODE_PATTERN),
+    timezone: z.string().optional(),
     message: z.string().optional(),
     preferredSlots: z.array(z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), time: z.string().regex(/^\d{2}:\d{2}$/) }).strict()).min(1).max(3).optional(),
     consent: z.literal(true),
@@ -67,12 +75,14 @@ export function buildRecord(input: LeadInput, context: LeadContext, userAgent: s
     requestType: input.requestType,
     name: input.name,
     email: input.email,
+    contactWindow: input.contactWindow ?? ANYTIME,
+    ...(context.timezone ? { timezone: context.timezone } : {}),
     consent: true,
     consentTextSha256: context.consent[input.lang],
     source: "form",
     userAgentSha256: sha256(userAgent ?? ""),
   };
-  for (const key of ["phone", "channel", "bestTime", "message"] as const) if (input[key] !== undefined) record[key] = input[key];
+  for (const key of ["phone", "channel", "message"] as const) if (input[key] !== undefined) record[key] = input[key];
   if (input.preferredSlots?.length) record.preferredSlots = input.preferredSlots.map(({ date, time }) => ({ date, time }));
   return record;
 }
@@ -119,23 +129,53 @@ async function storeWebhook(record: LeadRecord, env: Env, fetchImpl: typeof fetc
   }
 }
 
+async function storeTelegram(record: LeadRecord, env: Env, fetchImpl: typeof fetch, owner: OwnerContext): Promise<void> {
+  const setup = telegramSetup(env, "store");
+  if (!setup.ok) throw new LeadStoreError(`telegram: configuration error in ${setup.names.join(", ")}`); // names only
+  try {
+    await sendTelegram(setup.config, ownerMessage(record, setup.config.detail, owner), { fetchImpl, timeoutMs: STORE_TIMEOUT_MS });
+  } catch (e) {
+    throw new LeadStoreError(e instanceof TelegramError ? `telegram: ${e.reason}` : "telegram: error"); // the reason is a status class, never data
+  }
+}
+
 /**
- * Stores a lead with the adapter LEADS_STORE names: "file" (JSON files under LEADS_DIR) or "webhook" (POST to
- * LEADS_WEBHOOK_URL). With none configured, or when the store fails (a read-only file system, a webhook that is down),
- * it throws LeadStoreError: the API then answers 503 and nothing claims to be saved.
- * `fetchImpl` and `cwd` are for tests.
+ * Stores a lead with the adapter LEADS_STORE names: "file" (JSON files under LEADS_DIR), "webhook" (POST to
+ * LEADS_WEBHOOK_URL) or "telegram" (a message to the seller's chat; delivered only when Telegram answers ok:true). With none
+ * configured, or when the store fails (a read-only file system, a webhook that is down, a bad Telegram configuration), it
+ * throws LeadStoreError: the API then answers 503 and nothing claims to be saved. LEADS_NOTIFY alone is not a store.
+ * `fetchImpl` and `cwd` are for tests; `owner` is the language of the message to the seller and what it needs (windows, product title).
  */
-export async function storeLead(record: LeadRecord, env: Env = process.env, fetchImpl: typeof fetch = fetch, cwd: string = process.cwd()): Promise<void> {
+export async function storeLead(record: LeadRecord, env: Env = process.env, fetchImpl: typeof fetch = fetch, cwd: string = process.cwd(), owner: OwnerContext = { lang: "en" }): Promise<void> {
   const store = env.LEADS_STORE?.trim();
   if (store === "file") return storeFile(record, env, cwd);
   if (store === "webhook") return storeWebhook(record, env, fetchImpl);
+  if (store === "telegram") return storeTelegram(record, env, fetchImpl, owner);
   throw new LeadStoreError(store ? `unknown LEADS_STORE "${store}"` : "LEADS_STORE is not set");
 }
 
 /**
- * Notifications (e-mail to the seller, Telegram message) are a documented stub: this is the interface a notifier would
- * implement. Nothing calls it yet; see "Lead handling" in PROJECT.md.
+ * Tells the seller's chat AFTER another store accepted the lead (LEADS_NOTIFY=telegram). It never throws and never changes
+ * what the visitor is told: a failure is logged as one generic line (a status class or the NAMES of bad variables, never data)
+ * and not retried beyond the adapter's single network retry. With Telegram as the store itself LEADS_NOTIFY is a
+ * configuration error that the handler refuses before storing (see checkDelivery).
  */
-export interface LeadNotifier {
-  notify(record: LeadRecord): Promise<void>;
+export async function notifyLead(record: LeadRecord, env: Env = process.env, fetchImpl: typeof fetch = fetch, owner: OwnerContext = { lang: "en" }): Promise<void> {
+  const choice = notifyChoice(env);
+  if (choice === "none") return;
+  try {
+    if (choice === "invalid") throw new LeadStoreError("configuration error in LEADS_NOTIFY");
+    const setup = telegramSetup(env, "notifier");
+    if (!setup.ok) throw new LeadStoreError(`configuration error in ${setup.names.join(", ")}`);
+    await sendTelegram(setup.config, ownerMessage(record, setup.config.detail, owner), { fetchImpl, timeoutMs: NOTIFY_TIMEOUT_MS });
+  } catch (e) {
+    const reason = e instanceof TelegramError || e instanceof LeadStoreError ? e.reason : "error";
+    console.error(`lead notification not sent (${reason})`);
+  }
+}
+
+/** The delivery settings that must be right before a lead is accepted (so a wrong setup loses nothing): Telegram as store and as notifier at once. */
+export function checkDelivery(env: Env): LeadStoreError | null {
+  if (env.LEADS_STORE?.trim() === "telegram" && env.LEADS_NOTIFY?.trim() === "telegram") return new LeadStoreError("telegram: configuration error in LEADS_STORE, LEADS_NOTIFY");
+  return null;
 }

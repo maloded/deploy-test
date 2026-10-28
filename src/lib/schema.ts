@@ -3,6 +3,7 @@ import type { SellerContact } from "./seller";
 import { AUDIO_FILE, AUDIO_FILE_MESSAGE, AUTOSTART_MODES, DEFAULT_AUTOSTART, DEFAULT_VOLUME, MAX_TITLE_CHARS, MAX_TRACKS } from "./music";
 import { isLanguage, unsupportedLanguageMessage, type Language } from "./languages";
 import { parseVideo } from "./video";
+import { checkContactWindows } from "./contact-windows";
 import { checkViewing, DAYS, MAX_DURATION, MIN_DURATION, isTime, isTimeZone, type ViewingSettings } from "./viewing";
 
 export { LANGUAGES, type Language } from "./languages";
@@ -55,6 +56,19 @@ export const viewingSchema = z
     for (const message of checkViewing(v as ViewingSettings)) ctx.addIssue({ code: "custom", path: [message.split(":")[0]], message: message.slice(message.indexOf(":") + 2) });
   });
 
+/**
+ * The seller's contact windows (seller.json, optional; the defaults are in contact-windows.ts): code, hours and a label per
+ * language. The rules (unique codes, from before to, "anytime" present) are checkContactWindows.
+ */
+export const contactWindowSchema = z
+  .object({ code: z.string(), from: z.string().optional(), to: z.string().optional(), label: localizedSchema })
+  .strict();
+export const contactWindowsSchema = z.array(contactWindowSchema).min(1).superRefine((windows, ctx) => {
+  for (const message of checkContactWindows(windows as never)) {
+    const [path, ...rest] = message.split(": ");
+    ctx.addIssue({ code: "custom", path: path.split(".").slice(1).map((p) => (/^\d+$/.test(p) ? Number(p) : p)), message: rest.join(": ") });
+  }
+});
 /** Focus point of a photo, as fractions of its width and height. Used as CSS object-position when cropping. */
 export const focusSchema = z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) }).strict();
 export type Focus = z.infer<typeof focusSchema>;

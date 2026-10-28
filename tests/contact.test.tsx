@@ -132,7 +132,7 @@ describe("the contact block (the footer's contact row)", () => {
   it("has the fields, with labels, required marks, limits and a hidden honeypot", () => {
     mount("en");
     const form = inline();
-    for (const name of ["name", "email", "phone", "channel", "bestTime", "message", "consent", "website"]) expect(field(form, name), name).toBeTruthy();
+    for (const name of ["name", "email", "phone", "channel", "contactWindow", "message", "consent", "website"]) expect(field(form, name), name).toBeTruthy();
     expect([...form.querySelectorAll("[required]")].map((e) => e.getAttribute("name"))).toEqual(["name", "email", "consent"]);
     expect(field(form, "message").getAttribute("maxlength")).toBe("1000");
     expect([...field(form, "channel").querySelectorAll("option")].map((o) => o.getAttribute("value"))).toEqual(["", "email", "phone", "whatsapp", "telegram"]);

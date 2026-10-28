@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ANYTIME } from "@/lib/contact-windows";
 import { FIELDS, validateLead, type LeadErrors, type LeadField } from "@/lib/lead";
 import { updateFormSnapshot } from "@/lib/form-snapshot";
 import { DEFAULT_REQUEST_TYPE, needsSlots, type RequestType } from "@/lib/request-types";
@@ -22,13 +23,14 @@ export type Values = {
   email: string;
   phone: string;
   channel: string;
-  bestTime: string;
+  /** The code of a contact window (contact-windows.ts); only sent when the preferred channel is not e-mail. */
+  contactWindow: string;
   message: string;
   consent: boolean;
   /** The honeypot. */
   website: string;
 };
-const EMPTY: Values = { requestType: DEFAULT_REQUEST_TYPE, slots: [{ date: "", time: "" }], name: "", email: "", phone: "", channel: "", bestTime: "", message: "", consent: false, website: "" };
+const EMPTY: Values = { requestType: DEFAULT_REQUEST_TYPE, slots: [{ date: "", time: "" }], name: "", email: "", phone: "", channel: "", contactWindow: ANYTIME, message: "", consent: false, website: "" };
 
 /** The problem of each slot row, or null: blank rows are ignored; a half-filled row, or a row the slot rules refuse, is an error of that row. */
 function slotRowErrors(rows: SlotInput[], viewing: ViewingConfig): (SlotError | null)[] {
@@ -40,13 +42,16 @@ function slotRowErrors(rows: SlotInput[], viewing: ViewingConfig): (SlotError | 
   });
 }
 
+/** The window that is sent and shown to the agent: the select is hidden for e-mail, and then the answer is "anytime". */
+export const effectiveWindow = (v: Pick<Values, "channel" | "contactWindow">): string => (v.channel === "email" ? ANYTIME : v.contactWindow);
+
 /** The body the lead schema checks (the submit and the snapshot build it the same way). */
 function leadBody(values: Values, lang: Language, viewing: ViewingConfig | null, elapsedMs: number) {
   const wantsSlots = needsSlots(values.requestType) && viewing !== null;
   const complete = (wantsSlots ? values.slots : []).filter((s) => s.date && s.time);
   const { slots: _slots, ...fields } = values;
   void _slots;
-  return { wantsSlots, body: { ...fields, lang, ...(wantsSlots ? { preferredSlots: complete } : {}), elapsedMs } };
+  return { wantsSlots, body: { ...fields, contactWindow: effectiveWindow(values), lang, ...(wantsSlots ? { preferredSlots: complete } : {}), elapsedMs } };
 }
 
 /** Where focus goes after a submit: the error summary, or the success panel. */
@@ -130,7 +135,7 @@ export function useContactModel({ lang, viewing, onSubmitted }: { lang: Language
       email: values.email.trim(),
       phone: values.phone.trim(),
       preferredChannel: values.channel,
-      bestTime: values.bestTime.trim(),
+      contactWindow: effectiveWindow(values),
       message: values.message.trim(),
       preferredSlots: values.slots.filter((s) => s.date && s.time).map((s) => ({ date: s.date, time: s.time })),
       language: lang,

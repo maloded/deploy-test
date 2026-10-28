@@ -9,6 +9,7 @@ import { fields as base } from "../product-types/_base/fields.ts";
 import { fields as car } from "../product-types/car/fields.ts";
 import { fields as house } from "../product-types/house/fields.ts";
 import { fields as watch } from "../product-types/watch/fields.ts";
+import { contactWindowsOf, sellerZone, type ContactWindow } from "./contact-windows.ts";
 import { isLanguage, type Language } from "./languages.ts";
 import { allowedRequestTypes, type RequestType } from "./request-types.ts";
 import { checkViewing, mergeViewing, missingViewingFields, type ViewingConfig, type ViewingSettings } from "./viewing.ts";
@@ -22,6 +23,14 @@ export type LeadContext = {
   /** "<seller>/<product>" */
   product: string;
   languages: Language[];
+  /** The seller's default language: the language of the messages to the seller (an older inlined context has none; the first language stands in). */
+  defaultLanguage?: Language;
+  /** The contact windows the form offers (the seller's override or the defaults): the server accepts only their codes and labels them in the messages to the seller. */
+  contactWindows?: ContactWindow[];
+  /** The product's title in the seller's default language (for the messages to the seller); absent when the product has none. */
+  productTitle?: string;
+  /** The seller's time zone (the viewing settings' zone, else seller.json's timezone); absent when there is none. */
+  timezone?: string;
   /** The request types this product accepts (its product type's list, without those that need viewing settings the product lacks). */
   requestTypes: RequestType[];
   /** The merged viewing settings the slots are checked against; null when the product has none. */
@@ -42,6 +51,8 @@ export function readLeadContext(env: Env = process.env, projectRoot: string = pr
     defaultLanguage?: unknown;
     consentText?: Record<string, string>;
     viewing?: ViewingSettings;
+    timezone?: string;
+    contactWindows?: ContactWindow[];
   };
   const languages = (seller.languages ?? []).filter(isLanguage);
   const fallback = isLanguage(seller.defaultLanguage) ? seller.consentText?.[seller.defaultLanguage] : undefined;
@@ -52,13 +63,16 @@ export function readLeadContext(env: Env = process.env, projectRoot: string = pr
     consent[lang] = sha256(text);
   }
   if (languages.length === 0) throw new Error("seller.json offers no supported language");
-  const productFile = JSON.parse(fs.readFileSync(/*turbopackIgnore: true*/ path.join(root, product, "product.json"), "utf8")) as { productType?: string; viewing?: ViewingSettings };
+  const productFile = JSON.parse(fs.readFileSync(/*turbopackIgnore: true*/ path.join(root, product, "product.json"), "utf8")) as { productType?: string; viewing?: ViewingSettings; title?: Record<string, string> };
   const merged = mergeViewing(seller.viewing, productFile.viewing);
   // (the loader refuses an incomplete or invalid merge when the page is built; here it simply means "no viewing")
   const viewing = merged && missingViewingFields(merged).length === 0 && checkViewing(merged).length === 0 ? (merged as ViewingConfig) : null;
   const listed = REQUEST_TYPES_OF[productFile.productType ?? ""];
   if (!listed) throw new Error(`unknown product type "${productFile.productType}"`);
-  return { product, languages, requestTypes: allowedRequestTypes(listed, viewing !== null), viewing, consent };
+  const timezone = sellerZone(viewing?.timezone, seller.timezone);
+  const defaultLanguage = isLanguage(seller.defaultLanguage) && languages.includes(seller.defaultLanguage) ? seller.defaultLanguage : languages[0];
+  const productTitle = productFile.title?.[defaultLanguage];
+  return { product, languages, ...(productTitle ? { productTitle } : {}), ...(timezone ? { timezone } : {}), contactWindows: contactWindowsOf(seller), defaultLanguage, requestTypes: allowedRequestTypes(listed, viewing !== null), viewing, consent };
 }
 
 /** The value next.config.ts inlines as LEAD_CONTEXT; empty when the content cannot be read here. */

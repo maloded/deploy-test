@@ -126,7 +126,7 @@ describe("page_context answer: the phases", () => {
     openAndFill();
     type(field("phone"), "+43 1 000 000");
     type(field("channel"), "phone");
-    type(field("bestTime"), "mornings");
+    type(field("contactWindow"), "morning"); // was the free-text best time; now the code of a contact window
     type(field("message"), MESSAGE);
     check(field("consent"));
     for (const dialogOpen of [true, false]) {
@@ -134,7 +134,7 @@ describe("page_context answer: the phases", () => {
       const a = ask();
       expect(a.phase).toBe("complete");
       expect(a.dialogOpen).toBe(dialogOpen);
-      expect(a.form).toEqual({ requestType: "question", name: NAME, email: EMAIL, phone: "+43 1 000 000", preferredChannel: "phone", bestTime: "mornings", message: MESSAGE, preferredSlots: [] });
+      expect(a.form).toEqual({ requestType: "question", name: NAME, email: EMAIL, phone: "+43 1 000 000", preferredChannel: "phone", contactWindow: "morning", message: MESSAGE, preferredSlots: [] });
     }
   });
 
@@ -169,7 +169,7 @@ describe("page_context answer: the phases", () => {
     const a = ask();
     // "submit" and "missing" are documented keys since the form-states step (states and field names, no value)
     expect(Object.keys(a).sort()).toEqual(["dialogOpen", "form", "language", "missing", "path", "phase", "product", "submit", "title"]);
-    expect(Object.keys(a.form).sort()).toEqual(["bestTime", "email", "message", "name", "phone", "preferredChannel", "preferredSlots", "requestType"]);
+    expect(Object.keys(a.form).sort()).toEqual(["contactWindow", "email", "message", "name", "phone", "preferredChannel", "preferredSlots", "requestType"]);
     const text = JSON.stringify(a);
     expect(consentText.length).toBeGreaterThan(10);
     expect(text).not.toContain(consentText);

@@ -20,7 +20,8 @@ export type FormSnapshot = {
   email: string;
   phone: string;
   preferredChannel: string;
-  bestTime: string;
+  /** The code of the contact window ("anytime" by default; always "anytime" for an e-mail channel). */
+  contactWindow: string;
   /** Cut to SNAPSHOT_MESSAGE_MAX characters. */
   message: string;
   /** Only the complete rows (both a date and a time). */
@@ -43,7 +44,7 @@ const INITIAL: FormSnapshot = {
   email: "",
   phone: "",
   preferredChannel: "",
-  bestTime: "",
+  contactWindow: "anytime",
   message: "",
   preferredSlots: [],
   language: null,

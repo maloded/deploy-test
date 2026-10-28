@@ -9,6 +9,8 @@ import { productTypes } from "@/product-types";
 import { offerTypes } from "@/offer-types";
 import { UI_KEYS, uiEntry } from "@/lib/ui-strings";
 import { REQUEST_TYPES } from "@/lib/request-types";
+import { OWNER_LABELS } from "@/lib/owner-message";
+import { DEFAULT_CONTACT_WINDOWS } from "@/lib/contact-windows";
 import { SELLER_FIELDS } from "@/lib/seller";
 import type { FieldDescriptor, SpecField, SpecGroup } from "@/lib/fields";
 import { sampleJson } from "./helpers";
@@ -41,6 +43,15 @@ describe("every registry language is complete", () => {
 
   it("has UI strings for every key", () => {
     for (const lang of LANGUAGES) for (const key of UI_KEYS) expect((uiEntry(key) as L)[lang], `ui ${key}.${lang}`).toBeTruthy();
+  });
+
+  it("has the owner-message labels (the Telegram message to the seller) for every key", () => {
+    expect(Object.keys(OWNER_LABELS).length).toBeGreaterThan(10);
+    for (const lang of LANGUAGES) for (const [key, l] of Object.entries(OWNER_LABELS)) expect((l as L)[lang], `owner message ${key}.${lang}`).toBeTruthy();
+  });
+
+  it("has a label for every default contact window", () => {
+    for (const lang of LANGUAGES) for (const w of DEFAULT_CONTACT_WINDOWS) expect((w.label as L)[lang], `contact window ${w.code}.${lang}`).toBeTruthy();
   });
 
   it("has descriptor labels for every product type, offer type and seller field", () => {

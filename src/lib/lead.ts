@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CODE_PATTERN } from "./contact-windows";
 import { needsSlots, REQUEST_TYPE_IDS, type RequestType } from "./request-types";
 import { MAX_SLOTS } from "./viewing";
 import { languageSchema } from "./schema";
@@ -10,7 +11,7 @@ import { languageSchema } from "./schema";
 export const CHANNELS = ["email", "phone", "whatsapp", "telegram"] as const;
 export type Channel = (typeof CHANNELS)[number];
 
-export const LIMITS = { name: 100, email: 254, phone: 40, bestTime: 100, message: 1000, honeypot: 200 } as const;
+export const LIMITS = { name: 100, email: 254, phone: 40, message: 1000, honeypot: 200 } as const;
 
 /** A post that arrives sooner than this after the visitor's first keystroke is not a person (the server answers 422). */
 export const MIN_FILL_MS = 3000;
@@ -18,7 +19,7 @@ export const MIN_FILL_MS = 3000;
 const MAX_FILL_MS = 86_400_000;
 
 /** The visible form fields, in page order. */
-export const FIELDS = ["requestType", "preferredSlots", "name", "email", "phone", "channel", "bestTime", "message", "consent"] as const;
+export const FIELDS = ["requestType", "preferredSlots", "name", "email", "phone", "channel", "contactWindow", "message", "consent"] as const;
 export type LeadField = (typeof FIELDS)[number];
 
 /** Control characters, zero-width and line-separator characters (written as escapes, so the source stays readable). */
@@ -50,7 +51,8 @@ export const leadSchema = z
     email: z.email().max(LIMITS.email),
     phone: z.string().regex(PHONE).optional(),
     channel: z.enum(CHANNELS).optional(),
-    bestTime: text(LIMITS.bestTime).optional(),
+    /** A contact window code; the server checks it against the seller's windows (the lead context). */
+    contactWindow: z.string().regex(CODE_PATTERN).optional(),
     message: text(LIMITS.message).optional(),
     consent: z.literal(true),
     /** The honeypot: a real visitor never sees it, so it is empty. */
@@ -70,7 +72,7 @@ export function normalizeLead(raw: unknown): unknown {
     else if (key === "lang" || key === "channel" || key === "website") out[key] = key === "website" ? value : value.trim();
     else out[key] = cleanText(value, key === "message");
   }
-  for (const key of ["phone", "channel", "bestTime", "message", "website"]) if (out[key] === "") delete out[key];
+  for (const key of ["phone", "channel", "message", "website"]) if (out[key] === "") delete out[key];
   return out;
 }
 

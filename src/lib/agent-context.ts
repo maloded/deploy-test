@@ -17,7 +17,7 @@ export const AGENT_INCLUDE_FORM = true;
 export const PHASES = ["not_opened", "open_filling", "closed_empty", "no_consent", "incomplete", "complete"] as const;
 export type Phase = (typeof PHASES)[number];
 
-const hasValues = (s: FormSnapshot): boolean => Boolean(s.name || s.email || s.phone || s.preferredChannel || s.bestTime || s.message || s.preferredSlots.length > 0);
+const hasValues = (s: FormSnapshot): boolean => Boolean(s.name || s.email || s.phone || s.preferredChannel || s.contactWindow !== "anytime" || s.message || s.preferredSlots.length > 0);
 
 /**
  * Where the visitor is with the form:
@@ -50,7 +50,7 @@ export function buildPageContext({ language, product, path, title, snapshot }: P
       email: snapshot.email,
       phone: snapshot.phone,
       preferredChannel: snapshot.preferredChannel,
-      bestTime: snapshot.bestTime,
+      contactWindow: snapshot.contactWindow,
       message: snapshot.message,
       preferredSlots: snapshot.preferredSlots.map((s) => ({ ...s })),
     };

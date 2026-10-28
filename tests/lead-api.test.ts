@@ -50,7 +50,7 @@ describe("validation and limits", () => {
 
   it("accepts a good body and a body with every field", () => {
     expect(validateLead(GOOD).ok).toBe(true);
-    expect(validateLead({ ...GOOD, phone: "+43 1 000 00", channel: "telegram", bestTime: "evenings", message: "Hi" }).ok).toBe(true);
+    expect(validateLead({ ...GOOD, phone: "+43 1 000 00", channel: "telegram", contactWindow: "evening", message: "Hi" }).ok).toBe(true);
   });
 
   it("names one code per bad field and never the value", async () => {
@@ -62,7 +62,8 @@ describe("validation and limits", () => {
     expect(codes({ phone: "abc" })).toEqual({ phone: "phone" });
     expect(codes({ channel: "fax" })).toMatchObject({ channel: "invalid" });
     expect(codes({ message: "x".repeat(LIMITS.message + 1) })).toEqual({ message: "max" });
-    expect(codes({ bestTime: "x".repeat(LIMITS.bestTime + 1) })).toEqual({ bestTime: "max" });
+    expect(codes({ bestTime: "evenings" })).toEqual({ form: "invalid" }); // the free-text best time is gone: the strict schema refuses the old key
+    expect(codes({ contactWindow: "Not A Code" })).toEqual({ contactWindow: "invalid" });
     expect(codes({ consent: false })).toEqual({ consent: "consent" });
     expect(codes({ consent: undefined })).toEqual({ consent: "consent" });
     expect(codes({ lang: "fr" })).toEqual({ form: "invalid" });
@@ -102,10 +103,10 @@ describe("validation and limits", () => {
     expect(cleanText("1 < 2")).toBe("1 2"); // a lone angle bracket is dropped
     expect(cleanText("1 < 2 > 0")).toBe("1 0"); // and "< 2 >" reads as a tag
     expect(cleanText("line one\r\n\r\n\r\n\r\nline  two", true)).toBe("line one\n\nline two");
-    const r = validateLead({ ...GOOD, phone: "  ", message: " <i>hi</i> ", bestTime: "" });
+    const r = validateLead({ ...GOOD, phone: "  ", message: " <i>hi</i> ", contactWindow: "morning" });
     expect(r.ok && r.data).toMatchObject({ message: "hi" });
     expect(r.ok && "phone" in r.data).toBe(false);
-    expect(r.ok && "bestTime" in r.data).toBe(false);
+    expect(r.ok && r.data.contactWindow).toBe("morning");
   });
 });
 
@@ -194,10 +195,10 @@ describe("the stored record", () => {
 
   it("has the expected fields: no IP, no raw user agent, the consent hash, source form", async () => {
     const env = baseEnv();
-    await post({ ...GOOD, phone: "+43 1 000", channel: "whatsapp", bestTime: "evenings", message: "Hello <b>there</b>" }, { "x-forwarded-for": "203.0.113.77" }, env);
+    await post({ ...GOOD, phone: "+43 1 000", channel: "whatsapp", contactWindow: "evening", message: "Hello <b>there</b>" }, { "x-forwarded-for": "203.0.113.77" }, env);
     const { name, text, record } = read(env);
-    expect(Object.keys(record).sort()).toEqual(["bestTime", "channel", "consent", "consentTextSha256", "email", "id", "lang", "message", "name", "phone", "product", "receivedAt", "requestType", "source", "userAgentSha256"]);
-    expect(record).toMatchObject({ product: REF, lang: "en", name: "Test Person", email: "person@example.invalid", phone: "+43 1 000", channel: "whatsapp", bestTime: "evenings", message: "Hello there", consent: true, source: "form" });
+    expect(Object.keys(record).sort()).toEqual(["channel", "consent", "consentTextSha256", "contactWindow", "email", "id", "lang", "message", "name", "phone", "product", "receivedAt", "requestType", "source", "userAgentSha256"]);
+    expect(record).toMatchObject({ product: REF, lang: "en", name: "Test Person", email: "person@example.invalid", phone: "+43 1 000", channel: "whatsapp", contactWindow: "evening", message: "Hello there", consent: true, source: "form" });
     expect(record.id).toMatch(/^[0-9a-f-]{36}$/);
     expect(record.receivedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     expect(record.consentTextSha256).toBe(sha256(fixtures.sellerJson().consentText.en));
@@ -213,7 +214,7 @@ describe("the stored record", () => {
   it("omits the optional fields that were not given", async () => {
     const env = baseEnv();
     await post(GOOD, {}, env);
-    expect(Object.keys(read(env).record).sort()).toEqual(["consent", "consentTextSha256", "email", "id", "lang", "name", "product", "receivedAt", "requestType", "source", "userAgentSha256"]);
+    expect(Object.keys(read(env).record).sort()).toEqual(["consent", "consentTextSha256", "contactWindow", "email", "id", "lang", "name", "product", "receivedAt", "requestType", "source", "userAgentSha256"]);
   });
 
   it("stores the page language and the hash of the consent text shown in that language", async () => {

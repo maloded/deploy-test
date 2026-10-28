@@ -67,14 +67,20 @@ describe("the compact form", () => {
     expect(css).not.toContain(".contact__lead");
   });
 
-  it("phone, channel and best time share a row of three columns where they fit; name and e-mail share two", () => {
-    expect(form.match(/contact__field contact__field--third/g)).toHaveLength(3);
-    expect(body(".contact__grid")).toMatch(/gap: var\(--space-3\)/);
+  it("name and e-mail share a row of two columns, phone and channel share one; the contact window and the message each get a full row", () => {
+    expect(form).not.toContain("contact__field--third"); // the best time was the third column; the window select has its own row
+    expect(css).not.toContain("contact__field--third");
+    expect(form.match(/contact__field contact__field--wide/g)).toHaveLength(2); // the window select and the message
+    // the rows are tighter than the columns since the contact window got its own row (the German form must still fit 1440x800)
+    expect(body(".contact__grid")).toMatch(/gap: var\(--space-2\) var\(--space-3\)/);
     expect(css).toMatch(/\.contact__grid \{\s*grid-template-columns: repeat\(6, 1fr\)/);
-    expect(body(".contact__grid > .contact__field--third")).toMatch(/grid-column: span 2/);
-    expect(body(".contact__grid > .contact__field--third")).toMatch(/justify-content: flex-end/); // inputs of the row stay in line when a label wraps
     expect(body(".contact__grid > .contact__field")).toMatch(/grid-column: span 3/);
     expect(body(".contact__grid > .contact__field--wide")).toMatch(/grid-column: 1 \/ -1/);
+  });
+
+  it("field labels are one line (nowrap) and the message counter drops to the next line before its label would wrap", () => {
+    expect(body(".contact__field > label, .contact__label-row > label")).toMatch(/white-space: nowrap/);
+    expect(body(".contact__label-row")).toMatch(/flex-wrap: wrap/);
   });
 
   it("the character counter is in the same row as the message label", () => {
@@ -84,7 +90,7 @@ describe("the compact form", () => {
   });
 
   it("keeps every field, the consent text and the submit button", () => {
-    for (const name of ['name="requestType"', 'autoComplete="name"', 'type="email"', 'type="tel"', 'name="channel"', "contact.bestTime", "contact.message", 'name="consent"', 'name="website"', 'type="submit"']) expect(form, name).toContain(name);
+    for (const name of ['name="requestType"', 'autoComplete="name"', 'type="email"', 'type="tel"', 'name="channel"', "contact.contactWindow", "contact.message", 'name="consent"', 'name="website"', 'type="submit"']) expect(form, name).toContain(name);
     expect(form).toContain("{consentText}");
   });
 });

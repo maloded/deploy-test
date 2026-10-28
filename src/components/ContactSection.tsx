@@ -7,6 +7,7 @@ import type { ViewingConfig } from "@/lib/viewing";
 import type { Language } from "@/lib/schema";
 import { ui } from "@/lib/ui-strings";
 import { ContactForm } from "./ContactForm";
+import type { ContactWindow } from "@/lib/contact-windows";
 import { useContactModel } from "./contact-model";
 
 /**
@@ -57,7 +58,7 @@ function firstEmptyRequired(dialog: HTMLElement): HTMLElement | null {
  * form in a native <dialog>; without it they scroll to this row, whose mailto link works. The form exists ONLY in the
  * dialog, and only after the page has loaded in a browser: the static markup holds no form field.
  */
-export function ContactSection({ lang, email, phone, requestTypes, viewing, prototypeNote, consentText, privacyUrl, imprintUrl }: { lang: Language; email: string; phone?: string; requestTypes: readonly RequestType[]; viewing: ViewingConfig | null; prototypeNote: boolean; consentText: string; privacyUrl?: string; imprintUrl?: string }) {
+export function ContactSection({ lang, contactWindows, timezone, email, phone, requestTypes, viewing, prototypeNote, consentText, privacyUrl, imprintUrl }: { lang: Language; contactWindows: readonly ContactWindow[]; timezone?: string; email: string; phone?: string; requestTypes: readonly RequestType[]; viewing: ViewingConfig | null; prototypeNote: boolean; consentText: string; privacyUrl?: string; imprintUrl?: string }) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const opener = useRef<HTMLElement | null>(null);
@@ -223,7 +224,7 @@ export function ContactSection({ lang, email, phone, requestTypes, viewing, prot
           </div>
           {/* only this body scrolls; the title row above stays in place */}
           <div className="contact-dialog__body">
-            {ready && <ContactForm model={model} idBase={formId} lang={lang} email={email} requestTypes={requestTypes} prototypeNote={prototypeNote} consentText={consentText} privacyUrl={privacyUrl} onDone={close} />}
+            {ready && <ContactForm model={model} idBase={formId} lang={lang} contactWindows={contactWindows} timezone={timezone} email={email} requestTypes={requestTypes} prototypeNote={prototypeNote} consentText={consentText} privacyUrl={privacyUrl} onDone={close} />}
           </div>
         </div>
       </dialog>

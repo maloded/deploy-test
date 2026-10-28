@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type FormEvent } from "react";
+import { windowLabel, zoneHint, type ContactWindow } from "@/lib/contact-windows";
 import { CHANNELS, LIMITS, type LeadField } from "@/lib/lead";
 import { pick } from "@/lib/i18n";
 import { localeOf } from "@/lib/languages";
@@ -39,6 +40,8 @@ export function ContactForm({
   model,
   idBase,
   lang,
+  contactWindows,
+  timezone,
   email,
   requestTypes,
   prototypeNote,
@@ -49,6 +52,10 @@ export function ContactForm({
   model: ContactModel;
   idBase: string;
   lang: Language;
+  /** The windows of the select (the seller's override or the defaults). */
+  contactWindows: readonly ContactWindow[];
+  /** The seller's time zone, for the hint under the select; none, no hint. */
+  timezone?: string;
   email: string;
   /** The kinds of request this product accepts, in the order of the select. */
   requestTypes: readonly RequestType[];
@@ -88,7 +95,7 @@ export function ContactForm({
         {errorText(name, errors[name]!, lang)}
       </p>
     ) : null;
-  const common = (name: Exclude<LeadField, "consent" | "channel" | "requestType" | "preferredSlots">) => ({
+  const common = (name: Exclude<LeadField, "consent" | "channel" | "requestType" | "preferredSlots" | "contactWindow">) => ({
     id: id(name),
     name,
     value: values[name],
@@ -97,6 +104,7 @@ export function ContactForm({
     onChange: (e: { target: { value: string } }) => model.set(name, e.target.value),
   });
 
+  const hint = zoneHint(timezone, lang);
   const showPrivacyLink = Boolean(privacyUrl) && !consentPointsToPrivacy(consentText, ui("contact.privacy", lang), privacyUrl!);
   const viewing = model.viewing;
   const withSlots = needsSlots(values.requestType) && viewing !== null;
@@ -263,12 +271,12 @@ export function ContactForm({
           <input type="email" autoComplete="email" inputMode="email" required maxLength={LIMITS.email} {...common("email")} />
           {fieldError("email")}
         </div>
-        <div className="contact__field contact__field--third">
+        <div className="contact__field">
           {label("phone", "contact.phone", false)}
           <input type="tel" autoComplete="tel" inputMode="tel" maxLength={LIMITS.phone} {...common("phone")} />
           {fieldError("phone")}
         </div>
-        <div className="contact__field contact__field--third">
+        <div className="contact__field">
           {label("channel", "contact.channel", false)}
           <select id={id("channel")} name="channel" value={values.channel} onChange={(e) => model.set("channel", e.target.value)}>
             <option value="">{ui("contact.channel.none", lang)}</option>
@@ -279,11 +287,23 @@ export function ContactForm({
             ))}
           </select>
         </div>
-        <div className="contact__field contact__field--third">
-          {label("bestTime", "contact.bestTime", false)}
-          <input type="text" maxLength={LIMITS.bestTime} {...common("bestTime")} />
-          {fieldError("bestTime")}
-        </div>
+        {values.channel !== "email" && (
+          <div className="contact__field contact__field--wide">
+            <label htmlFor={id("contactWindow")}>{ui("contact.contactWindow", lang)}</label>
+            <select id={id("contactWindow")} name="contactWindow" value={values.contactWindow} aria-describedby={hint ? id("contactWindow-hint") : undefined} onChange={(e) => model.set("contactWindow", e.target.value)}>
+              {contactWindows.map((w) => (
+                <option key={w.code} value={w.code}>
+                  {windowLabel(w, lang)}
+                </option>
+              ))}
+            </select>
+            {hint && (
+              <p className="contact__hint" id={id("contactWindow-hint")}>
+                {hint}
+              </p>
+            )}
+          </div>
+        )}
         <div className="contact__field contact__field--wide">
           <div className="contact__label-row">
             {label("message", "contact.message", false)}

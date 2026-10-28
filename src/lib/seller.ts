@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { formatIssues, languageSchema, localizedSchema, viewingSchema, type Localized } from "./schema";
+import { contactWindowsSchema, formatIssues, languageSchema, localizedSchema, viewingSchema, type Localized } from "./schema";
+import { isTimeZone } from "./viewing";
 
 /**
  * The seller: everything that is the same for all of a seller's products (name, contact, languages, default theme,
@@ -65,6 +66,10 @@ export const sellerShape = {
   consentText: localizedSchema,
   /** Optional viewing settings, the default for the seller's products (a product may override single fields). */
   viewing: viewingSchema.optional(),
+  /** Optional IANA time zone of the seller (for example "Europe/Vienna"): the zone of the contact window hint and of the times in the messages to the seller when there are no viewing settings. */
+  timezone: z.string().refine(isTimeZone, 'must be an IANA time zone such as "Europe/Vienna"').optional(),
+  /** Optional override of the contact windows the form offers (the defaults are in contact-windows.ts). "anytime" must be one of them. */
+  contactWindows: contactWindowsSchema.optional(),
   /** Optional voice assistant (see sellerAgentSchema). Nothing is loaded or registered without it. */
   agent: sellerAgentSchema.optional(),
   /** Placeholders until the seller supplies the real pages. */
@@ -98,7 +103,7 @@ export type SellerFieldDescriptor = {
   key: keyof typeof sellerShape;
   label: Localized;
   required: boolean;
-  type: "version" | "text" | "localized" | "contact" | "languages" | "language" | "theme" | "link" | "viewing" | "agent";
+  type: "version" | "text" | "localized" | "contact" | "languages" | "language" | "theme" | "link" | "viewing" | "agent" | "timezone" | "contactWindows";
 };
 
 export const SELLER_FIELDS = [
@@ -112,6 +117,8 @@ export const SELLER_FIELDS = [
   { key: "theme", label: { en: "Default theme", de: "Standard-Theme" }, required: true, type: "theme" },
   { key: "consentText", label: { en: "Consent text of the contact form", de: "Einwilligungstext des Kontaktformulars" }, required: true, type: "localized" },
   { key: "viewing", label: { en: "Viewing settings (default)", de: "Besichtigungseinstellungen (Standard)" }, required: false, type: "viewing" },
+  { key: "timezone", label: { en: "Time zone (IANA, for example Europe/Vienna)", de: "Zeitzone (IANA, zum Beispiel Europe/Vienna)" }, required: false, type: "timezone" },
+  { key: "contactWindows", label: { en: "Contact windows (override of the defaults)", de: "Erreichbarkeitsfenster (überschreibt die Standardwerte)" }, required: false, type: "contactWindows" },
   { key: "agent", label: { en: "Voice assistant widget (id, variant, placement, theme)", de: "Sprachassistent-Widget (ID, Variante, Platzierung, Theme)" }, required: false, type: "agent" },
   { key: "privacyUrl", label: { en: "Privacy page (placeholder)", de: "Datenschutzseite (Platzhalter)" }, required: false, type: "link" },
   { key: "imprintUrl", label: { en: "Imprint page (placeholder)", de: "Impressum (Platzhalter)" }, required: false, type: "link" },

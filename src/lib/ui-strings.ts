@@ -73,7 +73,7 @@ const STRINGS = {
   "contact.channel.phone": { en: "Phone", de: "Telefon" },
   "contact.channel.whatsapp": { en: "WhatsApp", de: "WhatsApp" },
   "contact.channel.telegram": { en: "Telegram", de: "Telegram" },
-  "contact.bestTime": { en: "Best time to reach you", de: "Beste Erreichbarkeit" },
+  "contact.contactWindow": { en: "When can we reach you?", de: "Wann sind Sie erreichbar?" },
   "contact.message": { en: "Message", de: "Nachricht" },
   "contact.count": { en: "{n} of {max} characters", de: "{n} von {max} Zeichen" },
   "contact.optional": { en: "optional", de: "optional" },
