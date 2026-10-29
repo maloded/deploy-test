@@ -21,7 +21,26 @@
   "agent": {
     "id": "6adfaa35eb18f467f5a255e9",
     "variant": "floating",
-    "avatar": { "id": "sofia" }
+    "avatar": {
+      "id": "sofia",
+      "name": "Sofia",
+      "tagline": {
+        "de": "Ich erzähle Ihnen gerne mehr oder helfe weiter.",
+        "en": "Happy to tell you more or help."
+      },
+      "badge": {
+        "de": "KI-Assistentin",
+        "en": "AI assistant"
+      },
+      "startLabel": {
+        "de": "Gespräch starten",
+        "en": "Start call"
+      },
+      "endLabel": {
+        "de": "Gespräch beenden",
+        "en": "End call"
+      }
+    }
   },
   "timezone": "Europe/Vienna"
 }

@@ -2,6 +2,8 @@
 // Pure functions; the hook that listens is in components/use-agent-state.ts.
 //
 // Signals used (hanc-webrtc-widgets 2.11.0):
+//  - the agent's own speech state (listening / speaking), read by src/lib/hanc-bridge.ts from the call's participant attributes:
+//    the primary source. It arrives as { kind: "speech" }.
 //  - "call-start" / "call-end": plain events of the widget element (bubbles, composed), documented in its README.
 //  - "agent-command" with type "agent_state" and payload.state "idle" | "listening" | "thinking" | "speaking": typed in the
 //    package (AgentCommand), forwarded to the document by the widget. Whether the platform actually SENDS agent_state is
@@ -10,7 +12,7 @@
 /** idle: no call (idle loop). call: a call is running (listen loop). speaking: the agent speaks (speak loop). */
 export type CardState = "idle" | "call" | "speaking";
 
-export type AgentSignal = { kind: "call-start" } | { kind: "call-end" } | { kind: "agent-state"; state: string };
+export type AgentSignal = { kind: "call-start" } | { kind: "call-end" } | { kind: "agent-state"; state: string } | { kind: "speech"; state: "idle" | "listening" | "speaking" };
 
 /**
  * The next card state. An agent_state outside a call is ignored (a late message after call-end must not wake the card),
@@ -19,6 +21,8 @@ export type AgentSignal = { kind: "call-start" } | { kind: "call-end" } | { kind
 export function nextCardState(state: CardState, signal: AgentSignal): CardState {
   if (signal.kind === "call-start") return "call";
   if (signal.kind === "call-end") return "idle";
+  // the bridge's speech state is the call itself: listening means a call is running (even if the bridge heard of it first), idle that it ended
+  if (signal.kind === "speech") return signal.state === "idle" ? "idle" : signal.state === "speaking" ? "speaking" : "call";
   if (state === "idle") return "idle";
   if (signal.state === "speaking") return "speaking";
   if (signal.state === "idle" || signal.state === "listening" || signal.state === "thinking") return "call";

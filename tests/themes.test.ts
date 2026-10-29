@@ -104,6 +104,7 @@ describe("optional theme variables", () => {
       "--hero-frame-max-ratio",
       "--radius-dialog",
       "--radius-control",
+      "--avatar-card-shadow",
     ]);
     expect(declaredVars(css("light-editorial"), "light-editorial")).toContain("--accent-line");
     expect(declaredVars(css("dark-premium"), "dark-premium")).not.toContain("--accent-line");

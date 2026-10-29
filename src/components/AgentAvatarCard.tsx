@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { CardState } from "@/lib/agent-state";
+import { pick } from "@/lib/i18n";
+import type { WidgetHost } from "@/lib/hanc-bridge";
+import type { Language } from "@/lib/languages";
 import type { AvatarSlot, ResolvedAvatar } from "@/lib/avatar-manifest";
 import { activeSlot, isSingleLoop, motionAllowed, pickFormat, slotsToMount } from "@/lib/avatar-view";
 import { useAgentState } from "./use-agent-state";
@@ -37,8 +40,7 @@ const subscribeMotion = (notify: () => void) => {
 const motionNow = () =>
   motionAllowed({ reducedMotion: Boolean(reducedMotion()?.matches), saveData: Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData) });
 
-export function AgentAvatarCard({ avatar, children }: { avatar: ResolvedAvatar; children: ReactNode }) {
-  const state: CardState = useAgentState();
+export function AgentAvatarCard({ avatar, lang, host, children }: { avatar: ResolvedAvatar; lang?: Language; host?: WidgetHost | null; children: ReactNode }) {
   // reduced motion and Save-Data mean poster only (it follows a change of the system setting); false on the server, where no video is rendered
   const motion = useSyncExternalStore(subscribeMotion, motionNow, () => false);
   const canWebm = useSyncExternalStore(noSubscription, webmSupported, () => false);
@@ -50,6 +52,7 @@ export function AgentAvatarCard({ avatar, children }: { avatar: ResolvedAvatar; 
   const videos = useRef<Partial<Record<AvatarSlot, HTMLVideoElement | null>>>({});
   const cardRef = useRef<HTMLElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
+  const state: CardState = useAgentState(cardRef, host);
   useCardTilt(cardRef, frameRef);
 
   // the idle loop waits for the page to be idle
@@ -67,6 +70,8 @@ export function AgentAvatarCard({ avatar, children }: { avatar: ResolvedAvatar; 
   const touch = useCallback(() => setTouched(true), []);
   const mounted = slotsToMount(avatar, { motion, pageIdle, touched: touched || state !== "idle" }).filter((slot) => !failed[slot]);
   const active = activeSlot(avatar, state);
+  // the caption: the name, the seller's one line and a small marker; no text in seller.json means no caption
+  const caption = avatar.caption && lang ? { tagline: avatar.caption.tagline && pick(avatar.caption.tagline, lang), badge: avatar.caption.badge && pick(avatar.caption.badge, lang) } : null;
 
   // only the shown loop plays, and only while the tab is visible
   useEffect(() => {
@@ -79,35 +84,46 @@ export function AgentAvatarCard({ avatar, children }: { avatar: ResolvedAvatar; 
   });
 
   return (
-    <section ref={cardRef} className="avatar-card" data-block="agent" data-placement="card" data-avatar={avatar.id} data-state={state} aria-label={avatar.name} onPointerDown={touch} onPointerEnter={touch} onFocusCapture={touch}>
-      <div ref={frameRef} className="avatar-card__frame" aria-hidden="true">
-        {/* eslint-disable-next-line @next/next/no-img-element -- a pack file served as it is from /avatars, sized by the card */}
-        <img className="avatar-card__poster" src={avatar.poster} alt="" decoding="async" />
-        {mounted.map((slot) => {
-          const file = pickFormat(avatar[slot]!, canWebm);
-          if (!file) return null;
-          return (
-            <video
-              key={slot}
-              ref={(el) => {
-                videos.current[slot] = el;
-                if (el) el.muted = true; // React does not always reflect the muted attribute; autoplay rules need it
-              }}
-              className="avatar-card__video"
-              data-slot={slot}
-              data-active={slot === active && playing[slot] ? "true" : "false"}
-              src={file}
-              muted
-              loop
-              playsInline
-              preload={slot === "idle" || isSingleLoop(avatar) ? "none" : "auto"} // the idle loop starts by play(); listen and speak are mounted at the first touch to load now
-              tabIndex={-1}
-              disablePictureInPicture
-              onPlaying={() => setPlaying((p) => ({ ...p, [slot]: true }))}
-              onError={() => setFailed((f) => ({ ...f, [slot]: true }))}
-            />
-          );
-        })}
+    <section ref={cardRef} className={caption ? "avatar-card avatar-card--caption" : "avatar-card"} data-block="agent" data-placement="card" data-avatar={avatar.id} data-state={state} aria-label={avatar.name} onPointerDown={touch} onPointerEnter={touch} onFocusCapture={touch}>
+      <div ref={frameRef} className="avatar-card__frame">
+        <div className="avatar-card__media" aria-hidden="true">
+          {/* eslint-disable-next-line @next/next/no-img-element -- a pack file served as it is from /avatars, sized by the card */}
+          <img className="avatar-card__poster" src={avatar.poster} alt="" decoding="async" />
+          {mounted.map((slot) => {
+            const file = pickFormat(avatar[slot]!, canWebm);
+            if (!file) return null;
+            return (
+              <video
+                key={slot}
+                ref={(el) => {
+                  videos.current[slot] = el;
+                  if (el) el.muted = true; // React does not always reflect the muted attribute; autoplay rules need it
+                }}
+                className="avatar-card__video"
+                data-slot={slot}
+                data-active={slot === active && playing[slot] ? "true" : "false"}
+                src={file}
+                muted
+                loop
+                playsInline
+                preload={slot === "idle" || isSingleLoop(avatar) ? "none" : "auto"} // the idle loop starts by play(); listen and speak are mounted at the first touch to load now
+                tabIndex={-1}
+                disablePictureInPicture
+                onPlaying={() => setPlaying((p) => ({ ...p, [slot]: true }))}
+                onError={() => setFailed((f) => ({ ...f, [slot]: true }))}
+              />
+            );
+          })}
+        </div>
+        {caption && (
+          <div className="avatar-card__caption">
+            <p className="avatar-card__title">
+              <span className="avatar-card__name">{avatar.name}</span>
+              {caption.badge && <span className="avatar-card__badge">{caption.badge}</span>}
+            </p>
+            {caption.tagline && <p className="avatar-card__tagline">{caption.tagline}</p>}
+          </div>
+        )}
       </div>
       <div className="avatar-card__action">{children}</div>
     </section>

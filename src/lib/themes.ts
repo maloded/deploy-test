@@ -41,6 +41,7 @@ export const OPTIONAL_VARS = [
   "--hero-frame-max-ratio",
   "--radius-dialog",
   "--radius-control",
+  "--avatar-card-shadow",
 ];
 
 export const THEMES_DIR = path.join(process.cwd(), "public", "themes");

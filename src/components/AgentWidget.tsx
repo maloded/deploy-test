@@ -5,10 +5,12 @@ import { buildPageContext } from "@/lib/agent-context";
 import { registerAgentBridge } from "@/lib/agent-bridge";
 import { getFormSnapshot } from "@/lib/form-snapshot";
 import type { ResolvedAvatar } from "@/lib/avatar-manifest";
+import type { WidgetHost } from "@/lib/hanc-bridge";
 import type { Language } from "@/lib/schema";
 import type { SellerAgent } from "@/lib/seller";
 import { ui } from "@/lib/ui-strings";
 import { AgentAvatarCard } from "./AgentAvatarCard";
+import { AgentStartButton } from "./AgentStartButton";
 
 /**
  * The voice assistant widget. It is rendered only for a seller that has an `agent` object in seller.json. The widget
@@ -24,6 +26,7 @@ import { AgentAvatarCard } from "./AgentAvatarCard";
 export function AgentWidget({ agent, lang, product, avatar, requestType }: { agent: SellerAgent; lang: Language; product: string; avatar?: ResolvedAvatar | null; requestType?: string }) {
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [host, setHost] = useState<WidgetHost | null>(null); // the widget element of the avatar card, for its own start button
 
   useEffect(() => {
     let live = true;
@@ -52,14 +55,19 @@ export function AgentWidget({ agent, lang, product, avatar, requestType }: { age
 
   if (avatar) {
     return (
-      <AgentAvatarCard avatar={avatar}>
-        {ready
-          ? createElement("hanc-ai-pill-floating-call", { ...common, position: "static", "button-end-text": ui("agent.end", lang), "orb-size": "36" })
-          : failed && (
-              <a className="button button--small" href="#contact" data-request-type={requestType}>
-                {ui("header.cta", lang)}
-              </a>
-            )}
+      <AgentAvatarCard avatar={avatar} lang={lang} host={host}>
+        {ready ? (
+          <>
+            {createElement("hanc-ai-pill-floating-call", { ...common, position: "static", "button-end-text": ui("agent.end", lang), "orb-size": "36", ref: setHost })}
+            <AgentStartButton host={host} lang={lang} startLabel={avatar.startLabel} endLabel={avatar.endLabel} />
+          </>
+        ) : (
+          failed && (
+            <a className="button button--small" href="#contact" data-request-type={requestType}>
+              {ui("header.cta", lang)}
+            </a>
+          )
+        )}
       </AgentAvatarCard>
     );
   }

@@ -45,9 +45,21 @@ export const sellerAgentSchema = z
     /**
      * Optional avatar card, chosen from the shared library (<content root>/_avatars/<id>) by id. The id is the only link: no file
      * name belongs here. With an avatar the assistant is the fixed card in the bottom-right corner and `variant` and `placement`
-     * are ignored. `name` replaces the pack's name as the card's accessible name.
+     * are ignored. `name` replaces the pack's name as the card's accessible name and its caption's heading. `tagline` (one line) and
+     * `badge` (a small marker such as "AI assistant") make the caption over the foot of the card; with neither there is no caption.
      */
-    avatar: z.object({ id: z.string().regex(AVATAR_ID, "lowercase letters, digits and dashes only").max(60), name: z.string().trim().min(1).max(60).optional() }).strict().optional(),
+    avatar: z
+      .object({
+        id: z.string().regex(AVATAR_ID, "lowercase letters, digits and dashes only").max(60),
+        name: z.string().trim().min(1).max(60).optional(),
+        tagline: localizedSchema.optional(),
+        badge: localizedSchema.optional(),
+        /** The start button's and the end button's labels (default: the standard "Start call" / "End call" of the page language). */
+        startLabel: localizedSchema.optional(),
+        endLabel: localizedSchema.optional(),
+      })
+      .strict()
+      .optional(),
     voiceServiceUrl: z.url({ protocol: /^https$/ }).default(DEFAULT_VOICE_SERVICE_URL),
   })
   .strict()

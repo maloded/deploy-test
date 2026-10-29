@@ -36,6 +36,15 @@ describe("nextCardState", () => {
     expect(run([{ kind: "call-start" }, state("speaking"), state("dancing")])).toBe("speaking");
   });
 
+  it("the bridge's speech state is the call itself: listening starts the call, speaking and back, idle ends it", () => {
+    const speech = (state: "idle" | "listening" | "speaking") => ({ kind: "speech", state }) as const;
+    expect(run([speech("listening")])).toBe("call"); // even when the bridge heard of the call first
+    expect(run([speech("listening"), speech("speaking")])).toBe("speaking");
+    expect(run([speech("listening"), speech("speaking"), speech("listening")])).toBe("call");
+    expect(run([speech("listening"), speech("speaking"), speech("idle")])).toBe("idle");
+    expect(run([speech("speaking"), speech("idle")], "call")).toBe("idle");
+  });
+
   it("a second call-start in a call keeps the call (not speaking)", () => {
     expect(run([{ kind: "call-start" }, state("speaking"), { kind: "call-start" }])).toBe("call");
   });

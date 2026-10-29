@@ -2,6 +2,7 @@
 // by the loader, the media scripts, the snapshot and the card. No file access here (see avatar-library.ts) and no path aliases,
 // so the app, the scripts (plain Node) and the tests import this one file.
 import { z } from "zod";
+import type { Localized } from "./schema";
 
 /** The folder of the shared library inside the content root. A seller folder can never be named like this (see PART in content-root.ts). */
 export const AVATARS_DIR = "_avatars";
@@ -99,10 +100,15 @@ export type ResolvedAvatar = {
   idle: ResolvedLoop | null;
   listen: ResolvedLoop | null;
   speak: ResolvedLoop | null;
+  /** The caption over the foot of the card (agent.avatar.tagline and .badge in seller.json, completed with the default language); null when the seller wrote neither. */
+  caption: { tagline: Localized | null; badge: Localized | null } | null;
+  /** The start and end button labels from seller.json (agent.avatar.startLabel / .endLabel); null: the page's standard labels. */
+  startLabel: Localized | null;
+  endLabel: Localized | null;
 };
 
-/** The manifest turned into URLs. `nameOverride` is agent.avatar.name from seller.json. */
-export function resolveAvatar(manifest: AvatarManifest, nameOverride?: string): ResolvedAvatar {
+/** The manifest turned into URLs. `nameOverride` is agent.avatar.name from seller.json, `texts` its tagline and badge. */
+export function resolveAvatar(manifest: AvatarManifest, nameOverride?: string, texts: { tagline?: Localized; badge?: Localized; startLabel?: Localized; endLabel?: Localized } = {}): ResolvedAvatar {
   const url = (f: LoopFiles | null): ResolvedLoop | null => {
     if (!f) return null;
     return { ...(f.mp4 ? { mp4: avatarUrl(manifest.id, f.mp4) } : {}), ...(f.webm ? { webm: avatarUrl(manifest.id, f.webm) } : {}) };
@@ -114,5 +120,8 @@ export function resolveAvatar(manifest: AvatarManifest, nameOverride?: string): 
     idle: url(loopFiles(manifest, "idle")),
     listen: url(loopFiles(manifest, "listen")),
     speak: url(loopFiles(manifest, "speak")),
+    caption: texts.tagline || texts.badge ? { tagline: texts.tagline ?? null, badge: texts.badge ?? null } : null,
+    startLabel: texts.startLabel ?? null,
+    endLabel: texts.endLabel ?? null,
   };
 }

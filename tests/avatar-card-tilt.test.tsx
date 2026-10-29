@@ -9,7 +9,7 @@ import type { ResolvedAvatar } from "@/lib/avatar-manifest";
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
-const PACK: ResolvedAvatar = { id: "test-pack", name: "Test pack", poster: "/avatars/test-pack/poster.webp", idle: null, listen: null, speak: null };
+const PACK: ResolvedAvatar = { id: "test-pack", name: "Test pack", poster: "/avatars/test-pack/poster.webp", idle: null, listen: null, speak: null, caption: null, startLabel: null, endLabel: null };
 
 describe("the tilt in the DOM", () => {
   let root: Root | undefined;
@@ -155,5 +155,24 @@ describe("the tilt in the DOM", () => {
 
   it("renders no transform on the server", () => {
     expect(renderToStaticMarkup(<AgentAvatarCard avatar={PACK}>x</AgentAvatarCard>)).not.toMatch(/transform|perspective/);
+  });
+
+  it("renders the caption (name, tagline, badge) inside the frame in the page language, and none without text", async () => {
+    box = document.createElement("div");
+    document.body.appendChild(box);
+    root = createRoot(box);
+    const withCaption = { ...PACK, caption: { tagline: { en: "Happy to help.", de: "Gern zu Diensten." }, badge: { en: "AI assistant", de: "KI-Assistent" } } };
+    await act(async () => root!.render(<AgentAvatarCard avatar={withCaption} lang="de">x</AgentAvatarCard>));
+    const cap = document.querySelector(".avatar-card__frame .avatar-card__caption")!;
+    expect(cap.textContent).toBe("Test packKI-AssistentGern zu Diensten."); // no separator in the text: it is drawn by CSS
+    expect(cap.querySelector(".avatar-card__title .avatar-card__name")!.nextElementSibling!.className).toBe("avatar-card__badge"); // the marker is on the name line
+    expect(document.querySelector(".avatar-card")!.classList.contains("avatar-card--caption")).toBe(true);
+    expect(document.querySelector(".avatar-card__action .avatar-card__caption")).toBeNull();
+    await act(async () => root!.render(<AgentAvatarCard avatar={{ ...withCaption, caption: { tagline: null, badge: { en: "AI assistant" } } }} lang="en">x</AgentAvatarCard>));
+    expect(document.querySelector(".avatar-card__tagline")).toBeNull();
+    expect(document.querySelector(".avatar-card__badge")!.textContent).toBe("AI assistant");
+    await act(async () => root!.render(<AgentAvatarCard avatar={PACK} lang="en">x</AgentAvatarCard>));
+    expect(document.querySelector(".avatar-card__caption")).toBeNull();
+    expect(document.querySelector(".avatar-card")!.classList.contains("avatar-card--caption")).toBe(false);
   });
 });

@@ -54,6 +54,7 @@
   --hero-headline-size: clamp(2rem, 4vw, 3.75rem); /* optional: size of the hero headline (default clamp(1.9rem, 4vw, 3.25rem)) */
   --hero-photo-min-width: 30%; /* optional: narrowest hero photo, a share of the container (default 40%) */
   --hero-frame-max-ratio: 4 / 3; /* optional: widest frame ratio (default 16 / 9); 4 / 3 shows a 4:3 photo without a crop */
+  --avatar-card-shadow: 0 1.5rem 3rem -1rem rgba(0, 0, 0, 0.8), 0 0.25rem 0.75rem -0.25rem rgba(0, 0, 0, 0.55), 0 0 2.5rem -0.75rem rgba(212, 175, 90, 0.2); /* optional: the avatar card's lift (deep, with a faint gold glow) */
 }
 
 :root[data-theme="dark-premium"] :is(h1, h2, h3):not(.label) {

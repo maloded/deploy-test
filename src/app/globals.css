@@ -1734,6 +1734,120 @@ main:focus-visible {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  /* lifted off the page; the shadow is drawn outside the frame's own box (overflow clips the content, not the frame's own shadow) and tilts with it */
+  box-shadow: var(--avatar-card-shadow, 0 1rem 2.25rem -0.75rem color-mix(in srgb, var(--text) 40%, transparent), 0 0.25rem 0.625rem -0.25rem color-mix(in srgb, var(--text) 25%, transparent));
+}
+
+.avatar-card__media {
+  position: absolute;
+  inset: 0;
+}
+
+/*
+ * The caption is a strip below the picture, inside the frame (so it tilts with it): the picture keeps its full 4:5 and the strip
+ * adds --avatar-strip-h to the card. One title line (the name, then the marker after a thin separator), the seller's line under it.
+ * Without caption texts there is no strip and the card is the picture only.
+ */
+:root {
+  --avatar-strip-h: 8.5rem;
+  --avatar-action-h: 4.25rem; /* the start button, its credit line and their gap, at the foot of the strip */
+}
+
+.avatar-card--caption {
+  aspect-ratio: auto;
+  height: calc(var(--avatar-card-w, 12.5rem) * 1.25 + var(--avatar-strip-h, 8.5rem));
+}
+
+:root:has(.avatar-card--caption) {
+  --avatar-card-h: calc(var(--avatar-card-w, 12.5rem) * 1.25 + var(--avatar-strip-h, 8.5rem));
+}
+
+.avatar-card--caption .avatar-card__media {
+  inset: 0 0 var(--avatar-strip-h, 8.5rem);
+}
+
+.avatar-card--caption .avatar-card__action {
+  bottom: var(--space-2);
+}
+
+.avatar-card__caption {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  flex-direction: column; /* the tagline shrinks (and is cut) before it can run into the button below */
+  height: var(--avatar-strip-h, 8.5rem);
+  padding: var(--space-2) var(--space-3) var(--avatar-action-h, 4.25rem);
+  overflow: hidden;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  color: var(--text);
+  pointer-events: none;
+}
+
+.avatar-card__caption p {
+  margin: 0;
+}
+
+.avatar-card__title {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.4rem;
+}
+
+.avatar-card__name {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.avatar-card__badge {
+  font-size: 0.7rem;
+  line-height: 1.2;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+/* the separator is drawn here, not stored in the data */
+.avatar-card__badge::before {
+  content: "\00b7";
+  margin-inline-end: 0.4rem;
+}
+
+.avatar-card__tagline {
+  min-height: 0;
+  display: -webkit-box;
+  margin-top: 0.15rem;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* the narrow card (about 120px) is the picture only */
+@media (width < 40em) {
+  .avatar-card__caption {
+    display: none;
+  }
+
+  .avatar-card--caption {
+    aspect-ratio: 4 / 5;
+    height: auto;
+  }
+
+  :root:has(.avatar-card--caption) {
+    --avatar-card-h: calc(var(--avatar-card-w, 12.5rem) * 1.25);
+  }
+
+  .avatar-card--caption .avatar-card__media {
+    inset: 0;
+  }
+
+  .avatar-card--caption .avatar-card__action {
+    bottom: var(--space-2);
+  }
 }
 
 .avatar-card__poster,
@@ -1790,15 +1904,148 @@ main:focus-visible {
   }
 }
 
+/*
+ * Our own start / end button (AgentStartButton), in the strip under the text. The real widget stays mounted and is hidden with
+ * its own parts (visibility, never opacity or pointer-events on an ancestor: the widget's form overlay is inside it and would
+ * inherit them and vanish). The widget's form overlay and privacy modal are not parts, so they show as always. Only on a wide
+ * card: the narrow card and the plain pill keep the widget's own button, and when the widget has no button of its own
+ * (data-mode="standard") the widget's pill shows and this one hides.
+ */
+.avatar-card__start {
+  display: none;
+}
+
+@media (width >= 40em) and (height >= 32.5em) {
+  .avatar-card__start {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    width: 100%;
+    height: 2.25rem; /* the same in every state: no label can change the card's layout */
+    padding: 0 var(--space-2);
+    overflow: hidden;
+    white-space: nowrap;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    border: 1px solid var(--accent);
+    border-radius: 99rem;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      background-color 0.2s,
+      color 0.2s;
+  }
+
+  .avatar-card__start:hover {
+    background: transparent;
+    color: var(--accent);
+  }
+
+  .avatar-card__start:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .avatar-card__start[aria-disabled="true"] {
+    cursor: progress;
+    opacity: 0.75;
+  }
+
+  .avatar-card__start[data-state="connected"] {
+    background: transparent;
+    color: var(--accent);
+  }
+
+  .avatar-card__start[data-state="connected"]:hover {
+    background: var(--accent);
+    color: var(--accent-contrast);
+  }
+
+  .avatar-card__start[data-state="error"] {
+    background: transparent;
+    color: var(--text);
+    border-color: var(--border);
+  }
+
+  .avatar-card__start[data-mode="standard"] {
+    display: none;
+  }
+
+  .avatar-card__start > span:not(.avatar-card__start-dot) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis; /* a safety net: a long seller label is cut, never wrapped */
+  }
+
+  .avatar-card__start-dot {
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    background: currentcolor;
+    border-radius: 50%;
+  }
+
+  /* the longest label (the German error text) gets the dot's room too */
+  .avatar-card__start[data-state="error"] .avatar-card__start-dot {
+    display: none;
+  }
+
+  .avatar-card__start[data-state="connecting"] .avatar-card__start-dot {
+    animation: avatar-start-pulse 1s ease-in-out infinite;
+  }
+
+  .avatar-card:has(.avatar-card__start:not([data-mode="standard"])) .avatar-card__action {
+    padding-bottom: 0;
+  }
+
+  /* without the widget's pill and its credit line the foot of the strip needs less room (the card, the footer reserve and the text follow) */
+  :root:has(.avatar-card__start:not([data-mode="standard"])) {
+    --avatar-strip-h: 7.75rem;
+    --avatar-action-h: 3.5rem;
+  }
+
+  .avatar-card:has(.avatar-card__start:not([data-mode="standard"])) hanc-ai-pill-floating-call {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+  }
+
+  .avatar-card:has(.avatar-card__start:not([data-mode="standard"])) hanc-ai-pill-floating-call::part(pill-button),
+  .avatar-card:has(.avatar-card__start:not([data-mode="standard"])) hanc-ai-pill-floating-call::part(floating-container) {
+    visibility: hidden;
+    transition: none;
+  }
+}
+
+@keyframes avatar-start-pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar-card__start,
+  .avatar-card__start[data-state="connecting"] .avatar-card__start-dot {
+    transition: none;
+    animation: none;
+  }
+}
+
 /* very small screens (under 360px wide or 520px tall): no card, just today's floating pill in the corner */
 @media (width < 22.5em), (height < 32.5em) {
-  :root {
+  :root,
+  :root:has(.avatar-card--caption) {
     --avatar-card-h: calc(5rem - var(--space-3));
     --avatar-card-bottom: var(--space-3, 1rem);
   }
 
   .avatar-card {
     width: auto;
+    height: auto;
     aspect-ratio: auto;
     right: var(--space-4);
     bottom: var(--space-4);

@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 /* eslint-disable @typescript-eslint/no-explicit-any -- DOM test helpers */
-import { act } from "react";
+import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -21,6 +21,9 @@ const pack = (loops: Partial<Record<"idle" | "listen" | "speak", { mp4?: string;
   idle: loops.idle ?? null,
   listen: loops.listen ?? null,
   speak: loops.speak ?? null,
+  caption: null,
+  startLabel: null,
+  endLabel: null,
 });
 const mp4 = (n: string) => ({ mp4: `/avatars/test-pack/${n}.mp4` });
 const FULL = pack({ idle: mp4("i"), listen: mp4("l"), speak: mp4("s") });
@@ -195,6 +198,73 @@ describe("the card in the DOM", () => {
     expect(plays).toContain("speak");
     await act(async () => void document.dispatchEvent(new Event("call-end", { bubbles: true })));
     expect(card().dataset.state).toBe("idle");
+  });
+
+  describe("the agent's own state through the bridge (the room's published attribute)", () => {
+    const room = () => {
+      const listeners = new Set<(...a: unknown[]) => void>();
+      const participants = new Map<string, { attributes: Record<string, string> }>([["agent-x", { attributes: {} }]]);
+      return {
+        remoteParticipants: participants,
+        on: (_: string, l: (...a: unknown[]) => void) => listeners.add(l),
+        off: (_: string, l: (...a: unknown[]) => void) => listeners.delete(l),
+        set(state: string) {
+          participants.get("agent-x")!.attributes = { "lk.agent.state": state };
+          listeners.forEach((l) => l({ "lk.agent.state": state }, participants.get("agent-x")));
+        },
+      };
+    };
+    const mountWithWidget = async (avatar: ResolvedAvatar) => {
+      let host: (HTMLElement & { callManager?: unknown }) | null = null;
+      await mount(avatar, createElement("hanc-ai-pill-floating-call", { ref: (el: HTMLElement | null) => void (host = el) }));
+      return host!;
+    };
+    const event = (host: HTMLElement, type: string) => act(async () => void host.dispatchEvent(new Event(type, { bubbles: true, composed: true })));
+
+    it("idle before the call, listen while the agent listens or thinks, speak while it speaks, idle after", async () => {
+      const r = room();
+      const host = await mountWithWidget(FULL);
+      host.callManager = { room: r };
+      await runIdle();
+      expect(card().dataset.state).toBe("idle");
+      plays.length = 0;
+      await event(host, "call-start");
+      expect(card().dataset.state).toBe("call");
+      expect(plays).toContain("listen");
+      await act(async () => r.set("speaking"));
+      expect(card().dataset.state).toBe("speaking");
+      expect(plays).toContain("speak");
+      await act(async () => r.set("thinking"));
+      expect(card().dataset.state).toBe("call");
+      await act(async () => r.set("speaking"));
+      await event(host, "call-end");
+      expect(card().dataset.state).toBe("idle");
+    });
+
+    it("a pack with one loop keeps playing that loop through the whole call, no switching", async () => {
+      const r = room();
+      const one = pack({ idle: mp4("i") });
+      const host = await mountWithWidget(one);
+      host.callManager = { room: r };
+      await runIdle();
+      await event(host, "call-start");
+      await act(async () => r.set("speaking"));
+      await act(async () => r.set("listening"));
+      expect(videos().map((v) => v.dataset.slot)).toEqual(["idle"]);
+      expect(plays.every((p) => p === "idle")).toBe(true);
+      await event(host, "call-end");
+      expect(videos().map((v) => v.dataset.slot)).toEqual(["idle"]);
+    });
+
+    it("without a room the card stays on the listening picture for the whole call", async () => {
+      const host = await mountWithWidget(FULL);
+      await runIdle();
+      plays.length = 0;
+      await event(host, "call-start");
+      expect(card().dataset.state).toBe("call");
+      expect(plays).toContain("listen");
+      expect(plays).not.toContain("speak");
+    });
   });
 
   it("without agent_state a call stays on the listen loop", async () => {
