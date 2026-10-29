@@ -139,7 +139,9 @@ export function sampleFolders(projectRoot) {
  */
 export function contentScanFiles({ projectRoot, contentRoot }) {
   const folders = contentRoot ? sellerFolders(contentRoot, projectRoot) : sampleFolders(projectRoot);
-  return [...folders.flatMap((d) => textFiles(d)), ...textFiles(path.join(projectRoot, "docs")), ...rootMarkdown(projectRoot)];
+  // the shared avatar library has free text too (license, provenance): scanned like a seller's files
+  const libraries = (contentRoot ? [contentRoot] : [path.join(projectRoot, "examples"), path.join(projectRoot, "tests", "fixtures", DEFAULT_CONTENT_DIR)]).map((r) => path.join(r, "_avatars"));
+  return [...folders.flatMap((d) => textFiles(d)), ...libraries.flatMap((d) => textFiles(d)), ...textFiles(path.join(projectRoot, "docs")), ...rootMarkdown(projectRoot)];
 }
 
 /** The seller.json and product.json files of the content root (or of the fake samples): the texts the claims scan reads. */

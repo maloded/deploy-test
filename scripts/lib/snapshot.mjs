@@ -15,6 +15,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { DEFAULT_CONTENT_DIR, splitRef } from "../../src/lib/content-root.ts";
+import { copyAvatarToSnapshot } from "./avatars.mjs";
 import { exportMediaWeb } from "./export-media-web.mjs";
 import { checkSnapshot, walk } from "./snapshot-guard.mjs";
 import { buildVersionInfo } from "./version-info.mjs";
@@ -77,6 +78,9 @@ async function buildTree({ projectRoot, contentRoot, ref, dest, log }) {
     // the seller's files (seller.json, ...) but no folder: the seller's other products must not travel
     if (entry.isFile()) fs.copyFileSync(path.join(sellerDir, entry.name), path.join(sellerOut, entry.name));
   }
+  // the seller's selected avatar pack (and only that one): the library is shared, so it is not inside the seller's folder
+  const avatar = copyAvatarToSnapshot({ contentRoot, seller, destContent: path.join(dest, DEFAULT_CONTENT_DIR) });
+  if (avatar) log(`   avatar pack ${avatar} (the only one of the library)`);
   fs.cpSync(productDir, path.join(sellerOut, product), {
     recursive: true,
     filter: (src) => {

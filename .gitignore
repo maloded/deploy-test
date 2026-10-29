@@ -4,6 +4,8 @@ next-env.d.ts
 *.tsbuildinfo
 # web-sized copies of <content root>/<slug>/media, made by npm run images
 public/media
+# the selected avatar packs of the library (npm run images)
+public/avatars
 .test-tmp
 .playwright-mcp
 .env*.local

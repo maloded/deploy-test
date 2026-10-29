@@ -4,9 +4,11 @@ import { createElement, useEffect, useState } from "react";
 import { buildPageContext } from "@/lib/agent-context";
 import { registerAgentBridge } from "@/lib/agent-bridge";
 import { getFormSnapshot } from "@/lib/form-snapshot";
+import type { ResolvedAvatar } from "@/lib/avatar-manifest";
 import type { Language } from "@/lib/schema";
 import type { SellerAgent } from "@/lib/seller";
 import { ui } from "@/lib/ui-strings";
+import { AgentAvatarCard } from "./AgentAvatarCard";
 
 /**
  * The voice assistant widget. It is rendered only for a seller that has an `agent` object in seller.json. The widget
@@ -15,15 +17,19 @@ import { ui } from "@/lib/ui-strings";
  *
  * Elements (hanc-webrtc-widgets 2.11.0): inline = <hanc-ai-inline-call>, pill = <hanc-ai-pill-call>, floating = <hanc-ai-pill-floating-call>.
  * placement "header": the pill in the header; "top": a slim strip below the header; "bottom" (default): the strip above the footer.
+ * With an `avatar` (agent.avatar in seller.json) none of these applies: the card in the bottom-right corner holds the widget as its
+ * start button (<hanc-ai-pill-floating-call position="static">, the one pill without `contain: layout`, see AgentAvatarCard), and
+ * variant and placement are ignored. If the widget package cannot be loaded, the card offers the contact link instead.
  */
-export function AgentWidget({ agent, lang, product }: { agent: SellerAgent; lang: Language; product: string }) {
+export function AgentWidget({ agent, lang, product, avatar, requestType }: { agent: SellerAgent; lang: Language; product: string; avatar?: ResolvedAvatar | null; requestType?: string }) {
   const [ready, setReady] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let live = true;
     import("hanc-webrtc-widgets").then(
       () => live && setReady(true),
-      () => {}, // the widget is an extra: a failed load leaves the page as it is
+      () => live && setFailed(true), // the widget is an extra: a failed load leaves the page as it is (the card offers the contact link)
     );
     return () => {
       live = false;
@@ -43,6 +49,20 @@ export function AgentWidget({ agent, lang, product }: { agent: SellerAgent; lang
     "button-connecting-text": ui("agent.connecting", lang),
     ...(agent.theme ? { theme: agent.theme } : {}),
   };
+
+  if (avatar) {
+    return (
+      <AgentAvatarCard avatar={avatar}>
+        {ready
+          ? createElement("hanc-ai-pill-floating-call", { ...common, position: "static", "button-end-text": ui("agent.end", lang), "orb-size": "36" })
+          : failed && (
+              <a className="button button--small" href="#contact" data-request-type={requestType}>
+                {ui("header.cta", lang)}
+              </a>
+            )}
+      </AgentAvatarCard>
+    );
+  }
 
   if (agent.variant === "floating") {
     // fixed in the corner; the footer keeps room below its last line for it (Footer, site-footer--agent-floating)

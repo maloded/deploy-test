@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
+import { MAX_AVATAR_POSTER_BYTES, MAX_AVATAR_VIDEO_BYTES } from "../../src/lib/avatar-manifest.ts";
 
 const PHOTO_EXT = /\.(jpe?g|heic|heif|tiff?|raw|dng|cr2|nef|arw)$/i;
 const AUDIO_EXT = /\.(mp3|m4a|ogg|wav|flac|aac)$/i;
@@ -21,6 +22,13 @@ export function forbiddenReason(rel, bytes = 0) {
     if (AUDIO_EXT.test(base)) return "an original audio file (a music track belongs in media-web, exported by npm run images:export)";
     if (PHOTO_EXT.test(base)) return "an original photo (content/<seller>/<product>/media)";
     if (bytes > MAX_ORIGINAL_BYTES) return "a large file in content/<seller>/<product>/media (looks like an original)";
+  }
+  // the shared avatar library: only the files a pack is made of, within the pack limits (a pack is web-ready, never an original)
+  if (/^content\/_avatars\//.test(rel)) {
+    if (parts.length !== 4) return "an avatar pack is content/_avatars/<id>/<file>, no deeper folder";
+    if (base !== "avatar.json" && !/\.(mp4|webm|webp)$/i.test(base)) return "not part of an avatar pack (avatar.json, .mp4, .webm or .webp only)";
+    if (/\.webp$/i.test(base) && bytes > MAX_AVATAR_POSTER_BYTES) return "an avatar poster over the poster limit";
+    if (/\.(mp4|webm)$/i.test(base) && bytes > MAX_AVATAR_VIDEO_BYTES) return "an avatar video over the video limit";
   }
   return null;
 }
@@ -48,7 +56,13 @@ export async function checkSnapshot(dir) {
     if (IMAGE_EXT.test(f.rel) && !f.rel.startsWith("tests/fixtures/")) {
       try {
         const meta = await sharp(f.full, { failOn: "none" }).metadata();
-        if (meta.exif) problems.push(`${f.rel}: still has EXIF metadata (GPS and camera data); export it with npm run images:export`);
+        if (meta.exif) {
+          problems.push(
+            f.rel.startsWith("content/_avatars/")
+              ? `${f.rel}: still has EXIF metadata; save the poster again without metadata (a pack is copied as it is, npm run images:export does not process it)`
+              : `${f.rel}: still has EXIF metadata (GPS and camera data); export it with npm run images:export`,
+          );
+        }
       } catch {
         problems.push(`${f.rel}: cannot be read as an image`);
       }

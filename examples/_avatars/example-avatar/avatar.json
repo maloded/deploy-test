@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "id": "example-avatar",
+  "name": "Example avatar",
+  "voiceHint": "neutral",
+  "poster": "poster.webp",
+  "license": "Synthetic placeholder, no restrictions",
+  "provenance": "A flat colour generated for the template's examples. Not a real person."
+}

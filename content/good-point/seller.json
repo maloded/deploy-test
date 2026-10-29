@@ -20,7 +20,8 @@
   },
   "agent": {
     "id": "6adfaa35eb18f467f5a255e9",
-    "variant": "floating"
+    "variant": "floating",
+    "avatar": { "id": "sofia" }
   },
   "timezone": "Europe/Vienna"
 }

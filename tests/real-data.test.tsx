@@ -83,9 +83,10 @@ describe.skipIf(!hasRealContent)("the vw-multivan sample is a sale in German and
     expect(faq).toMatch(/free of encumbrance/);
   });
 
-  it("uses the contact placeholder and a draft consent text that mentions the privacy notice in words (no literal anchor)", () => {
+  it("has a real contact e-mail (not the placeholder) and a draft consent text that mentions the privacy notice in words (no literal anchor)", () => {
     const s = content.sellerJson();
-    expect(s.contact.email).toBe("contact@example.invalid");
+    expect(s.contact.email).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@.]+$/); // a valid address ...
+    expect(s.contact.email).not.toMatch(/@example\.invalid$/i); // ... that is no longer the placeholder
     for (const lang of ["de", "en"]) expect(s.consentText[lang]).toContain(`${s.displayName} `); // names the seller
     expect(s.consentText.de).toMatch(/Datenschutzerklärung/);
     expect(s.consentText.en).toMatch(/privacy notice/);

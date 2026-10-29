@@ -1,5 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
+import { readAvatar } from "./avatar-library";
+import { resolveAvatar, type ResolvedAvatar } from "./avatar-manifest";
 import { contentRoot, splitRef } from "./content-root";
 import { readImageSize } from "./image-size";
 import { AUDIO_FILE, MAX_AUDIO_BYTES } from "./music";
@@ -42,6 +44,8 @@ export type LoadedProduct = {
   translationWarnings: string[];
   /** Per offered language: localized fields of the product and the seller that have a text, out of all of them. */
   coverage: Coverage[];
+  /** The voice agent's avatar pack, resolved from the shared library; null without agent.avatar. */
+  avatar: ResolvedAvatar | null;
   /** Missing media files, only reported (instead of thrown) when `strictMedia` is false. */
   warnings: string[];
 };
@@ -79,6 +83,14 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
     throw new ContentError(`${sellerSlug}/seller.json`, sellerReport.missingDefault.map((p) => `${p}: no text in the default language "${defaultLanguage}" (only the default language is required)`));
   }
   const seller = completeLocalized(sellerResult.seller, languages, defaultLanguage);
+
+  // the avatar is chosen by id from the shared library; an id that is not there (or a broken pack) stops the build
+  let avatar: ResolvedAvatar | null = null;
+  if (seller.agent?.avatar) {
+    const found = readAvatar(contentDir, seller.agent.avatar.id);
+    if (!found.ok) throw new ContentError(`${sellerSlug}/seller.json`, found.issues.map((i) => `agent.avatar.id: ${i}`));
+    avatar = resolveAvatar(found.avatar, seller.agent.avatar.name);
+  }
 
   const result = validateProduct(readJson(path.join(/*turbopackIgnore: true*/ dir, "product.json"), `${ref}/product.json`), options.registries ?? defaultRegistries);
   if (!result.ok) throw new ContentError(`${ref}/product.json`, result.issues);
@@ -153,5 +165,5 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
   // without it gets it last (listing "contact" only decides where it goes)
   const listed = file.blocks ?? defaultBlocksFor(typeFields);
   const blocks: BlockId[] = listed.includes("contact") ? [...listed] : [...listed, "contact"];
-  return { ref, seller, product, typeFields, blocks, viewing, images, translationWarnings, coverage, warnings };
+  return { ref, seller, product, typeFields, blocks, viewing, images, translationWarnings, coverage, warnings, avatar };
 }

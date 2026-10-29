@@ -3,6 +3,7 @@ import { AgentWidget } from "./AgentWidget";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
 import { renderBlock, renderedBlocks } from "./blocks";
+import { presetFor } from "./request-presets";
 import type { Site } from "./blocks";
 
 /**
@@ -19,9 +20,10 @@ const MUSIC_HEADER_H = "calc(2.75rem + 2 * var(--space-3) + 1px)";
 export default function ProductLayout({ site }: { site: Site }) {
   const { media } = site.typeFields;
   const agent = site.seller.agent;
-  const agentTop = agent && agent.placement === "top" && agent.variant !== "floating" ? agent : null;
+  const avatar = agent ? site.avatar : null; // with an avatar the card replaces every variant and placement
+  const agentTop = agent && !avatar && agent.placement === "top" && agent.variant !== "floating" ? agent : null;
   // in the header only the compact pill fits: "inline" there is the bottom strip, "floating" ignores the placement
-  const agentHeader = agent && agent.placement === "header" && agent.variant === "pill" ? agent : null;
+  const agentHeader = agent && !avatar && agent.placement === "header" && agent.variant === "pill" ? agent : null;
   return (
     <div
       className={`pt pt-${site.product.productType}`}
@@ -33,7 +35,7 @@ export default function ProductLayout({ site }: { site: Site }) {
       {agentTop && <AgentWidget agent={agentTop} lang={site.lang} product={site.ref} />}
       {/* "contact" is rendered by the footer (its contact row), wherever the product lists it */}
       <main tabIndex={-1}>{site.blocks.filter((id) => id !== "contact").map((id) => renderBlock(id, site))}</main>
-      {agent && !agentTop && !agentHeader && <AgentWidget agent={agent} lang={site.lang} product={site.ref} />}
+      {agent && !agentTop && !agentHeader && <AgentWidget agent={agent} lang={site.lang} product={site.ref} avatar={avatar} requestType={presetFor("header", site)} />}
       <Footer site={site} />
     </div>
   );

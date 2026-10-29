@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AVATAR_ID } from "./avatar-manifest";
 import { contactWindowsSchema, formatIssues, languageSchema, localizedSchema, viewingSchema, type Localized } from "./schema";
 import { isTimeZone } from "./viewing";
 
@@ -41,6 +42,12 @@ export const sellerAgentSchema = z
     placement: z.enum(AGENT_PLACEMENTS).default("bottom"),
     /** The widget's own theme name (optional; its default theme otherwise). */
     theme: z.string().regex(/^[a-z0-9-]{1,40}$/).optional(),
+    /**
+     * Optional avatar card, chosen from the shared library (<content root>/_avatars/<id>) by id. The id is the only link: no file
+     * name belongs here. With an avatar the assistant is the fixed card in the bottom-right corner and `variant` and `placement`
+     * are ignored. `name` replaces the pack's name as the card's accessible name.
+     */
+    avatar: z.object({ id: z.string().regex(AVATAR_ID, "lowercase letters, digits and dashes only").max(60), name: z.string().trim().min(1).max(60).optional() }).strict().optional(),
     voiceServiceUrl: z.url({ protocol: /^https$/ }).default(DEFAULT_VOICE_SERVICE_URL),
   })
   .strict()
@@ -119,7 +126,7 @@ export const SELLER_FIELDS = [
   { key: "viewing", label: { en: "Viewing settings (default)", de: "Besichtigungseinstellungen (Standard)" }, required: false, type: "viewing" },
   { key: "timezone", label: { en: "Time zone (IANA, for example Europe/Vienna)", de: "Zeitzone (IANA, zum Beispiel Europe/Vienna)" }, required: false, type: "timezone" },
   { key: "contactWindows", label: { en: "Contact windows (override of the defaults)", de: "Erreichbarkeitsfenster (überschreibt die Standardwerte)" }, required: false, type: "contactWindows" },
-  { key: "agent", label: { en: "Voice assistant widget (id, variant, placement, theme)", de: "Sprachassistent-Widget (ID, Variante, Platzierung, Theme)" }, required: false, type: "agent" },
+  { key: "agent", label: { en: "Voice assistant widget (id, variant, placement, theme, avatar)", de: "Sprachassistent-Widget (ID, Variante, Platzierung, Theme, Avatar)" }, required: false, type: "agent" },
   { key: "privacyUrl", label: { en: "Privacy page (placeholder)", de: "Datenschutzseite (Platzhalter)" }, required: false, type: "link" },
   { key: "imprintUrl", label: { en: "Imprint page (placeholder)", de: "Impressum (Platzhalter)" }, required: false, type: "link" },
 ] as const satisfies readonly SellerFieldDescriptor[];

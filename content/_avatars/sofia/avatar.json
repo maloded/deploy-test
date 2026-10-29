@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "id": "sofia",
+  "name": "Sofia",
+  "voiceHint": "female",
+  "poster": "poster.webp",
+  "idle": { "mp4": "f1.mp4", "webm": "f1.webm" },
+  "license": "Hanc.ai cast asset, used with permission of the Hanc project curator",
+  "provenance": "Hanc.ai cast F1 (Sofia): a synthetic character, not a real person. 5 s image-to-video loop (Kling v3, start frame equals end frame) from an AI-generated 4:5 still."
+}

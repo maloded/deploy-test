@@ -1493,7 +1493,7 @@ main:focus-visible {
 /* development theme switcher */
 .theme-switcher {
   position: fixed;
-  right: var(--space-3);
+  left: var(--space-3);
   bottom: var(--space-3);
   z-index: 1000;
   display: flex;
@@ -1685,4 +1685,152 @@ main:focus-visible {
 /* the floating pill is fixed in the bottom corner: room below the footer's last line so it never covers the links */
 .site-footer--agent-floating {
   padding-bottom: calc(var(--space-5) + 5rem);
+}
+
+/*
+ * The avatar card of the voice agent (agent.avatar in seller.json): a fixed rectangle, portrait 4:5, in the bottom-right corner.
+ * The poster fills it, up to three loops lie on top and change by opacity only. The widget is the start button at its foot.
+ *
+ * Keep transform, translate, scale, rotate, filter, backdrop-filter, perspective, will-change, contain and container-type OFF
+ * this card and every ancestor of the widget (.pt, body, html): any of them makes that element the containing block of the
+ * widget's position:fixed form overlay and confines the overlay to the card. tests/avatar-card-layout.test.ts reads this file.
+ *
+ * Stacking: the card is a fixed element, so it is a stacking context and the widget's form overlay (z-index 2147483000 inside it)
+ * counts as the card's z-index on the page. 1100 is above the review theme switcher (1000) and below the widget's privacy modal
+ * (z-index 10000, appended to <body>). The native dialogs (contact form, lightbox) are in the top layer and cover the card.
+ */
+:root {
+  --avatar-card-w: 12.5rem;
+  --avatar-card-bottom: 6rem; /* the gap under the card: it floats clear of the bottom edge and of the first screen's buttons */
+  --avatar-card-h: calc(var(--avatar-card-w, 12.5rem) * 1.25);
+}
+
+@media (width < 40em) {
+  :root {
+    --avatar-card-w: 7.5rem;
+    --avatar-card-bottom: 3.5rem;
+  }
+}
+
+.avatar-card {
+  position: fixed;
+  right: var(--space-3);
+  bottom: var(--avatar-card-bottom, 6rem);
+  z-index: 1100;
+  width: var(--avatar-card-w, 12.5rem);
+  aspect-ratio: 4 / 5;
+  overflow: hidden; /* clips the pictures to the rounded box; it does not clip the widget's fixed overlay */
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/*
+ * The pictures tilt toward the pointer (useCardTilt): the stage gives the perspective, the layer inside it is rotated by script.
+ * These two are the ONLY elements with perspective or transform. The widget (.avatar-card__action) is a sibling of the stage, so
+ * it neither tilts nor sits under a transformed ancestor.
+ */
+.avatar-card__stage {
+  position: absolute;
+  inset: 0;
+  perspective: 56rem; /* about 1000px at the base size: a gentle depth */
+}
+
+/* a little larger than the card (which clips it), so the edge that turns away never shows the card's background */
+.avatar-card__tilt {
+  position: absolute;
+  inset: -3%;
+}
+
+.avatar-card__poster,
+.avatar-card__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-card__video {
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.avatar-card__video[data-active="true"] {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar-card__video {
+    transition: none;
+  }
+}
+
+/* the widget (or, when its package cannot load, the contact link) at the foot of the card; the room below the button is for the widget's own credit line */
+.avatar-card__action {
+  position: absolute;
+  inset-inline: var(--space-2);
+  bottom: var(--space-2);
+  display: flex;
+  justify-content: center;
+  padding-bottom: 1.1rem;
+}
+
+.avatar-card__action .button {
+  margin-bottom: -1.1rem;
+}
+
+/* narrow window: the picture only, with the widget reduced to a small round start button in the corner (the button's text stays in the page for screen readers) */
+@media (22.5em <= width < 40em) and (height >= 32.5em) {
+  .avatar-card__action {
+    inset-inline: auto var(--space-2);
+    justify-content: flex-end;
+  }
+
+  .avatar-card__action hanc-ai-pill-floating-call::part(pill-button) {
+    width: 2.625rem;
+    height: 2.625rem;
+    padding: 3px;
+    border-radius: 50%;
+    overflow: hidden;
+  }
+}
+
+/* very small screens (under 360px wide or 520px tall): no card, just today's floating pill in the corner */
+@media (width < 22.5em), (height < 32.5em) {
+  :root {
+    --avatar-card-h: calc(5rem - var(--space-3));
+    --avatar-card-bottom: var(--space-3, 1rem);
+  }
+
+  .avatar-card {
+    width: auto;
+    aspect-ratio: auto;
+    overflow: visible;
+    background: none;
+    border: 0;
+    border-radius: 0;
+    right: var(--space-4);
+    bottom: var(--space-4);
+  }
+
+  .avatar-card__stage {
+    display: none;
+  }
+
+  .avatar-card__action {
+    position: static;
+    padding-bottom: 0;
+    inset-inline: auto;
+  }
+}
+
+/* room below the footer's last line so the card never covers the links */
+.site-footer--agent-card {
+  padding-bottom: calc(var(--space-5) + var(--avatar-card-h, 15.625rem) + var(--avatar-card-bottom, 6rem));
+}
+
+/* the review theme switcher stays in the other corner and never reaches under the card */
+body:has(.avatar-card) .theme-switcher {
+  max-width: calc(100vw - 3 * var(--space-3) - var(--avatar-card-w, 12.5rem));
 }
