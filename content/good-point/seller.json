@@ -6,7 +6,7 @@
     "de": "Die Angaben auf dieser Seite sind unverbindlich und stellen kein verbindliches Angebot dar."
   },
   "contact": {
-    "email": "contact@example.invalid"
+    "email": "volkswagehanc@gmail.com"
   },
   "languages": [
     "de",
@@ -20,8 +20,7 @@
   },
   "agent": {
     "id": "6adfaa35eb18f467f5a255e9",
-    "variant": "pill",
-    "placement": "header"
+    "variant": "floating"
   },
   "timezone": "Europe/Vienna"
 }
