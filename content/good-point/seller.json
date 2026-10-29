@@ -39,7 +39,8 @@
       "endLabel": {
         "de": "Gespräch beenden",
         "en": "End call"
-      }
+      },
+      "buttonIcon": "wheel"
     }
   },
   "timezone": "Europe/Vienna"

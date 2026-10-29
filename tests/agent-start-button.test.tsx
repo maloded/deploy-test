@@ -43,11 +43,11 @@ describe("AgentStartButton", () => {
     localStorage.clear();
   });
 
-  const mount = async (host: WidgetHost | null, extra: { startLabel?: any; endLabel?: any; lang?: "en" | "de" } = {}) => {
+  const mount = async (host: WidgetHost | null, extra: { startLabel?: any; endLabel?: any; lang?: "en" | "de"; icon?: "dot" | "wheel" } = {}) => {
     box = document.createElement("div");
     document.body.appendChild(box);
     root = createRoot(box);
-    await act(async () => root!.render(createElement(AgentStartButton, { host, lang: extra.lang ?? "en", startLabel: extra.startLabel ?? null, endLabel: extra.endLabel ?? null })));
+    await act(async () => root!.render(createElement(AgentStartButton, { host, lang: extra.lang ?? "en", startLabel: extra.startLabel ?? null, endLabel: extra.endLabel ?? null, ...(extra.icon ? { icon: extra.icon } : {}) })));
     await act(async () => void (await vi.advanceTimersByTimeAsync(0)));
     return () => box!.querySelector<HTMLButtonElement>(".avatar-card__start")!;
   };
@@ -99,6 +99,88 @@ describe("AgentStartButton", () => {
     host.callStatus = "idle";
     await tick();
     expect(button().dataset.state).toBe("idle");
+  });
+
+  describe("the wheel icon (agent.avatar.buttonIcon)", () => {
+    /** A fake room whose agent publishes lk.agent.state, as the widget's LiveKit room does. */
+    const room = () => {
+      const listeners = new Set<(...a: unknown[]) => void>();
+      const participants = new Map<string, { attributes: Record<string, string> }>([["agent-x", { attributes: {} }]]);
+      return {
+        remoteParticipants: participants,
+        on: (_: string, l: (...a: unknown[]) => void) => listeners.add(l),
+        off: (_: string, l: (...a: unknown[]) => void) => listeners.delete(l),
+        set(state: string) {
+          participants.get("agent-x")!.attributes = { "lk.agent.state": state };
+          listeners.forEach((l) => l({ "lk.agent.state": state }, participants.get("agent-x")));
+        },
+      };
+    };
+    const callStart = (host: HTMLElement) => act(async () => void host.dispatchEvent(new Event("call-start", { bubbles: true, composed: true })));
+    const callEnd = (host: HTMLElement) => act(async () => void host.dispatchEvent(new Event("call-end", { bubbles: true, composed: true })));
+
+    it("shows the status dot by default and the wheel only for buttonIcon \"wheel\" (never both); aria-hidden", async () => {
+      const dot = await mount(widget().host);
+      expect(dot().dataset.icon).toBe("dot");
+      expect(dot().querySelector(".avatar-card__start-dot")).not.toBeNull();
+      expect(dot().querySelector(".avatar-card__wheel")).toBeNull();
+      act(() => root!.unmount());
+      box!.remove();
+      const wheel = await mount(widget().host, { icon: "wheel" });
+      expect(wheel().dataset.icon).toBe("wheel");
+      expect(wheel().querySelector(".avatar-card__wheel")).not.toBeNull();
+      expect(wheel().querySelector(".avatar-card__start-dot")).toBeNull();
+      expect(wheel().querySelector(".avatar-card__wheel")!.getAttribute("aria-hidden")).toBe("true");
+      expect(wheel().querySelector(".avatar-card__wheel")!.getAttribute("focusable")).toBe("false");
+      expect(wheel().querySelectorAll(".avatar-card__wheel-turn")).toHaveLength(1); // the one group that turns
+      expect(wheel().querySelectorAll(".avatar-card__wheel-turn circle[cx]")).toHaveLength(5); // five lug nuts
+    });
+
+    it("is driven by the button's own data-state alone: the wheel is in the markup in every state, the CSS turns it only for \"connected\"", async () => {
+      const { host } = widget();
+      const button = await mount(host, { icon: "wheel" });
+      const seen: string[] = [];
+      for (const status of ["idle", "connecting", "connected", "error", "connected", "idle"]) {
+        host.callStatus = status;
+        await tick();
+        seen.push(button().dataset.state!);
+        expect(button().querySelectorAll(".avatar-card__wheel"), status).toHaveLength(1);
+        expect(button().hasAttribute("data-speech"), status).toBe(false); // no speech attribute any more
+      }
+      expect(seen).toEqual(["idle", "connecting", "connected", "error", "connected", "idle"]);
+    });
+
+    it("does not read the agent's room at all, with the wheel or without (the spin only follows the call status)", async () => {
+      for (const icon of [undefined, "wheel" as const]) {
+        const r = room();
+        const on = vi.spyOn(r, "on");
+        const { host } = widget();
+        (host as any).callManager = { room: r };
+        const button = await mount(host, icon ? { icon } : {});
+        await callStart(host);
+        host.callStatus = "connected";
+        await tick();
+        await act(async () => r.set("speaking"));
+        expect(on, String(icon)).not.toHaveBeenCalled();
+        expect(button().hasAttribute("data-speech"), String(icon)).toBe(false);
+        await callEnd(host);
+        act(() => root!.unmount());
+        box!.remove();
+      }
+    });
+
+    it("keeps the label's structure and the button's markup the same in every state (the label is one span, after the icon)", async () => {
+      const { host } = widget();
+      const button = await mount(host, { icon: "wheel" });
+      const shape = () => [...button().children].map((c) => `${c.tagName}.${c.getAttribute("class") ?? ""}`).join(" ");
+      const idle = shape();
+      for (const status of ["connecting", "connected", "error", "idle"]) {
+        host.callStatus = status;
+        await tick();
+        expect(shape(), status).toBe(idle);
+        expect(button().querySelectorAll(":scope > span"), status).toHaveLength(1);
+      }
+    });
   });
 
   it("starts and ends the call with a click on the widget's own button, and touches no consent", async () => {
@@ -189,7 +271,7 @@ describe("the state labels fit the button", () => {
       expect(ui("agent.error", code).length, `error ${code}`).toBeLessThanOrEqual(26);
     }
     expect(ui("agent.connecting", "de")).toBe("Verbinde...");
-    expect(ui("agent.error", "de")).toBe("Fehlgeschlagen. Nochmal?");
+    expect(ui("agent.error", "de")).toBe("Fehler. Nochmal?");
     expect(ui("agent.connecting", "en")).toBe("Connecting...");
     expect(ui("agent.error", "en")).toBe("Failed. Try again");
   });

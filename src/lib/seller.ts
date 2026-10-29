@@ -57,6 +57,8 @@ export const sellerAgentSchema = z
         /** The start button's and the end button's labels (default: the standard "Start call" / "End call" of the page language). */
         startLabel: localizedSchema.optional(),
         endLabel: localizedSchema.optional(),
+        /** The icon in the start button: the status "dot" (default) or a car "wheel" that turns while the agent speaks. */
+        buttonIcon: z.enum(["dot", "wheel"]).default("dot"),
       })
       .strict()
       .optional(),

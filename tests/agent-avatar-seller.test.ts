@@ -32,9 +32,9 @@ const parse = (avatar: unknown) => validateSeller({ ...fixtures.sellerJson(), ag
 describe("agent.avatar in seller.json", () => {
   it("takes an id and an optional name, nothing else", () => {
     const r = parse({ id: "some-pack", name: "Label" });
-    expect(r.ok && r.seller.agent?.avatar).toEqual({ id: "some-pack", name: "Label" });
+    expect(r.ok && r.seller.agent?.avatar).toEqual({ id: "some-pack", name: "Label", buttonIcon: "dot" });
     const only = parse({ id: "some-pack" });
-    expect(only.ok && only.seller.agent?.avatar).toEqual({ id: "some-pack" });
+    expect(only.ok && only.seller.agent?.avatar).toEqual({ id: "some-pack", buttonIcon: "dot" });
   });
 
   it("is strict: no file names, no unknown keys, no bad ids", () => {
@@ -67,6 +67,7 @@ describe("loading a product whose seller has an avatar", () => {
       caption: null,
       startLabel: null,
       endLabel: null,
+      buttonIcon: "dot",
     });
   });
 
@@ -162,5 +163,29 @@ describe("the caption texts (agent.avatar.tagline and .badge)", () => {
     const offered = loaded.product.languages.filter((l) => l !== loaded.product.defaultLanguage);
     expect(warnings).toHaveLength(offered.length);
     for (const l of loaded.product.languages) expect(loaded.avatar?.caption?.tagline?.[l]).toBe(loaded.avatar?.caption?.tagline?.[loaded.product.defaultLanguage]);
+  });
+});
+
+describe("the button icon (agent.avatar.buttonIcon)", () => {
+  it("is \"dot\" or \"wheel\", \"dot\" when the seller wrote none, and nothing else", () => {
+    const icon = (avatar: object) => {
+      const r = parse(avatar);
+      return r.ok ? r.seller.agent?.avatar?.buttonIcon : "invalid";
+    };
+    expect(icon({ id: "some-pack" })).toBe("dot");
+    expect(icon({ id: "some-pack", buttonIcon: "dot" })).toBe("dot");
+    expect(icon({ id: "some-pack", buttonIcon: "wheel" })).toBe("wheel");
+    expect(icon({ id: "some-pack", buttonIcon: "gear" })).toBe("invalid");
+    expect(icon({ id: "some-pack", buttonIcon: "" })).toBe("invalid");
+    expect(icon({ id: "some-pack", buttonIcon: true })).toBe("invalid");
+    expect(icon({ id: "some-pack", buttonIcon: { en: "wheel" } })).toBe("invalid"); // not a localized text
+  });
+
+  it("reaches the card; a seller without it gets the dot", () => {
+    pack("pack-icon");
+    setAgent({ id: "x", avatar: { id: "pack-icon", buttonIcon: "wheel" } });
+    expect(here.loadFor(slug).avatar).toMatchObject({ buttonIcon: "wheel" });
+    setAgent({ id: "x", avatar: { id: "pack-icon" } });
+    expect(here.loadFor(slug).avatar).toMatchObject({ buttonIcon: "dot" });
   });
 });

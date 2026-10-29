@@ -24,6 +24,7 @@ const pack = (loops: Partial<Record<"idle" | "listen" | "speak", { mp4?: string;
   caption: null,
   startLabel: null,
   endLabel: null,
+  buttonIcon: "dot",
 });
 const mp4 = (n: string) => ({ mp4: `/avatars/test-pack/${n}.mp4` });
 const FULL = pack({ idle: mp4("i"), listen: mp4("l"), speak: mp4("s") });

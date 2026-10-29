@@ -89,6 +89,8 @@ export const avatarUrl = (id: string, file: string): string => `/avatars/${id}/$
 /** What a picker needs of a pack (see listAvatars). `poster` is a file name inside the pack; `loops` the slots that have a video. */
 export type AvatarListing = { id: string; name: string; voiceHint: (typeof VOICE_HINTS)[number] | null; poster: string; loops: AvatarSlot[] };
 
+export type ButtonIcon = "dot" | "wheel";
+
 /** A loop for the card: the URL(s) by container. The card picks one container and loads only that. */
 export type ResolvedLoop = LoopFiles;
 /** The pack as the card gets it (plain data, safe to hand to a client component): URLs, no file system. */
@@ -105,10 +107,12 @@ export type ResolvedAvatar = {
   /** The start and end button labels from seller.json (agent.avatar.startLabel / .endLabel); null: the page's standard labels. */
   startLabel: Localized | null;
   endLabel: Localized | null;
+  /** The icon in the start button (agent.avatar.buttonIcon). */
+  buttonIcon: ButtonIcon;
 };
 
 /** The manifest turned into URLs. `nameOverride` is agent.avatar.name from seller.json, `texts` its tagline and badge. */
-export function resolveAvatar(manifest: AvatarManifest, nameOverride?: string, texts: { tagline?: Localized; badge?: Localized; startLabel?: Localized; endLabel?: Localized } = {}): ResolvedAvatar {
+export function resolveAvatar(manifest: AvatarManifest, nameOverride?: string, texts: { tagline?: Localized; badge?: Localized; startLabel?: Localized; endLabel?: Localized; buttonIcon?: ButtonIcon } = {}): ResolvedAvatar {
   const url = (f: LoopFiles | null): ResolvedLoop | null => {
     if (!f) return null;
     return { ...(f.mp4 ? { mp4: avatarUrl(manifest.id, f.mp4) } : {}), ...(f.webm ? { webm: avatarUrl(manifest.id, f.webm) } : {}) };
@@ -123,5 +127,6 @@ export function resolveAvatar(manifest: AvatarManifest, nameOverride?: string, t
     caption: texts.tagline || texts.badge ? { tagline: texts.tagline ?? null, badge: texts.badge ?? null } : null,
     startLabel: texts.startLabel ?? null,
     endLabel: texts.endLabel ?? null,
+    buttonIcon: texts.buttonIcon ?? "dot",
   };
 }

@@ -185,6 +185,70 @@ describe("our own start button hides the real widget without confining it", () =
   });
 });
 
+describe("the wheel icon of the start button", () => {
+  const WIDE = "@media (width >= 40em) and (height >= 32.5em)";
+  const keyframes = /@keyframes avatar-wheel-spin\s*\{[\s\S]*?\n\}/.exec(css)?.[0] ?? "";
+
+  it("is the only animated transform: on .avatar-card__wheel-turn, a group inside the SVG inside the button, never on an ancestor of the widget", () => {
+    expect(keyframes).toMatch(/transform: rotate\(360deg\)/);
+    // the keyframes are used by exactly one selector, and it is that group
+    const users = all.filter((r) => /animation(-name)?:[^;]*avatar-wheel-spin/.test(r.body));
+    expect(users.map((r) => r.selector)).toEqual([".avatar-card__wheel-turn"]);
+    // no other rule of the card or the button sets transform / rotate / translate / scale (the inline tilt is the frame's only one)
+    const others = all.filter((r) => /(^|;|\s)(transform|translate|scale|rotate)\s*:/.test(r.body) && !/^(to|from|\d+%)$/.test(r.selector));
+    expect(others.map((r) => r.selector).filter((s) => /avatar-card/.test(s))).toEqual([]);
+    // the markup agrees: the turning element is a <g> of the wheel's <svg>, and the wheel is rendered inside the button only
+    const icon = read("src", "components", "WheelIcon.tsx");
+    expect(icon).toMatch(/<svg className="avatar-card__wheel"[\s\S]*<g className="avatar-card__wheel-turn">/);
+    expect(read("src", "components", "AgentStartButton.tsx")).toMatch(/<button[^>]*className="avatar-card__start"[\s\S]*<WheelIcon \/>[\s\S]*<\/button>/);
+    expect(read("src", "components", "AgentAvatarCard.tsx")).not.toMatch(/WheelIcon|avatar-card__wheel/);
+    expect(read("src", "components", "AgentWidget.tsx")).not.toMatch(/WheelIcon|avatar-card__wheel/);
+  });
+
+  it("turns for as long as the call is connected (the button's own data-state), pauses at its angle otherwise, and never turns under prefers-reduced-motion", () => {
+    expect(body(".avatar-card__wheel-turn", WIDE)).toMatch(/animation: avatar-wheel-spin 0\.8s linear infinite paused/);
+    expect(body('.avatar-card__start[data-state="connected"] .avatar-card__wheel-turn', WIDE)).toMatch(/animation-play-state: running/);
+    // nothing but the connected state starts it, and no speech attribute is involved any more
+    const runners = all.filter((r) => /animation-play-state:\s*running/.test(r.body)).map((r) => r.selector);
+    expect(runners).toEqual(['.avatar-card__start[data-state="connected"] .avatar-card__wheel-turn']);
+    expect(css).not.toMatch(/data-speech/);
+    const calm = all.find((r) => r.media === "@media (prefers-reduced-motion: reduce)" && r.selector.includes(".avatar-card__wheel-turn"))!;
+    expect(calm.body).toMatch(/animation: none/);
+    // the error state has no rule that makes it turn
+    expect(all.filter((r) => /data-state="error"/.test(r.selector) && /wheel/.test(r.selector) && /animation/.test(r.body))).toEqual([]);
+  });
+
+  it("sits inside the pill on the left (size and inset from variables, no overhang), and the label's box starts after it with its text centred", () => {
+    expect(body(":root")).toMatch(/--avatar-wheel-size: 1\.75rem/);
+    expect(body(":root")).toMatch(/--avatar-wheel-inset: 0\.2rem/);
+    expect(css).not.toMatch(/wheel-overhang/);
+    const w = body(".avatar-card__wheel", WIDE);
+    expect(w).toMatch(/position: absolute/);
+    expect(w).toMatch(/inline-size: var\(--avatar-wheel-size, 1\.75rem\)/);
+    expect(w).toMatch(/inset-inline-start: var\(--avatar-wheel-inset, 0\.2rem\)/); // positive: inside the edge
+    const b = body('.avatar-card__start[data-icon="wheel"]', WIDE);
+    // start padding = wheel + inset + gap; the end padding is the ordinary one
+    expect(b).toMatch(/padding-inline: calc\(var\(--avatar-wheel-size, 1\.75rem\) \+ var\(--avatar-wheel-inset, 0\.2rem\) \+ var\(--space-2, 0\.5rem\)\) var\(--space-2, 0\.5rem\)/);
+    const label = body('.avatar-card__start[data-icon="wheel"] > span', WIDE);
+    expect(label).toMatch(/flex: 1 1 auto/);
+    expect(label).toMatch(/text-align: center/);
+    // the pill keeps its overflow: hidden (nothing is relaxed), the label its ellipsis, and the fixed size is not touched
+    expect(b).not.toMatch(/overflow/);
+    expect(body(".avatar-card__start", WIDE)).toMatch(/overflow: hidden/);
+    expect(all.filter((r) => /avatar-card__start/.test(r.selector) && /overflow:\s*visible/.test(r.body))).toEqual([]);
+    expect(all.find((r) => r.media === WIDE && r.selector === ".avatar-card__start > span:not(.avatar-card__start-dot)")!.body).toMatch(/overflow: hidden[\s\S]*text-overflow: ellipsis/);
+    expect(b).not.toMatch(/(^|;|\s)(height|width|white-space)\s*:/);
+    expect(body(".avatar-card__start", WIDE)).toMatch(/height: 2\.25rem/);
+  });
+
+  it("takes its colours from the theme, with fallbacks (optional --avatar-wheel-tyre and --avatar-wheel-rim), and has no raw colour", () => {
+    const wheel = all.filter((r) => /avatar-card__wheel/.test(r.selector));
+    expect(wheel.find((r) => /wheel-tyre/.test(r.selector))!.body).toMatch(/fill: var\(--avatar-wheel-tyre, color-mix\(in srgb, var\(--accent\) 18%, black\)\)/);
+    expect(wheel.find((r) => /wheel-rim/.test(r.selector))!.body).toMatch(/fill: var\(--avatar-wheel-rim, color-mix\(in srgb, var\(--accent\) 22%, white\)\)/);
+    for (const r of wheel) expect(r.body, r.selector).not.toMatch(/#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i);
+  });
+});
+
 describe("the card's place and stacking", () => {
   it("is fixed in the bottom-right corner, 4:5, with the width from a variable", () => {
     const c = body(".avatar-card");

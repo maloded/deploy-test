@@ -89,7 +89,7 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
   if (seller.agent?.avatar) {
     const found = readAvatar(contentDir, seller.agent.avatar.id);
     if (!found.ok) throw new ContentError(`${sellerSlug}/seller.json`, found.issues.map((i) => `agent.avatar.id: ${i}`));
-    avatar = resolveAvatar(found.avatar, seller.agent.avatar.name, { tagline: seller.agent.avatar.tagline, badge: seller.agent.avatar.badge, startLabel: seller.agent.avatar.startLabel, endLabel: seller.agent.avatar.endLabel });
+    avatar = resolveAvatar(found.avatar, seller.agent.avatar.name, { tagline: seller.agent.avatar.tagline, badge: seller.agent.avatar.badge, startLabel: seller.agent.avatar.startLabel, endLabel: seller.agent.avatar.endLabel, buttonIcon: seller.agent.avatar.buttonIcon });
   }
 
   const result = validateProduct(readJson(path.join(/*turbopackIgnore: true*/ dir, "product.json"), `${ref}/product.json`), options.registries ?? defaultRegistries);

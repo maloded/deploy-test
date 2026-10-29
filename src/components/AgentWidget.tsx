@@ -59,7 +59,7 @@ export function AgentWidget({ agent, lang, product, avatar, requestType }: { age
         {ready ? (
           <>
             {createElement("hanc-ai-pill-floating-call", { ...common, position: "static", "button-end-text": ui("agent.end", lang), "orb-size": "36", ref: setHost })}
-            <AgentStartButton host={host} lang={lang} startLabel={avatar.startLabel} endLabel={avatar.endLabel} />
+            <AgentStartButton host={host} lang={lang} startLabel={avatar.startLabel} endLabel={avatar.endLabel} icon={avatar.buttonIcon} />
           </>
         ) : (
           failed && (

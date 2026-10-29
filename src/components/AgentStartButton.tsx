@@ -5,6 +5,8 @@ import { pick } from "@/lib/i18n";
 import { ui } from "@/lib/ui-strings";
 import type { Language } from "@/lib/languages";
 import type { Localized } from "@/lib/schema";
+import type { ButtonIcon } from "@/lib/avatar-manifest";
+import { WheelIcon } from "./WheelIcon";
 import { toggleCall, watchCallStatus, whenWidgetReady, type CallStatus, type WidgetHost } from "@/lib/hanc-bridge";
 
 /**
@@ -14,11 +16,11 @@ import { toggleCall, watchCallStatus, whenWidgetReady, type CallStatus, type Wid
  *
  * data-mode: "pending" until the widget has rendered its button, "custom" when it has, "standard" when it has not (another version
  * of the package, or no button): then this button hides itself and the widget's own pill shows (the CSS keys on the attribute).
- * data-state: idle, connecting, connected (a call is running) or error.
+ * data-state: idle, connecting, connected (a call is running) or error. The wheel icon turns while data-state is "connected", nothing else.
  */
 type Mode = "pending" | "custom" | "standard";
 
-export function AgentStartButton({ host, lang, startLabel, endLabel }: { host: WidgetHost | null; lang: Language; startLabel: Localized | null; endLabel: Localized | null }) {
+export function AgentStartButton({ host, lang, startLabel, endLabel, icon = "dot" }: { host: WidgetHost | null; lang: Language; startLabel: Localized | null; endLabel: Localized | null; icon?: ButtonIcon }) {
   const [mode, setMode] = useState<Mode>("pending");
   const [status, setStatus] = useState<CallStatus>("idle");
 
@@ -44,8 +46,8 @@ export function AgentStartButton({ host, lang, startLabel, endLabel }: { host: W
 
   return (
     <>
-      <button type="button" className="avatar-card__start" data-mode={mode} data-state={status} aria-disabled={disabled || undefined} aria-busy={status === "connecting" || undefined} onClick={onClick}>
-        <span className="avatar-card__start-dot" aria-hidden="true" />
+      <button type="button" className="avatar-card__start" data-mode={mode} data-state={status} data-icon={icon} aria-disabled={disabled || undefined} aria-busy={status === "connecting" || undefined} onClick={onClick}>
+        {icon === "wheel" ? <WheelIcon /> : <span className="avatar-card__start-dot" aria-hidden="true" />}
         <span>{label}</span>
       </button>
       {/* outside the button, so the button's own name stays its label; says what changed to a screen reader */}

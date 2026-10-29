@@ -56,7 +56,7 @@ const STRINGS = {
   "agent.pill": { en: "Talk to our assistant", de: "Mit unserem Assistenten sprechen" },
   "agent.end": { en: "End call", de: "Gespräch beenden" },
   "agent.connecting": { en: "Connecting...", de: "Verbinde..." },
-  "agent.error": { en: "Failed. Try again", de: "Fehlgeschlagen. Nochmal?" },
+  "agent.error": { en: "Failed. Try again", de: "Fehler. Nochmal?" },
   "footer.contact": { en: "Contact", de: "Kontakt" },
   "footer.privacy": { en: "Privacy", de: "Datenschutz" },
   "footer.imprint": { en: "Imprint", de: "Impressum" },
