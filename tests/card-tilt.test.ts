@@ -44,7 +44,7 @@ describe("springStep", () => {
   it("returns to flat from a tilted position", () => {
     const { s } = settle({ x: 3, y: -7, vx: 0, vy: 0 }, { x: 0, y: 0 });
     expect(atRest(s, { x: 0, y: 0 })).toBe(true);
-    expect(tiltTransform({ ...s, x: 0, y: 0 })).toBe("rotateX(0.000deg) rotateY(0.000deg)");
+    expect(tiltTransform({ ...s, x: 0, y: 0 })).toBe("perspective(56rem) rotateX(0.000deg) rotateY(0.000deg)");
   });
   it("caps a long frame, so a pause does not make it jump", () => {
     const jump = springStep(REST_SPRING, { x: 0, y: 7 }, 10);

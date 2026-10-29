@@ -8,25 +8,26 @@ const HOVER_FINE = "(hover: hover) and (pointer: fine)";
 const FLAT: Tilt = { x: 0, y: 0 };
 
 /**
- * Turns `layer` toward the pointer while it is over `card` (only the layer: the widget is a sibling of it, never inside it).
+ * Turns `frame` (the card's border, radius, clipping and pictures) toward the pointer while the pointer is over `card`, the untransformed
+ * container, so the hit area does not move with the tilt. The widget is a sibling of the frame, never inside it.
  * A critically damped spring runs in requestAnimationFrame only while it moves; pointermove just sets the target. Off with
  * prefers-reduced-motion and without a hovering fine pointer (checked again when either changes); touch pens and mice only.
  *
  * The widget's full-screen form is in its shadow DOM, so there is no event for it. It does reach the card, though: a pointer event
  * that arrives from outside the card's box came through that overlay (see tiltTarget), and then the card lies flat.
  */
-export function useCardTilt(card: RefObject<HTMLElement | null>, layer: RefObject<HTMLElement | null>): void {
+export function useCardTilt(card: RefObject<HTMLElement | null>, frame: RefObject<HTMLElement | null>): void {
   useEffect(() => {
     const cardEl = card.current;
-    const layerEl = layer.current;
+    const frameEl = frame.current;
     const reduced = window.matchMedia?.(REDUCED);
     const hover = window.matchMedia?.(HOVER_FINE);
-    if (!cardEl || !layerEl || !hover) return;
+    if (!cardEl || !frameEl || !hover) return;
 
     let stop: (() => void) | null = null;
     const sync = () => {
       const allowed = tiltAllowed({ reducedMotion: Boolean(reduced?.matches), hoverFine: hover.matches });
-      if (allowed && !stop) stop = start(cardEl, layerEl);
+      if (allowed && !stop) stop = start(cardEl, frameEl);
       else if (!allowed && stop) {
         stop();
         stop = null;
@@ -40,10 +41,10 @@ export function useCardTilt(card: RefObject<HTMLElement | null>, layer: RefObjec
       hover.removeEventListener?.("change", sync);
       stop?.();
     };
-  }, [card, layer]);
+  }, [card, frame]);
 }
 
-function start(cardEl: HTMLElement, layerEl: HTMLElement): () => void {
+function start(cardEl: HTMLElement, frameEl: HTMLElement): () => void {
   let spring: Spring = REST_SPRING;
   let target: Tilt = FLAT;
   let raf = 0;
@@ -54,11 +55,11 @@ function start(cardEl: HTMLElement, layerEl: HTMLElement): () => void {
     last = time;
     if (atRest(spring, target)) {
       spring = { ...target, vx: 0, vy: 0 };
-      layerEl.style.transform = target === FLAT ? "" : tiltTransform(spring);
+      frameEl.style.transform = target === FLAT ? "" : tiltTransform(spring);
       raf = 0;
       return;
     }
-    layerEl.style.transform = tiltTransform(spring);
+    frameEl.style.transform = tiltTransform(spring);
     raf = requestAnimationFrame(frame);
   };
   const kick = () => {
@@ -82,6 +83,6 @@ function start(cardEl: HTMLElement, layerEl: HTMLElement): () => void {
     cardEl.removeEventListener("pointermove", onMove);
     cardEl.removeEventListener("pointerleave", onLeave);
     cancelAnimationFrame(raf);
-    layerEl.style.transform = "";
+    frameEl.style.transform = "";
   };
 }

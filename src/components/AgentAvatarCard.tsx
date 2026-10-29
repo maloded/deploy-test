@@ -15,8 +15,8 @@ import { useCardTilt } from "./use-card-tilt";
  * first touch of the card or when a call starts. Poster only with prefers-reduced-motion or Save-Data. Videos pause when the tab is
  * hidden. One format per loop, never both. A video that fails is dropped and the poster stays.
  *
- * Tilt: the stage (perspective) and the tilt layer (rotateX/rotateY, set by useCardTilt) hold the pictures; the widget is a SIBLING of
- * the stage, so it never tilts. Do not put transform, filter, perspective, will-change or contain on this element or on any ancestor of
+ * Tilt: the frame (border, radius, clipping and the pictures) is turned as a whole by useCardTilt, perspective inside its transform;
+ * the widget is a SIBLING of the frame, so it never tilts. Do not put transform, filter, perspective, will-change or contain on this element or on any ancestor of
  * `children`: they turn it into the containing block of the widget's position:fixed form overlay and confine the overlay to the card
  * (see the CSS guard test).
  */
@@ -49,8 +49,8 @@ export function AgentAvatarCard({ avatar, children }: { avatar: ResolvedAvatar; 
   const [failed, setFailed] = useState<Partial<Record<AvatarSlot, boolean>>>({});
   const videos = useRef<Partial<Record<AvatarSlot, HTMLVideoElement | null>>>({});
   const cardRef = useRef<HTMLElement>(null);
-  const tiltRef = useRef<HTMLDivElement>(null);
-  useCardTilt(cardRef, tiltRef);
+  const frameRef = useRef<HTMLDivElement>(null);
+  useCardTilt(cardRef, frameRef);
 
   // the idle loop waits for the page to be idle
   useEffect(() => {
@@ -80,8 +80,7 @@ export function AgentAvatarCard({ avatar, children }: { avatar: ResolvedAvatar; 
 
   return (
     <section ref={cardRef} className="avatar-card" data-block="agent" data-placement="card" data-avatar={avatar.id} data-state={state} aria-label={avatar.name} onPointerDown={touch} onPointerEnter={touch} onFocusCapture={touch}>
-      <div className="avatar-card__stage" aria-hidden="true">
-        <div ref={tiltRef} className="avatar-card__tilt">
+      <div ref={frameRef} className="avatar-card__frame" aria-hidden="true">
         {/* eslint-disable-next-line @next/next/no-img-element -- a pack file served as it is from /avatars, sized by the card */}
         <img className="avatar-card__poster" src={avatar.poster} alt="" decoding="async" />
         {mounted.map((slot) => {
@@ -109,7 +108,6 @@ export function AgentAvatarCard({ avatar, children }: { avatar: ResolvedAvatar; 
             />
           );
         })}
-        </div>
       </div>
       <div className="avatar-card__action">{children}</div>
     </section>

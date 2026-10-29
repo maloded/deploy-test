@@ -47,8 +47,11 @@ export function springStep(s: Spring, target: Tilt, dt: number): Spring {
 export const atRest = (s: Spring, target: Tilt): boolean =>
   Math.abs(target.x - s.x) < REST && Math.abs(target.y - s.y) < REST && Math.abs(s.vx) < REST && Math.abs(s.vy) < REST;
 
-/** The CSS transform for a spring position. */
-export const tiltTransform = (s: Spring): string => `rotateX(${s.x.toFixed(3)}deg) rotateY(${s.y.toFixed(3)}deg)`;
+/** How far the card is from the viewer, as the transform's own perspective (about 1000px at the base size: a gentle depth). */
+export const TILT_PERSPECTIVE = "56rem";
+
+/** The CSS transform for a spring position: the perspective is inside it, so no ancestor needs a perspective property. */
+export const tiltTransform = (s: Spring): string => `perspective(${TILT_PERSPECTIVE}) rotateX(${s.x.toFixed(3)}deg) rotateY(${s.y.toFixed(3)}deg)`;
 
 /** The tilt exists only with a real hover pointer and when motion is welcome. */
 export const tiltAllowed = (env: { reducedMotion: boolean; hoverFine: boolean }): boolean => env.hoverFine && !env.reducedMotion;

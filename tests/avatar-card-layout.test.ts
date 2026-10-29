@@ -37,13 +37,19 @@ describe("nothing on the card or above the widget can confine its fixed overlay"
     expect(hits).toEqual([]);
   });
 
-  it("only .avatar-card__stage and .avatar-card__tilt may set transform, perspective or the like; nothing else of the card does", () => {
+  it("no rule of the card sets transform, perspective or the like: the frame's transform is inline, set only while it tilts", () => {
     const hits = all
       .filter((r) => r.selector.split(",").some((s) => /^\.avatar-card/.test(s.trim())))
-      .filter((r) => CONFINING.test(r.body) && !r.selector.split(",").every((s) => ["", ".avatar-card__stage", ".avatar-card__tilt"].includes(s.trim())))
+      .filter((r) => CONFINING.test(r.body))
       .map((r) => `${r.media} ${r.selector}`);
     expect(hits).toEqual([]);
-    expect(body(".avatar-card__stage")).toMatch(/perspective: 56rem/);
+    expect(all.filter((r) => /(^|;|\s)perspective\s*:/.test(r.body))).toEqual([]); // no selector anywhere: the perspective is inside the transform function
+  });
+
+  it("the frame owns the border, the radius, the clipping and the background; the card itself has none of them", () => {
+    const frame = body(".avatar-card__frame");
+    for (const re of [/overflow: hidden/, /border: 1px solid var\(--border\)/, /border-radius: var\(--radius\)/, /background: var\(--surface\)/]) expect(frame).toMatch(re);
+    expect(body(".avatar-card")).not.toMatch(/overflow|border|background/);
   });
 
   it("the components set no confining inline style on the card or the layout", () => {
@@ -117,8 +123,7 @@ describe("small windows", () => {
   });
 
   it("under 360px wide or 520px tall there is no card, only the widget's own pill in the corner (the button is not cut down there)", () => {
-    expect(body(".avatar-card__stage", TINY)).toMatch(/display: none/);
-    expect(body(".avatar-card", TINY)).toMatch(/background: none/);
+    expect(body(".avatar-card__frame", TINY)).toMatch(/display: none/);
     expect(all.filter((r) => r.media === TINY && r.selector.includes("::part"))).toEqual([]);
   });
 

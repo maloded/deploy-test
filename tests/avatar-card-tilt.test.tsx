@@ -51,7 +51,7 @@ describe("the tilt in the DOM", () => {
     card.getBoundingClientRect = () => ({ left: 100, top: 200, width: 200, height: 250, right: 300, bottom: 450, x: 100, y: 200, toJSON() {} });
     return card;
   };
-  const layer = () => document.querySelector<HTMLElement>(".avatar-card__tilt")!;
+  const frame = () => document.querySelector<HTMLElement>(".avatar-card__frame")!;
   const pointer = (card: Element, type: string, x: number, y: number, pointerType = "mouse") => {
     const e = new MouseEvent(type, { bubbles: true, clientX: x, clientY: y });
     Object.defineProperty(e, "pointerType", { value: pointerType });
@@ -67,21 +67,21 @@ describe("the tilt in the DOM", () => {
     }
   };
 
-  it("turns the picture layer toward the pointer, and puts it back flat on pointer leave", async () => {
+  it("turns the whole frame toward the pointer (perspective inside the transform), and after leaving and settling its inline transform is empty again", async () => {
     const card = await mount();
     pointer(card, "pointermove", 300, 325);
     run();
-    expect(layer().style.transform).toBe("rotateX(0.000deg) rotateY(7.000deg)");
+    expect(frame().style.transform).toBe("perspective(56rem) rotateX(0.000deg) rotateY(7.000deg)");
     pointer(card, "pointerleave", 0, 0);
     run();
-    expect(layer().style.transform).toBe("");
+    expect(frame().style.transform).toBe("");
   });
 
   it("never turns more than 7 / 5 degrees, however the pointer sits at the edge", async () => {
     const card = await mount();
     pointer(card, "pointermove", 100, 200);
     run();
-    expect(layer().style.transform).toBe("rotateX(5.000deg) rotateY(-7.000deg)");
+    expect(frame().style.transform).toBe("perspective(56rem) rotateX(5.000deg) rotateY(-7.000deg)");
   });
 
   it("moves in animation frames: a burst of pointer moves asks for one frame", async () => {
@@ -94,17 +94,17 @@ describe("the tilt in the DOM", () => {
     const card = await mount();
     pointer(card, "pointermove", 300, 325);
     run();
-    expect(layer().style.transform).not.toBe("");
+    expect(frame().style.transform).not.toBe("");
     pointer(card, "pointermove", 700, 40);
     run();
-    expect(layer().style.transform).toBe("");
+    expect(frame().style.transform).toBe("");
   });
 
   it("ignores touch", async () => {
     const card = await mount();
     pointer(card, "pointermove", 300, 325, "touch");
     expect(frames).toHaveLength(0);
-    expect(layer().style.transform).toBe("");
+    expect(frame().style.transform).toBe("");
   });
 
   it("is off with prefers-reduced-motion", async () => {
@@ -112,7 +112,7 @@ describe("the tilt in the DOM", () => {
     const card = await mount();
     pointer(card, "pointermove", 300, 325);
     expect(frames).toHaveLength(0);
-    expect(layer().style.transform).toBe("");
+    expect(frame().style.transform).toBe("");
   });
 
   it("is off without a hovering fine pointer (a phone, a tablet)", async () => {
@@ -126,25 +126,31 @@ describe("the tilt in the DOM", () => {
     const card = await mount();
     pointer(card, "pointermove", 300, 325);
     run();
-    expect(layer().style.transform).not.toBe("");
+    expect(frame().style.transform).not.toBe("");
     reduced = true;
     act(() => changeListeners.slice().forEach((l) => l()));
-    expect(layer().style.transform).toBe("");
+    expect(frame().style.transform).toBe("");
     pointer(card, "pointermove", 300, 325);
     expect(frames).toHaveLength(0);
   });
 
-  it("the widget is a sibling of the stage, not inside the stage or the tilt layer (nothing transformed above it)", async () => {
+  it("the widget is a sibling of the frame, not inside it, and no ancestor of it is the frame (nothing transformed above it)", async () => {
     const card = await mount();
     const widget = card.querySelector("hanc-ai-pill-floating-call")!;
-    const stage = card.querySelector(".avatar-card__stage")!;
-    expect(stage.contains(widget)).toBe(false);
-    expect(layer().contains(widget)).toBe(false);
+    expect(frame().contains(widget)).toBe(false);
     expect(widget.closest(".avatar-card__action")!.parentElement).toBe(card);
-    expect(stage.parentElement).toBe(card);
-    for (let el: Element | null = widget; el; el = el.parentElement) {
-      expect(el.classList.contains("avatar-card__stage") || el.classList.contains("avatar-card__tilt")).toBe(false);
-    }
+    expect(frame().parentElement).toBe(card);
+    for (let el: Element | null = widget; el; el = el.parentElement) expect(el.classList.contains("avatar-card__frame")).toBe(false);
+  });
+
+  it("the pointer listener is on the untransformed container: a move over the frame's own box reaches it", async () => {
+    const card = await mount();
+    const e = new MouseEvent("pointermove", { bubbles: true, clientX: 300, clientY: 325 });
+    Object.defineProperty(e, "pointerType", { value: "mouse" });
+    act(() => void frame().dispatchEvent(e)); // dispatched on the frame, caught on the card by bubbling
+    run();
+    expect(frame().style.transform).toContain("rotateY(7.000deg)");
+    expect(card.style.transform).toBe("");
   });
 
   it("renders no transform on the server", () => {

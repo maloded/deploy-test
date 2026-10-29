@@ -1719,27 +1719,21 @@ main:focus-visible {
   z-index: 1100;
   width: var(--avatar-card-w, 12.5rem);
   aspect-ratio: 4 / 5;
-  overflow: hidden; /* clips the pictures to the rounded box; it does not clip the widget's fixed overlay */
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
 }
 
 /*
- * The pictures tilt toward the pointer (useCardTilt): the stage gives the perspective, the layer inside it is rotated by script.
- * These two are the ONLY elements with perspective or transform. The widget (.avatar-card__action) is a sibling of the stage, so
- * it neither tilts nor sits under a transformed ancestor.
+ * The frame owns the border, the radius, the clipping and the background, and it is the one element that tilts toward the pointer
+ * (useCardTilt sets its transform inline, perspective included, only while it moves). The widget (.avatar-card__action) is a
+ * SIBLING of the frame, so it neither tilts nor sits under a transformed ancestor. No rule in this file sets a transform or a
+ * perspective; tests/avatar-card-layout.test.ts guards that.
  */
-.avatar-card__stage {
+.avatar-card__frame {
   position: absolute;
   inset: 0;
-  perspective: 56rem; /* about 1000px at the base size: a gentle depth */
-}
-
-/* a little larger than the card (which clips it), so the edge that turns away never shows the card's background */
-.avatar-card__tilt {
-  position: absolute;
-  inset: -3%;
+  overflow: hidden; /* clips the pictures to the rounded box; it does not clip the widget's fixed overlay (the widget is not inside it) */
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 
 .avatar-card__poster,
@@ -1806,15 +1800,11 @@ main:focus-visible {
   .avatar-card {
     width: auto;
     aspect-ratio: auto;
-    overflow: visible;
-    background: none;
-    border: 0;
-    border-radius: 0;
     right: var(--space-4);
     bottom: var(--space-4);
   }
 
-  .avatar-card__stage {
+  .avatar-card__frame {
     display: none;
   }
 
