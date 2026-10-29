@@ -4,7 +4,18 @@
   "name": "Sofia",
   "voiceHint": "female",
   "poster": "poster.webp",
-  "idle": { "mp4": "f1.mp4", "webm": "f1.webm" },
+  "idle": {
+    "mp4": "listen.mp4",
+    "webm": "listen.webm"
+  },
   "license": "Hanc.ai cast asset, used with permission of the Hanc project curator",
-  "provenance": "Hanc.ai cast F1 (Sofia): a synthetic character, not a real person. 5 s image-to-video loop (Kling v3, start frame equals end frame) from an AI-generated 4:5 still."
+  "provenance": "Hanc.ai cast F1 (Sofia): a synthetic character, not a real person. 5 s image-to-video loop (Kling v3, start frame equals end frame) from an AI-generated 4:5 still. Loops listen and speak cut from the same clip (frames 3-39 and 42-110, played forward then backward) with ffmpeg. Before the call (idle) the listen loop plays (test).",
+  "listen": {
+    "mp4": "listen.mp4",
+    "webm": "listen.webm"
+  },
+  "speak": {
+    "mp4": "speak.mp4",
+    "webm": "speak.webm"
+  }
 }
