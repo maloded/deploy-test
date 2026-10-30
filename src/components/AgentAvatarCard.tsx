@@ -64,7 +64,7 @@ export function AgentAvatarCard({ avatar, lang, host, slot = false, placement: p
   const frameRef = useRef<HTMLDivElement>(null);
   const overlay = useWidgetOverlay(cardRef);
   const { phase, blocked } = useCallOutcome(useCallStatus(host));
-  const { placement, ready } = useCardPlacement(cardRef, slot, pinned, overlay || phase !== "idle");
+  const { placement, ready } = useCardPlacement(cardRef, slot, pinned, overlay);
   const state: CardState = useAgentState(cardRef, host);
   const call = callAttribute(phase);
   const rings = useOrbRings(cardRef, phase);

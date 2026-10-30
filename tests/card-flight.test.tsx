@@ -271,19 +271,84 @@ describe("the flight of the ghost in the page", () => {
     }
   });
 
-  it("ends the flight at once when a call starts connecting: the real card is shown, the ghost is gone, and the next switch is instant", async () => {
+  const wait = (ms = 250) => act(async () => void (await new Promise((r) => setTimeout(r, ms))));
+
+  it("flies in every phase of a call - idle, connecting, live, ended - and a flight in the air is not stopped by the call changing phase", async () => {
     const { card, host } = await first({ callStatus: "idle" });
+    let share_ = 0.1;
+    for (const status of ["idle", "connecting", "connected", "idle"]) {
+      host.callStatus = status;
+      await wait();
+      await share(share_);
+      expect(card.dataset.placement, status).toBe("dock");
+      expect(card.dataset.flight, status).toBe("dock");
+      expect(ghosts(), status).toHaveLength(1);
+      fly(CARD_FLIGHT.ms + 1);
+      expect(card.dataset.flight, status).toBeUndefined();
+      await wait(CARD_FLIGHT.crossfadeMs + 80);
+      expect(ghosts(), status).toHaveLength(0);
+      share_ = 0.1;
+      await share(0.9); // and back up, in the same phase
+      expect(card.dataset.flight, status).toBe("hero");
+      expect(ghosts(), status).toHaveLength(1);
+      fly(CARD_FLIGHT.ms * 2 + 2);
+      await wait(CARD_FLIGHT.crossfadeMs + 80);
+      clock = 1000; // the next flight reads the clock when it starts
+    }
+    // the call changes phase in mid-air: the flight goes on
+    await share(0.1);
+    expect(ghosts()).toHaveLength(1);
+    host.callStatus = "connecting";
+    await wait();
+    expect(ghosts()).toHaveLength(1);
+    expect(card.dataset.flight).toBe("dock");
+    host.callStatus = "connected";
+    await wait();
+    expect(ghosts()).toHaveLength(1);
+    fly(10_000);
+    expect(card.dataset.flight).toBeUndefined();
+  });
+
+  it("draws the frame of the loop on screen during a call (listen or speak), not the invite or idle loop", async () => {
+    const draw = vi.fn();
+    (HTMLCanvasElement.prototype as any).getContext = () => ({ fillRect() {}, drawImage: draw, fillStyle: "" });
+    const { card } = await first({ callStatus: "connected" });
+    const videos = Array.from(card.querySelectorAll<HTMLVideoElement>("video"));
+    for (const v of videos) {
+      Object.defineProperty(v, "readyState", { configurable: true, value: 4 });
+      Object.defineProperty(v, "videoWidth", { configurable: true, value: 960 });
+      Object.defineProperty(v, "videoHeight", { configurable: true, value: 1200 });
+    }
+    for (const want of ["speak", "listen"]) {
+      expect(videos.map((v) => v.dataset.slot)).toEqual(expect.arrayContaining([want]));
+      for (const v of videos) v.dataset.active = String(v.dataset.slot === want);
+      draw.mockClear();
+      await share(0.1);
+      expect(draw).toHaveBeenCalledTimes(1);
+      expect((draw.mock.calls[0][0] as HTMLVideoElement).dataset.slot).toBe(want);
+      fly(CARD_FLIGHT.ms + 1);
+      await wait(CARD_FLIGHT.crossfadeMs + 80);
+      await share(0.9);
+      fly(CARD_FLIGHT.ms * 2 + 2);
+      await wait(CARD_FLIGHT.crossfadeMs + 80);
+      clock = 1000;
+    }
+  });
+
+  it("while the widget's form is open the switches are instant (no ghost), and they fly again when it closes", async () => {
+    const { card } = await first();
+    await act(async () => void card.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientX: 5, clientY: 5 }))); // from outside the card's box: the form
+    await share(0.1);
+    expect(card.dataset.placement).toBe("dock");
+    expect(ghosts()).toHaveLength(0);
+    expect(card.dataset.flight).toBeUndefined();
+    await share(0.9);
+    expect(card.dataset.placement).toBe("hero");
+    expect(ghosts()).toHaveLength(0);
+    await act(async () => void card.dispatchEvent(new MouseEvent("pointerleave", { bubbles: false })));
     await share(0.1);
     expect(ghosts()).toHaveLength(1);
     expect(card.dataset.flight).toBe("dock");
-    host.callStatus = "connecting";
-    await act(async () => void (await new Promise((r) => setTimeout(r, 250))));
-    expect(ghosts()).toHaveLength(0);
-    expect(card.dataset.flight).toBeUndefined();
-    await share(0.9); // a call is on its way: no ghost for the next switch either
-    expect(card.dataset.placement).toBe("hero");
-    expect(ghosts()).toHaveLength(0);
-    expect(card.dataset.flight).toBeUndefined();
   });
 
   it("ends the flight at once when the widget's form opens (a pointer arrives from outside the card's box)", async () => {

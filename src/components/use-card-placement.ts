@@ -11,8 +11,8 @@ export type Placement = "hero" | "dock";
  * fixed in the corner). The switch is instant and reversible, and the card is ONE element for the whole page life: only the attribute and
  * its custom properties change, so nothing is remounted, a running call goes on and the videos do not restart.
  *
- * - `busy` (the widget's form is open, a call is on its way or on) ends a flight in the air at once and makes the next switch instant: what the
- *   visitor is doing with the widget is never covered by a ghost.
+ * - `formOpen` (the widget's form is open over the card) ends a flight in the air at once and makes the next switch instant: the form is never covered
+ *   by a ghost. A call in any phase (connecting, live, ended) does not stop the flight: the ghost never touches the widget, and it draws the loop on screen.
  * - The hero's slot is watched by an IntersectionObserver with the thresholds 0 and CARD_FLIGHT.trigger (0.28): the card is in the hero while at
  *   least that share of the slot is on screen, and docks below it, with a flight of a ghost (card-flight-controller.ts); the same share brings it
  *   back. The first measurement places it without a flight.
@@ -26,16 +26,16 @@ export type Placement = "hero" | "dock";
  * - `expectSlot` is what the server knows (the hero block is on the page). Without a slot in the DOM the card stays docked. `fixed` pins
  *   the placement and skips all of this.
  */
-export function useCardPlacement(card: RefObject<HTMLElement | null>, expectSlot: boolean, fixed?: Placement, busy = false): { placement: Placement; ready: boolean } {
+export function useCardPlacement(card: RefObject<HTMLElement | null>, expectSlot: boolean, fixed?: Placement, formOpen = false): { placement: Placement; ready: boolean } {
   const [placement, setPlacement] = useState<Placement>(fixed ?? (expectSlot ? "hero" : "dock"));
   const [ready, setReady] = useState(fixed !== undefined || !expectSlot);
-  // busy: the widget's form is open or a call is connecting or on. The card is then shown as it is at once (no ghost in the air, none starts).
-  const busyNow = useRef(busy);
+  // formOpen: the widget's form is open over the card. The card is then shown as it is at once (no ghost in the air, none starts).
+  const formNow = useRef(formOpen);
   const flying = useRef<FlightController | null>(null);
   useEffect(() => {
-    busyNow.current = busy;
-    if (busy) flying.current?.finish();
-  }, [busy]);
+    formNow.current = formOpen;
+    if (formOpen) flying.current?.finish();
+  }, [formOpen]);
 
   useEffect(() => {
     const el = card.current;
@@ -94,7 +94,7 @@ export function useCardPlacement(card: RefObject<HTMLElement | null>, expectSlot
       }
       if (want === current) return;
       current = want;
-      if (reduced?.matches || busyNow.current) {
+      if (reduced?.matches || formNow.current) {
         flight.finish();
         setPlacement(want);
       } else flight.start(want);
