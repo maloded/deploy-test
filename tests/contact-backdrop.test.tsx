@@ -29,7 +29,7 @@ const q = <T extends Element>(sel: string) => box!.querySelector(sel) as T;
 const dialog = () => q<HTMLDialogElement>("dialog.contact-dialog");
 const inner = () => q<HTMLElement>(".contact-dialog__box");
 const field = (name: string) => q<HTMLInputElement>(`dialog [name=${name}]`);
-const opener = () => q<HTMLAnchorElement>('header a[href="#contact"]');
+const opener = () => q<HTMLAnchorElement>('.hero a[href="#contact"]'); // the header's button scrolls (data-contact="scroll"); the hero's opens the dialog
 const open = () => act(() => void opener().click());
 const press = (el: Element) => act(() => void el.dispatchEvent(new Event("pointerdown", { bubbles: true })));
 const click = (el: Element) => act(() => void el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true })));

@@ -179,11 +179,28 @@ main:focus-visible {
   outline: none;
 }
 
-/* header strip */
+/*
+ * header strip: full width, not sticky. ONE height for every control in it (the button, the player's button and track select, the language
+ * links or dropdown): --header-control-h, by default the height the "Get in touch" button always had (its 0.7rem text, the line height, its
+ * 0.5rem padding and hairline), so the three sit on one level. The header is that plus modest padding. On a narrow screen the controls are 44px.
+ */
+:root {
+  --header-control-h: calc(0.7rem * var(--line-height, 1.55) + var(--space-2) * 2 + 2px);
+  --header-h: calc(var(--header-control-h, 2.25rem) + var(--space-2) * 3 + 1px);
+  --brand-size: 1.7rem; /* the seller's name in the header; its line (1.1) stays below the control height, so it never makes the header taller */
+}
+
+@media (width < 40em) {
+  :root {
+    --header-control-h: 2.75rem;
+    --brand-size: 1.35rem;
+  }
+}
+
 .site-header {
   display: flex;
   align-items: center;
-  min-height: var(--header-h, 4.25rem);
+  min-height: var(--header-h, 3.75rem);
   border-bottom: 1px solid var(--border);
 }
 
@@ -194,7 +211,7 @@ main:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2) var(--space-3);
-  padding-block: var(--space-3);
+  padding-block: calc(var(--space-2) * 1.5);
 }
 
 /* switcher and button; on a narrow screen they may drop under the brand, never overflow */
@@ -210,12 +227,15 @@ main:focus-visible {
 .lang-switch {
   display: flex;
   gap: var(--space-3);
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 
-/* plain text links, the current language underlined: narrow enough for the header at 390 px */
+/* plain text links, the current language underlined, each the height of a control: narrow enough for the header at 390 px */
 .lang-switch a {
-  padding-block: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: var(--header-control-h, 2.25rem);
   border-bottom: 2px solid transparent;
   color: var(--muted);
   text-decoration: none;
@@ -226,11 +246,115 @@ main:focus-visible {
   color: var(--text);
 }
 
+/* three languages or more: a dropdown showing the current language (a <details> of the same links, so it works without JavaScript) */
+.lang-menu {
+  position: relative;
+}
+
+.lang-menu__current {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  height: var(--header-control-h, 2.25rem);
+  padding-inline: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 0);
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;
+}
+
+.lang-menu__current::-webkit-details-marker {
+  display: none;
+}
+
+.lang-menu__current::after {
+  content: "\25BE";
+  color: var(--muted);
+  font-size: 0.8em;
+}
+
+.lang-menu[open] .lang-menu__current,
+.lang-menu__current:hover {
+  border-color: var(--accent-line, var(--accent));
+}
+
+.lang-menu__current:focus-visible,
+.lang-menu__list a:focus-visible {
+  outline: 2px solid var(--accent-line, var(--accent));
+  outline-offset: 2px;
+}
+
+.lang-menu__list {
+  position: absolute;
+  inset-inline-start: 0;
+  top: calc(100% + var(--space-1));
+  z-index: 30;
+  min-width: 100%;
+  margin: 0;
+  padding: var(--space-1);
+  list-style: none;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 0);
+}
+
+.lang-menu__list a {
+  padding-inline: var(--space-3);
+  border-bottom: 0;
+  white-space: nowrap;
+}
+
+.lang-menu__list a[aria-current="true"] {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.lang-menu__list a:hover {
+  color: var(--accent-line, var(--accent));
+}
+
+/* the button to the footer's contact row: its own size (the generic small button), only made exactly as high as the other controls */
+.site-header__end > .button--small {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: var(--header-control-h, 2.25rem);
+  padding-block: 0;
+}
+
+/* a narrow screen: the brand and the button share the first row, the language control and the player the second (two rows, not three) */
+@media (width < 40em) {
+  .site-header:not(.site-header--agent) .site-header__end {
+    display: contents;
+  }
+
+  .site-header:not(.site-header--agent) .site-header__end > .button--small {
+    order: 1;
+    margin-inline-start: auto;
+  }
+
+  .site-header:not(.site-header--agent) .site-header__inner {
+    column-gap: var(--space-2);
+  }
+
+  /* second row: the language control (its original 0.875rem size here) and the player, 327px at 390px */
+  .site-header:not(.site-header--agent) .lang-switch {
+    order: 2;
+    font-size: 0.875rem;
+  }
+
+  .site-header:not(.site-header--agent) .music {
+    order: 3;
+  }
+}
+
 .site-header__name {
   min-width: 0;
   font-family: var(--font-heading);
-  font-size: 1.1rem;
-  line-height: 1.2;
+  font-size: var(--brand-size, 1.7rem);
+  line-height: 1.1;
   overflow-wrap: anywhere;
 }
 
@@ -477,28 +601,32 @@ main:focus-visible {
     align-items: flex-end;
   }
 
+  /*
+   * Key facts on wide screens: one row of four, a divider between neighbours. The dividers are the items' own left borders, pulled 1px
+   * outside the list, whose overflow clips them: the first fact of every row shows none and the last has no trailing one, so a set that does
+   * not fit wraps cleanly (no lone fact with a stray divider and an indent). The list is pulled back by one padding (--fact-pad), so the first
+   * text lines up with the description above it, as before; --fact-pad is the space each side of a fact.
+   */
   .hero__facts {
+    --fact-pad: calc(var(--space-2) * 0.875); /* 7px: the widest set (light theme, English) needs at most 8px each side to fit four in the 700px column; was --space-3 */
     display: flex;
     flex-wrap: wrap;
+    gap: var(--space-3) 0; /* only a wrapped row has a gap above it */
+    margin-inline-start: calc(var(--fact-pad, 0.4rem) * -1);
+    overflow: hidden;
   }
 
   .hero__fact {
     padding-block: 0;
-    padding-inline: var(--space-3);
+    padding-inline: var(--fact-pad, 0.4rem);
     border-top: 0;
+    border-left: 1px solid var(--border);
+    margin-left: -1px;
   }
 
   /* one size for all wide windows: four German values fit one row of the 55% column; never below 1.25rem */
   .hero__fact-value {
     font-size: clamp(1.25rem, 1.9vw, 1.5rem);
-  }
-
-  .hero__fact:first-child {
-    padding-left: 0;
-  }
-
-  .hero__fact + .hero__fact {
-    border-left: 1px solid var(--border);
   }
 }
 
@@ -517,8 +645,8 @@ main:focus-visible {
   .hero {
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - var(--header-h, 4.25rem) - var(--agent-top-h, 0rem));
-    min-height: calc(100svh - var(--header-h, 4.25rem) - var(--agent-top-h, 0rem));
+    min-height: calc(100vh - var(--header-h, 3.75rem) - var(--agent-top-h, 0rem));
+    min-height: calc(100svh - var(--header-h, 3.75rem) - var(--agent-top-h, 0rem));
   }
 
   .hero__stage {
@@ -615,7 +743,6 @@ main:focus-visible {
   }
 
   .hero__facts {
-    flex-wrap: nowrap;
     margin-top: var(--space-3);
   }
 
@@ -1554,7 +1681,8 @@ main:focus-visible {
   min-height: 3.5rem;
 }
 
-/* background music (only for a product with music): play/pause button and an optional track select, right after the language switcher */
+/* background music (only for a product with music): a play/pause button and an optional track select showing the title, right after the language switcher;
+   the button and the select are exactly --header-control-h high, like the header's other controls */
 .music {
   display: flex;
   align-items: center;
@@ -1565,8 +1693,9 @@ main:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2.75rem; /* 44 px at the smallest theme size: the touch target */
-  min-height: 2.75rem;
+  box-sizing: border-box;
+  width: var(--header-control-h, 2.25rem);
+  height: var(--header-control-h, 2.25rem);
   padding: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius, 0);
@@ -1594,8 +1723,9 @@ main:focus-visible {
 }
 
 .music__select {
+  box-sizing: border-box;
   max-width: 9rem;
-  min-height: 2.75rem;
+  height: var(--header-control-h, 2.25rem);
   padding-inline: var(--space-2);
   border: 1px solid var(--border);
   border-radius: var(--radius, 0);
@@ -1603,6 +1733,11 @@ main:focus-visible {
   color: var(--text);
   font: inherit;
   font-size: 0.875rem;
+}
+
+.music__select option {
+  background: var(--bg);
+  color: var(--text);
 }
 
 .music__error {
@@ -1622,7 +1757,7 @@ main:focus-visible {
 /* one screen and up: the header is exactly --header-h (the hero below subtracts it) */
 @media (min-width: 56em) {
   .site-header--agent {
-    height: var(--header-h, 4.25rem);
+    height: var(--header-h, 3.75rem);
   }
 
   .site-header--agent .site-header__inner {
@@ -2135,9 +2270,25 @@ main:focus-visible {
   }
 }
 
-/* room below the footer's last line so the card never covers the links */
+/*
+ * Room for the fixed card, only where it can cover footer text. Narrow and tiny windows: the footer's text runs the full width, so the
+ * card (a fixed box) needs the space below the last line (the default here). Wide windows: the card sits in the right column, so the
+ * footer reserves that column's width on its right side instead and ends at the page bottom with no empty zone; where the centred
+ * container leaves enough room beside the card (very wide windows) the reserve is just the container's own padding. The scrollbar
+ * (100vw counts it, the card does not) is covered by the 1.25rem safety margin.
+ */
 .site-footer--agent-card {
   padding-bottom: calc(var(--space-5) + var(--avatar-card-h, 15.625rem) + var(--avatar-card-bottom, 6rem));
+}
+
+@media (width >= 40em) and (height >= 32.5em) {
+  .site-footer--agent-card {
+    padding-bottom: var(--space-5);
+  }
+
+  .site-footer--agent-card .site-footer__inner {
+    padding-right: max(var(--space-4), calc(var(--avatar-card-w, 12.5rem) + var(--space-3) * 2 + 1.25rem - max(0rem, (100vw - var(--container)) / 2)));
+  }
 }
 
 /* the review theme switcher stays in the other corner and never reaches under the card */

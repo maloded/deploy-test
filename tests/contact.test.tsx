@@ -350,12 +350,12 @@ describe("sending", () => {
 });
 
 describe("the dialog", () => {
-  const opener = () => box!.querySelector('header a[href="#contact"]') as HTMLAnchorElement;
+  const opener = () => box!.querySelector('.hero a[href="#contact"]') as HTMLAnchorElement;
 
-  it("opens from the header, hero and offer buttons, and the inline section stays", () => {
+  it("opens from the hero and offer buttons, and the inline section stays", () => {
     mount("en");
-    const links = [...box!.querySelectorAll('a[href="#contact"]')].filter((a) => !section().contains(a));
-    expect(links.length).toBeGreaterThanOrEqual(3);
+    const links = [...box!.querySelectorAll('a[href="#contact"]:not([data-contact="scroll"])')].filter((a) => !section().contains(a));
+    expect(links.length).toBeGreaterThanOrEqual(2);
     for (const link of links) {
       const click = new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 });
       act(() => void link.dispatchEvent(click));
@@ -364,6 +364,16 @@ describe("the dialog", () => {
       key(dialog(), "Escape");
       expect(dialog().open).toBe(false);
     }
+  });
+
+  it("leaves the header's button (data-contact=\"scroll\") to the browser: no dialog, the click is not prevented, the link still targets #contact", () => {
+    mount("en");
+    const link = box!.querySelector('header a[href="#contact"]') as HTMLAnchorElement;
+    expect(link.getAttribute("data-contact")).toBe("scroll");
+    const click = new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 });
+    act(() => void link.dispatchEvent(click));
+    expect(click.defaultPrevented).toBe(false);
+    expect(dialog().open).toBe(false);
   });
 
   it("leaves modified clicks, middle clicks and links inside the section alone", () => {

@@ -37,7 +37,6 @@ const form = () => q<HTMLFormElement>("dialog form.contact__form");
 const field = (name: string) => form().querySelector(`[name=${name}]`) as HTMLInputElement;
 const title = () => q("dialog .contact-dialog__title").textContent;
 const selected = () => (field("requestType") as unknown as HTMLSelectElement).value;
-const header = () => q<HTMLAnchorElement>('header a[href="#contact"]');
 const hero = () => q<HTMLAnchorElement>('.hero a[href="#contact"]');
 const offer = () => q<HTMLAnchorElement>('.offer a[href="#contact"]');
 const click = (el: Element) => act(() => void (el as HTMLElement).click());
@@ -60,16 +59,19 @@ const extraLink = (requestType: string) => {
 };
 
 describe("one button per place, with its preset in the markup", () => {
-  it("the presets are data: header and hero ask a question, the offer block makes an offer", () => {
+  it("the presets are data: header and hero ask a question, the offer block makes an offer (the page header's own button has none: it scrolls; the preset is the agent widget's contact link's)", () => {
     expect(BUTTON_PRESETS).toEqual({ header: "question", hero: "question", offer: "offer" });
   });
 
-  it("the static page has exactly one #contact button in the header, one in the hero and one in the offer block, as plain links with data-request-type", () => {
+  it("the static page has exactly one #contact button in the header (a plain scroll link), one in the hero and one in the offer block (plain links with data-request-type)", () => {
     for (const lang of ["en", "de"] as const) {
       const out = renderToStaticMarkup(<ProductLayout site={car(lang)} />);
       const part = (open: string, close: string) => out.slice(out.indexOf(open), out.indexOf(close, out.indexOf(open)));
       const links = (html: string) => [...html.matchAll(/<a class="([^"]*)" href="#contact"( data-request-type="([a-z_]+)")?>([^<]*)<\/a>/g)].map((m) => ({ cls: m[1], type: m[3], text: m[4] }));
-      expect(links(part("<header", "</header>"))).toEqual([{ cls: "button button--small", type: "question", text: ui("header.cta", lang) }]);
+      // the header's button is a plain link that scrolls to the footer's contact row: no preset, data-contact="scroll"
+      expect([...part("<header", "</header>").matchAll(/<a class="([^"]*)" href="#contact"( data-request-type="[a-z_]+")?( data-contact="(\w+)")?>([^<]*)<\/a>/g)].map((m) => ({ cls: m[1], preset: m[2], contact: m[4], text: m[5] }))).toEqual([
+        { cls: "button button--small", preset: undefined, contact: "scroll", text: ui("header.cta", lang) },
+      ]);
       expect(links(part('<section class="hero"', "</section>"))).toEqual([{ cls: "button", type: "question", text: ui("hero.cta", lang) }]);
       expect(links(part('<section class="offer"', "</section>"))).toEqual([{ cls: "button", type: "offer", text: ui("offer.cta.offer", lang) }]);
     }
@@ -96,7 +98,6 @@ describe("one button per place, with its preset in the markup", () => {
 
 describe("each button opens the dialog with its preset and title", () => {
   it.each([
-    ["header", header, "question", "Request details", "Details anfragen"],
     ["hero", hero, "question", "Request details", "Details anfragen"],
     ["offer", offer, "offer", "Make an offer", "Angebot machen"],
   ] as const)("%s", (_place, button, type, en, de) => {
@@ -199,7 +200,7 @@ describe("the agent interface", () => {
 describe("focus and autofill", () => {
   it("focus lands on the Name input after open (not on the select or the close button) and returns to the opener after close", () => {
     mount(car("en"));
-    for (const button of [header, hero, offer]) {
+    for (const button of [hero, offer]) {
       const opener = button();
       opener.focus();
       click(opener);

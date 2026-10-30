@@ -218,11 +218,12 @@ describe("the player", () => {
     expect(src).not.toMatch(/agent|hanc|localStorage|sessionStorage|document\.cookie|fetch\(/i);
   });
 
-  it("uses the theme only: 2.75rem (44 px or more) targets, a visible focus, no raw colour and no new font", () => {
+  it("uses the theme only: --header-control-h targets, a visible focus, no raw colour and no new font", () => {
     const css = fs.readFileSync("src/app/globals.css", "utf8");
     const rules = css.match(/\.music[\w_-]*(?:\[[^\]]*\])?(?::[\w-]+)? \{[^}]*\}/g)!.join("\n");
-    expect(rules).toMatch(/min-width: 2.75rem/);
-    expect(rules).toMatch(/min-height: 2.75rem/);
+    expect(rules).toMatch(/width: var\(--header-control-h, 2\.25rem\)/); // the button and the select are exactly as high as the header's other controls
+    expect(rules).toMatch(/height: var\(--header-control-h, 2\.25rem\)/);
+    expect(rules).not.toMatch(/music__pick/); // the visible select, not an icon-only picker
     expect(rules).toMatch(/:focus-visible/);
     expect(rules).not.toMatch(/#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i);
     expect(rules).not.toMatch(/font-family/);
@@ -335,13 +336,12 @@ describe("agent-independent and complete strings", () => {
 });
 
 describe("the header height with music", () => {
-  it("is set from the player's touch target, 5.5rem stays with the agent in the header, nothing without music", () => {
-    expect(renderToStaticMarkup(<ProductLayout site={render(MUSIC)} />)).toContain("--header-h:calc(2.75rem + 2 * var(--space-3) + 1px)");
+  it("is the header's own (4rem: the controls are 2.75rem inside it), so music sets no --header-h; 5.5rem stays with the agent in the header", () => {
+    expect(renderToStaticMarkup(<ProductLayout site={render(MUSIC)} />)).not.toContain("--header-h");
     expect(renderToStaticMarkup(<ProductLayout site={render(undefined)} />)).not.toContain("--header-h");
     const agent = { id: "test-agent-id", variant: "pill", placement: "header", voiceServiceUrl: "https://voice.hanc.ai" };
     const html = renderToStaticMarkup(<ProductLayout site={render(MUSIC, { agent })} />);
     expect(html).toContain("--header-h:5.5rem");
-    expect(html).not.toContain("calc(2.75rem");
   });
 });
 

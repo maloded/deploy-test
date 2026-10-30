@@ -117,12 +117,13 @@ export function ContactSection({ lang, contactWindows, timezone, email, phone, r
     if (back?.isConnected) back.focus();
   }, [emit]);
 
-  // every "#contact" link outside the band opens the dialog
+  // every "#contact" link outside the band opens the dialog, except one marked data-contact="scroll" (the header button: it scrolls)
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const link = (e.target as Element | null)?.closest?.('a[href="#contact"]');
       if (!link || sectionRef.current?.contains(link)) return;
+      if (link.getAttribute("data-contact") === "scroll") return; // the header's button: the browser scrolls to the footer's contact row
       e.preventDefault();
       open(link as HTMLElement);
     };

@@ -34,8 +34,8 @@ describe("one screen in three zones", () => {
     const hero = rule(".hero", ONE_SCREEN);
     const lines = hero.body.split(";").map((l) => l.trim()).filter((l) => l.startsWith("min-height"));
     expect(lines).toEqual([
-      "min-height: calc(100vh - var(--header-h, 4.25rem) - var(--agent-top-h, 0rem))",
-      "min-height: calc(100svh - var(--header-h, 4.25rem) - var(--agent-top-h, 0rem))",
+      "min-height: calc(100vh - var(--header-h, 3.75rem) - var(--agent-top-h, 0rem))",
+      "min-height: calc(100svh - var(--header-h, 3.75rem) - var(--agent-top-h, 0rem))",
     ]);
     expect(hero.body).toMatch(/flex-direction:\s*column/);
     expect(rule(".hero__stage", ONE_SCREEN).body).toMatch(/flex:\s*1/);
@@ -43,8 +43,29 @@ describe("one screen in three zones", () => {
     expect(rule(".hero__intro", ONE_SCREEN).body).toMatch(/flex:\s*none/);
   });
 
+  it("has ONE control height for the header's controls (the button's own height by default, 44px on a narrow screen) and derives the header from it", () => {
+    const root = rule(":root", "").body;
+    expect(root).toMatch(/--header-control-h: calc\(0\.7rem \* var\(--line-height, 1\.55\) \+ var\(--space-2\) \* 2 \+ 2px\)/); // the "Get in touch" button's natural height
+    expect(root).toMatch(/--header-h: calc\(var\(--header-control-h, 2\.25rem\) \+ var\(--space-2\) \* 3 \+ 1px\)/);
+    expect(rule(":root", "@media (width < 40em)").body).toMatch(/--header-control-h: 2\.75rem/);
+    // every control takes its height from the variable and from nowhere else
+    for (const sel of [".lang-switch a", ".lang-menu__current", ".site-header__end > .button--small", ".music__button", ".music__select"]) {
+      expect(rule(sel).body, sel).toMatch(/height: var\(--header-control-h, 2\.25rem\)/);
+    }
+    expect(rule(".site-header__inner").body).toMatch(/padding-block: calc\(var\(--space-2\) \* 1\.5\)/);
+  });
+
+  it("sets the brand name's size from --brand-size (1.7rem, 1.35rem on a narrow screen) with a line shorter than the control, so the header does not grow", () => {
+    expect(rule(":root", "").body).toMatch(/--brand-size: 1\.7rem/);
+    expect(rule(":root", "@media (width < 40em)").body).toMatch(/--brand-size: 1\.35rem/);
+    const name = rule(".site-header__name", "").body;
+    expect(name).toMatch(/font-size: var\(--brand-size, 1\.7rem\)/);
+    expect(name).toMatch(/line-height: 1\.1/); // 1.7rem x 1.1 stays under the control's height
+    expect(name).toMatch(/font-family: var\(--font-heading\)/);
+  });
+
   it("uses the same header height variable and fallback as the header itself", () => {
-    expect(rule(".site-header").body).toContain("min-height: var(--header-h, 4.25rem)");
+    expect(rule(".site-header").body).toContain("min-height: var(--header-h, 3.75rem)");
   });
 
   it("has no raw pixel heights in any hero rule, and never forces a fixed height", () => {
@@ -148,9 +169,26 @@ describe("the bottom row has bounded heights", () => {
     expect(button).toMatch(/padding-block:\s*0/);
   });
 
-  it("keeps the key facts in one row on wide screens (at most four in the data)", () => {
-    expect(rule(".hero__facts", WIDE).body).toMatch(/display:\s*flex/);
-    expect(rule(".hero__facts", COMPACT).body).toMatch(/flex-wrap:\s*nowrap/);
+  it("keeps the key facts in one row of four where it fits, and wraps cleanly where it does not (never a forced nowrap that would clip)", () => {
+    const list = rule(".hero__facts", WIDE).body;
+    expect(list).toMatch(/display:\s*flex/);
+    expect(list).toMatch(/flex-wrap:\s*wrap/);
+    expect(list).toMatch(/gap:\s*var\(--space-3\) 0/); // only a wrapped row has a gap above it
+    expect(rules().filter((r) => r.selector === ".hero__facts" && /nowrap/.test(r.body))).toEqual([]);
+    expect(rule(".hero__facts", COMPACT).body).not.toMatch(/flex-wrap/);
+  });
+
+  it("draws the fact dividers as left borders pulled 1px outside a clipped list: none leads a row, none trails, at any wrap", () => {
+    const list = rule(".hero__facts", WIDE).body;
+    expect(list).toMatch(/overflow:\s*hidden/);
+    expect(list).toMatch(/--fact-pad:\s*calc\(var\(--space-2\) \* 0\.875\)/); // 7px each side of a fact: four of the widest set fit the 700px column
+    expect(list).toMatch(/margin-inline-start:\s*calc\(var\(--fact-pad, 0\.4rem\) \* -1\)/); // the first text stays aligned with the description
+    const fact = rule(".hero__fact", WIDE).body;
+    expect(fact).toMatch(/border-left:\s*1px solid var\(--border\)/);
+    expect(fact).toMatch(/margin-left:\s*-1px/);
+    expect(fact).toMatch(/padding-inline:\s*var\(--fact-pad, 0\.4rem\)/);
+    // no rule draws a divider from a sibling or a position (that was the stray one on a wrapped fact)
+    expect(css).not.toMatch(/hero__fact\s*\+\s*\.hero__fact|hero__fact:first-child|hero__fact:last-child/);
   });
 
   it("is more compact on short laptop windows: side-by-side buttons, 2 lines, no trust line, less padding", () => {
@@ -279,9 +317,8 @@ describe("intro row", () => {
     expect(rule(".button", "").body).toMatch(/border:\s*1px solid var\(--accent\)/);
   });
 
-  it("shows the key facts in two columns on mobile and a row with dividers on wide screens", () => {
+  it("shows the key facts in two columns on mobile and with dividers on wide screens", () => {
     expect(rule(".hero__facts", "").body).toMatch(/grid-template-columns:\s*repeat\(2,/);
-    expect(rule(".hero__fact + .hero__fact", WIDE).body).toMatch(/border-left:\s*1px solid var\(--border\)/);
     expect(rule(".hero__fact-value", "").body).toMatch(/font-family:\s*var\(--font-heading\)/);
     expect(rule(".hero__fact-label", "").body).toMatch(/text-transform:\s*uppercase/);
   });

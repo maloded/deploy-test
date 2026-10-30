@@ -100,7 +100,7 @@ describe("widget mounting", () => {
     expect(html).toContain("--agent-top-h:3.5rem");
     expect(html).not.toContain("agent-strip__heading");
     const css = fs.readFileSync("src/app/globals.css", "utf8");
-    expect(css).toMatch(/min-height: calc\(100svh - var\(--header-h, 4\.25rem\) - var\(--agent-top-h, 0rem\)\)/);
+    expect(css).toMatch(/min-height: calc\(100svh - var\(--header-h, 3.75rem\) - var\(--agent-top-h, 0rem\)\)/);
     expect(css).not.toMatch(/\.agent-strip[^{]*\{[^}]*position: (fixed|sticky)/);
     await mount(site);
     const el = box!.querySelector("hanc-ai-pill-call")!;
@@ -159,8 +159,8 @@ describe("widget mounting", () => {
 
   it("the hero follows the header: both use --header-h, and wide windows fix the header's height to it", () => {
     const css = fs.readFileSync("src/app/globals.css", "utf8");
-    expect(css).toMatch(/min-height: calc\(100svh - var\(--header-h, 4\.25rem\)/);
-    expect(css).toMatch(/\.site-header--agent \{\s*height: var\(--header-h, 4\.25rem\);/);
+    expect(css).toMatch(/min-height: calc\(100svh - var\(--header-h, 3.75rem\)/);
+    expect(css).toMatch(/\.site-header--agent \{\s*height: var\(--header-h, 3.75rem\);/);
     expect(css).toMatch(/\.site-header__widget \{[^}]*min-height: 3\.75rem/);
   });
 
