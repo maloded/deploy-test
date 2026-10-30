@@ -6,7 +6,7 @@ import { pick } from "./i18n";
 import type { Language, Localized, Product } from "./schema";
 import { THEMES_DIR } from "./themes";
 
-export type HeroFact = { value: string; label: string };
+export type HeroFact = { /** the spec's key: it picks the fact's icon */ key: string; value: string; label: string };
 
 /** Eyebrow line: hero.eyebrow items (for example the place) and then the offer type label, joined with " · ". */
 export function heroEyebrow(product: Product, lang: Language, offerLabel: Localized): string {
@@ -42,7 +42,36 @@ export function heroFacts(product: Product, type: ProductTypeFields, lang: Langu
   return keys
     .flatMap((key) => product.specs.filter((s) => s.key === key))
     .slice(0, 4)
-    .map((s) => ({ value: shortValue(pick(s.value, lang)), label: pick(s.label, lang) }));
+    .map((s) => ({ key: s.key, value: shortValue(pick(s.value, lang)), label: pick(s.label, lang) }));
+}
+
+/** Words whose full stop does not end a sentence (compared in lower case). */
+const ABBREVIATIONS = new Set(["ca", "nr", "dr", "prof", "bzw", "usw", "evtl", "inkl", "ggf", "vgl", "approx", "no", "st", "mr", "mrs", "ms", "vs", "etc", "incl", "max", "min", "tel"]);
+
+/**
+ * The description split at the end of its first sentence, for a lead line (purely presentational: the text is the same, `lead` + " " + `rest`). A sentence
+ * ends at ".", "!" or "?" (a closing quote or bracket may follow) before a space and a capital letter or digit, but not at the full stop of an abbreviation
+ * (ABBREVIATIONS, or a single letter such as the "z." of "z. B."). With only one sentence all of it is the lead.
+ */
+export function splitLead(text: string): { lead: string; rest: string } {
+  const trimmed = text.trim();
+  const end = /[.!?]["”»')\]]?(?=\s+[\p{Lu}\d])/gu;
+  for (let m = end.exec(trimmed); m; m = end.exec(trimmed)) {
+    const before = trimmed.slice(0, m.index);
+    const word = /[\p{L}\p{N}-]*$/u.exec(before)?.[0] ?? "";
+    const abbreviation = m[0][0] === "." && (ABBREVIATIONS.has(word.toLowerCase()) || /^\p{L}$/u.test(word));
+    if (abbreviation) continue;
+    const cut = m.index + m[0].length;
+    return { lead: trimmed.slice(0, cut), rest: trimmed.slice(cut).trim() };
+  }
+  return { lead: trimmed, rest: "" };
+}
+
+/** The facts in pairs, as the hero lays them out: two side by side while they fit, one pair under the other where they do not (never three and one). */
+export function factPairs(facts: HeroFact[]): HeroFact[][] {
+  const pairs: HeroFact[][] = [];
+  for (let i = 0; i < facts.length; i += 2) pairs.push(facts.slice(i, i + 2));
+  return pairs;
 }
 
 /** Trust items shown as one thin line under the intro row. */

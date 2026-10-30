@@ -9,6 +9,19 @@ const css = fs.readFileSync(path.join(process.cwd(), "src", "app", "globals.css"
 const rules = [...css.matchAll(/([^{}@]+)\{([^{}]*)\}/g)].map((m) => ({ selector: m[1].trim().replace(/\s+/g, " "), body: m[2] }));
 const using = (variable: string) => rules.filter((r) => r.body.includes(variable));
 
+describe("--radius-media", () => {
+  it("is an optional theme variable, 0.75rem in both themes, used only for the hero photo and its thumbnails beside the card, with the fallback var(--radius)", () => {
+    expect(OPTIONAL_VARS).toContain("--radius-media");
+    for (const theme of listThemes()) {
+      const text = fs.readFileSync(path.join(process.cwd(), "public", "themes", `${theme}.css`), "utf8");
+      expect(declaredVars(text, theme), theme).toContain("--radius-media");
+      expect(text, theme).toMatch(/--radius-media:\s*0\.75rem/);
+    }
+    expect(using("--radius-media").map((r) => r.selector)).toEqual([".hero[data-card] .hero__box, .hero[data-card] .hero__thumb"]);
+    expect(css.match(/var\(--radius-media[^)]*\)+/g)).toEqual(["var(--radius-media, var(--radius))"]);
+  });
+});
+
 describe("--radius-dialog and --radius-control", () => {
   it("are optional theme variables, set in both themes (0.75rem and 0.375rem)", () => {
     expect(OPTIONAL_VARS).toContain("--radius-dialog");

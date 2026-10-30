@@ -24,7 +24,7 @@ The snapshot carries no `.github/` (no CI workflow): the deployment repository i
 `--out` is required (there is no default folder). What it does: runs `npm run images:export` for that one product (only the files `product.json` uses go to `<content root>/<seller>/<product>/media-web/`,
 processed: long side 2000 px, quality about 80, rotation applied, EXIF and GPS removed; unused photos are listed as
 "skipped (not used)"); exports the **tracked files of the current commit** (uncommitted changes are not included), without the
-development notes (`PROJECT.md`, `PROGRESS.md`, `docs/`; `README.md` and this file are kept);
+development notes (`PROJECT.md`, `PROGRESS.md`, `docs/`; this file is kept, and `README.md` is replaced by a generated one that says "generated, do not edit here" and holds the template version, the template and content commit, the exact `--update` command, how the host builds it and the variable names the project needs);
 adds only that product (`<content root>/<seller>/<product>`, never its `media/` originals) and its seller's `seller.json`, plus `examples/` and `tests/fixtures`, and nothing else from the content root (no other seller, no other product of the seller); refuses to continue if the tree contains an original photo, `.env*`, `data/leads`,
 `node_modules` or an image that still has EXIF; prints the file list and total size; makes one commit in a new
 repository. It never adds a remote and never pushes. The history of the working repository is not copied.

@@ -2,26 +2,32 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { listProducts } from "../src/lib/content-root";
-import { textFiles } from "../scripts/lib/content-scan.mjs";
+import { loadTermsFile, textFiles } from "../scripts/lib/content-scan.mjs";
+import { README_TITLE } from "../scripts/lib/snapshot-readme.mjs";
 import { CONTENT_DIR } from "./helpers";
 
 const root = process.cwd();
 
 /**
- * Names that must not be literals in scripts or in the two docs a snapshot keeps: this project's folder and every real
- * seller and product folder (in ./content, or wherever CONTENT_DIR points). On a CI runner the project folder is just
- * the repository's name, which says nothing about a client, so it is not checked there (CI=true).
+ * Names that must not be literals in scripts or in the two docs a snapshot keeps: every real seller and product folder
+ * (in ./content, or wherever CONTENT_DIR points) and the owner's own list in the git-ignored .private/client-words.txt.
+ * Nothing is derived from the checkout's folder name, so the result does not depend on where the repository is cloned.
+ * A clone without real content and without .private has no names to look for, and the test then has nothing to find.
  */
-const names = [...(process.env.CI ? [] : [path.basename(root)]), ...listProducts(CONTENT_DIR).flatMap((ref) => ref.split("/"))].filter((n) => n.length >= 4);
-const files = [...textFiles(path.join(root, "scripts")), path.join(root, "README.md"), path.join(root, "DEPLOY.md")];
+const names = [
+  ...listProducts(CONTENT_DIR).flatMap((ref) => ref.split("/")),
+  ...loadTermsFile(path.join(root, ".private", "client-words.txt")).terms,
+].filter((n) => n.length >= 4);
+// a deploy repository's README is generated and names its own product on purpose (the command to regenerate it), so it is not scanned
+const isGenerated = (file: string) => fs.readFileSync(file, "utf8").startsWith(README_TITLE);
+const files = [...textFiles(path.join(root, "scripts")), path.join(root, "README.md"), path.join(root, "DEPLOY.md")].filter((f) => !isGenerated(f));
 
 describe("no project or client name is a literal in scripts, README or DEPLOY", () => {
-  it("checks something", () => {
-    expect(names.length > 0 || Boolean(process.env.CI)).toBe(true); // a runner without real content has no names to look for
+  it("scans the scripts, the README and DEPLOY", () => {
     expect(files.length).toBeGreaterThan(3);
   });
 
-  it("finds none of the names (the project folder, the seller and product folders)", () => {
+  it("finds none of the names (the seller and product folders, .private/client-words.txt)", () => {
     const hits: string[] = [];
     for (const file of files) {
       const lines = fs.readFileSync(file, "utf8").toLowerCase().split("\n");

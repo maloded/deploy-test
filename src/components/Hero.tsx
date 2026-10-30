@@ -1,10 +1,16 @@
 import Image from "next/image";
+import type { CSSProperties } from "react";
 import { objectPosition } from "@/lib/focus";
-import { frameRangeForTheme, heroDescription, heroEyebrow, heroFacts, heroFit, heroHeadline, heroTrust } from "@/lib/hero";
+import { frameRangeForTheme, heroDescription, heroEyebrow, heroFacts, factPairs, heroFit, heroHeadline, heroTrust, splitLead } from "@/lib/hero";
+import { heroThumbs } from "@/lib/hero-thumbs";
 import { formatPrice, pick } from "@/lib/i18n";
 import { ui } from "@/lib/ui-strings";
 import { getOfferType } from "@/offer-types";
 import type { Site } from "./blocks";
+import { FactIcon } from "./fact-icons";
+import { galleryProps } from "./gallery-props";
+import { HeroFacts } from "./HeroFacts";
+import { HeroThumbs } from "./HeroThumbs";
 import { presetFor } from "./request-presets";
 
 /**
@@ -23,15 +29,20 @@ export function Hero({ site }: { site: Site }) {
   const background = product.media.background ? images[product.media.background] : undefined;
   const facts = heroFacts(product, typeFields, lang);
   const trust = heroTrust(product, lang);
+  const lead = splitLead(heroDescription(product, lang));
   const hasCard = Boolean(site.seller.agent && site.avatar);
   const fit = image ? heroFit(image.width, image.height, frameRangeForTheme(site.theme)) : "cover";
+
+  // with the agent's card the left column has room beside the photo: the next two gallery photos after the hero one, as thumbnails that open the gallery
+  // at that photo (the same deep link as /#gallery-N). Only when the page renders the gallery block.
+  const thumbs = hasCard && site.blocks.includes("gallery") ? heroThumbs(galleryProps(site).slides, image?.src) : [];
 
   // the title zone: eyebrow, then headline and the photo frame
   const eyebrow = <p className="hero__eyebrow label">{heroEyebrow(product, lang, getOfferType(product.offerType).label)}</p>;
   const stage = (
     <>
       <h1 className="hero__headline">{heroHeadline(product, lang)}</h1>
-      <div className="hero__photo" data-fit={fit}>
+      <div className="hero__photo" data-fit={fit} data-thumbs={thumbs.length > 0 ? thumbs.length : undefined}>
         <div className="hero__frame">
           <div className="hero__box">
             {image ? (
@@ -56,6 +67,15 @@ export function Hero({ site }: { site: Site }) {
             )}
           </div>
         </div>
+        {thumbs.length > 0 && (
+          <HeroThumbs>
+            {thumbs.map((t) => (
+              <a key={t.n} className="hero__thumb" href={`#gallery-${t.n}`}>
+                <Image className="hero__thumb-image" src={t.src} width={t.width} height={t.height} alt={t.alt} sizes="(min-width: 56em) 16rem, 0px" style={t.position ? { objectPosition: t.position } : undefined} />
+              </a>
+            ))}
+          </HeroThumbs>
+        )}
       </div>
     </>
   );
@@ -88,16 +108,26 @@ export function Hero({ site }: { site: Site }) {
         <div className="hero__container">
           <div className="hero__intro-grid">
             <div className="hero__intro-main">
-              <p className="hero__description">{heroDescription(product, lang)}</p>
+              <p className="hero__description">
+                <span className="hero__lead">{lead.lead}</span>
+                {lead.rest && ` ${lead.rest}`}
+              </p>
               {facts.length > 0 && (
-                <ul className="hero__facts">
-                  {facts.map((f) => (
-                    <li className="hero__fact" key={f.label}>
-                      <span className="hero__fact-value">{f.value}</span>
-                      <span className="hero__fact-label">{f.label}</span>
-                    </li>
+                <HeroFacts>
+                  {factPairs(facts).map((pair, i) => (
+                    <ul className="hero__facts-pair" data-count={pair.length} key={i}>
+                      {pair.map((f, j) => (
+                        <li className="hero__fact" key={f.label} style={{ "--i": i * 2 + j } as CSSProperties}>
+                          <span className="hero__fact-value">{f.value}</span>
+                          <span className="hero__fact-label">
+                            <FactIcon factKey={f.key} />
+                            <span>{f.label}</span>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
                   ))}
-                </ul>
+                </HeroFacts>
               )}
             </div>
 

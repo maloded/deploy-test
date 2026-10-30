@@ -3,9 +3,9 @@
 //
 // A whitelist: the snapshot holds
 //   1. the tracked template files of the current commit (git archive HEAD), minus any content/ folder they carry and
-//      the development notes (PROJECT.md, PROGRESS.md, docs/), which stay in the working repository; README.md and
-//      DEPLOY.md are kept; .github/ is dropped too (the host builds the deployment repository, and the workflow tests
-//      the examples, not the product; export:template keeps it),
+//      the development notes (PROJECT.md, PROGRESS.md, docs/), which stay in the working repository; DEPLOY.md is kept
+//      and README.md is replaced by a generated one (snapshot-readme.mjs); .github/ is dropped too (the host builds the
+//      deployment repository, and the workflow tests the examples, not the product; export:template keeps it),
 //   2. <content root>/<seller>/<product> (everything in it except the originals folder media/; media-web is the
 //      processed export) and the files of <content root>/<seller> (seller.json), but no other product of the seller,
 //   3. examples/ and tests/fixtures (fake data the tests need; they are tracked template files).
@@ -18,6 +18,7 @@ import { DEFAULT_CONTENT_DIR, splitRef } from "../../src/lib/content-root.ts";
 import { copyAvatarToSnapshot } from "./avatars.mjs";
 import { exportMediaWeb } from "./export-media-web.mjs";
 import { checkSnapshot, walk } from "./snapshot-guard.mjs";
+import { README_FILE, snapshotReadme } from "./snapshot-readme.mjs";
 import { buildVersionInfo } from "./version-info.mjs";
 
 /** The snapshot was refused: `problems` lists why. The folder is removed before this is thrown. */
@@ -31,6 +32,8 @@ export class SnapshotRefused extends Error {
 const REF = /^[a-z0-9]+(-[a-z0-9]+)*\/[a-z0-9]+(-[a-z0-9]+)*$/;
 /** Written into every snapshot; it changes with each build (its time), so the change counters leave it out. */
 export const VERSION_FILE = "version.json";
+/** Files the snapshot generates (version.json, and the README that repeats its data): never counted as a change on their own. */
+const GENERATED = [VERSION_FILE, README_FILE];
 const REQUIRED_TEMPLATE = ["examples", "tests/fixtures"];
 const DEV_NOTES = ["PROJECT.md", "PROGRESS.md", "docs", ".github"];
 const git = (cwd, ...a) => execFileSync("git", a, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
@@ -95,7 +98,9 @@ async function buildTree({ projectRoot, contentRoot, ref, dest, log }) {
   if (problems.length) refuse(problems);
 
   // the build's own description (version, template and content commit, time): hashes, numbers and a date only
-  fs.writeFileSync(path.join(dest, VERSION_FILE), JSON.stringify(buildVersionInfo({ projectRoot, contentRoot }), null, 2) + "\n");
+  const info = buildVersionInfo({ projectRoot, contentRoot });
+  fs.writeFileSync(path.join(dest, VERSION_FILE), JSON.stringify(info, null, 2) + "\n");
+  fs.writeFileSync(path.join(dest, README_FILE), snapshotReadme({ ref, info })); // replaces the template's README, which describes the template
 }
 
 /**
@@ -199,8 +204,8 @@ export async function updateSnapshot({ projectRoot, contentRoot, product: ref, d
   git(dest, "add", "-A");
   git(dest, "add", "-f", "-A", DEFAULT_CONTENT_DIR);
   const staged = git(dest, "diff", "--cached", "--name-only", "HEAD").split("\n").filter(Boolean);
-  // version.json differs in every build (its time): it is expected, goes along with a real change, and is not counted
-  const changed = staged.filter((p) => p !== VERSION_FILE);
+  // version.json and the README (which repeats its data) differ in every build (the time): expected, they go along with a real change, and are not counted
+  const changed = staged.filter((p) => !GENERATED.includes(p));
   const templateChanged = changed.filter((p) => !p.startsWith(DEFAULT_CONTENT_DIR + "/"));
   const branch = git(dest, "rev-parse", "--abbrev-ref", "HEAD");
   const pushCommand = `git -C ${dest} push origin ${branch}`;
@@ -209,7 +214,7 @@ export async function updateSnapshot({ projectRoot, contentRoot, product: ref, d
     git(dest, "-c", "user.name=snapshot", "-c", "user.email=snapshot@invalid", "commit", "-q", "-m", updateSummary(changed));
     commit = git(dest, "rev-parse", "--short", "HEAD");
   } else if (staged.length) {
-    git(dest, "reset", "-q", "--hard", "HEAD"); // only the new version.json: no commit, and the deploy folder stays clean
+    git(dest, "reset", "-q", "--hard", "HEAD"); // only the generated files: no commit, and the deploy folder stays clean
   }
   return { dest, commit, changed, templateChanged, branch, pushCommand };
 }

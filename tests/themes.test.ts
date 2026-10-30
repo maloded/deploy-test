@@ -104,6 +104,7 @@ describe("optional theme variables", () => {
       "--hero-frame-max-ratio",
       "--radius-dialog",
       "--radius-control",
+      "--radius-media",
       "--avatar-card-shadow",
       "--avatar-ring",
       "--avatar-glow",

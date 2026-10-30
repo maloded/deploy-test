@@ -69,7 +69,7 @@ describe("version.json in a snapshot", () => {
     const r = await update(s);
     expect(r.changed).toEqual(["src/a.ts"]);
     expect(r.templateChanged).toEqual(["src/a.ts"]);
-    expect(git(s.dest, "show", "--name-only", "--format=", "HEAD").split("\n").sort()).toEqual(["src/a.ts", "version.json"]);
+    expect(git(s.dest, "show", "--name-only", "--format=", "HEAD").split("\n").sort()).toEqual(["README.md", "src/a.ts", "version.json"]);
     expect(JSON.parse(fs.readFileSync(path.join(s.dest, "version.json"), "utf8")).template).toBe(git(s.project, "rev-parse", "--short", "HEAD"));
   });
 

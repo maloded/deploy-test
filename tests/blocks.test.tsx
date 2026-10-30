@@ -221,7 +221,7 @@ describe("hero layout", () => {
 
   it("has an intro row with a description, key facts, a figure with a note and exactly two buttons", () => {
     const main = /<div class="hero__intro-main">([\s\S]*?)<\/div><div class="hero__intro-aside">/.exec(intro)?.[1] ?? "";
-    expect(main).toContain("Fixture description: take over a running lease. Example text.");
+    expect(main).toContain('<span class="hero__lead">Fixture description: take over a running lease.</span> Example text.');
     expect(main.match(/<li class="hero__fact"/g)).toHaveLength(3);
     const aside = /<div class="hero__intro-aside">([\s\S]*?)<\/div><\/div><\/div>/.exec(intro)?.[1] ?? "";
     expect(aside).toContain('<span class="hero__amount">€589 / month</span>');
@@ -272,20 +272,20 @@ describe("hero layout", () => {
 
   it("uses hero.description, else the tagline", () => {
     const plain = withProduct(site, (p) => delete p.hero);
-    expect(html(<Hero site={plain} />)).toContain('<p class="hero__description">Take over a running lease on a seven-seat family van. Example text.</p>');
+    expect(html(<Hero site={plain} />)).toContain('<p class="hero__description"><span class="hero__lead">Take over a running lease on a seven-seat family van.</span> Example text.</p>');
   });
 
   it("builds the key facts from hero.highlights, or from the type's hero specs that exist", () => {
-    expect(intro).toContain('<span class="hero__fact-value">150 kW</span><span class="hero__fact-label">Power</span>');
+    expect(intro).toMatch(/<span class="hero__fact-value">150 kW<\/span><span class="hero__fact-label">(<svg[\s\S]*?<\/svg>)?<span>Power<\/span><\/span>/);
     expect(intro).toContain('<span class="hero__fact-value">Plug-in hybrid</span>');
 
     const byType = withProduct(site, (p) => delete p.hero.highlights);
-    const facts = [...html(<Hero site={byType} />).matchAll(/hero__fact-value">([^<]*)<\/span><span class="hero__fact-label">([^<]*)</g)].map((m) => [m[1], m[2]]);
+    const facts = [...html(<Hero site={byType} />).matchAll(/hero__fact-value">([^<]*)<\/span><span class="hero__fact-label">(?:<svg[\s\S]*?<\/svg>)?<span>([^<]*)</g)].map((m) => [m[1], m[2]]);
     // car default keys year, power, fuel, mileage: mileage does not exist as a spec; "(204 PS)" is cut; units stay
     expect(facts).toEqual([["2023", "Year"], ["150 kW", "Power"], ["Plug-in hybrid", "Fuel"]]);
 
     const de = { ...withProduct(site, (p) => delete p.hero.highlights), lang: "de" as const };
-    expect(html(<Hero site={de} />)).toContain('hero__fact-label">Leistung<');
+    expect(html(<Hero site={de} />)).toContain('<span>Leistung</span>');
 
     const none = withProduct(site, (p) => {
       delete p.hero.highlights;

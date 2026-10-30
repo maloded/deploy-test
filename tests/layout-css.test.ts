@@ -23,7 +23,7 @@ const COMPACT = `${ONE_SCREEN} and (max-height: 50em)`;
 const WIDE = "@media (min-width: 56em)";
 
 const heroRules = rules().filter((r) => r.selector.startsWith(".hero"));
-const PHOTO_SELECTORS = /hero__(photo|frame|box|image|placeholder)/;
+const PHOTO_SELECTORS = /hero__(photo|frame|box|image|placeholder|thumbs?|thumb-image)/; // the thumbnails beside the photo are part of the photo zone
 
 describe("one screen in three zones", () => {
   it("applies only to wide and tall enough windows, in em (no pixels)", () => {
@@ -53,6 +53,12 @@ describe("one screen in three zones", () => {
       expect(rule(sel).body, sel).toMatch(/height: var\(--header-control-h, 2\.25rem\)/);
     }
     expect(rule(".site-header__inner").body).toMatch(/padding-block: calc\(var\(--space-2\) \* 1\.5\)/);
+  });
+
+  it("is as wide as the hero's content: the header and .hero__container share the same max-width, so the brand starts where the title does", () => {
+    const max = /max-width:\s*(var\(--container-wide, var\(--container\)\))/;
+    expect(rule(".site-header__inner").body).toMatch(max);
+    expect(rule(".hero__container").body).toMatch(max);
   });
 
   it("sets the brand name's size from --brand-size (1.7rem, 1.35rem on a narrow screen) with a line shorter than the control, so the header does not grow", () => {
@@ -154,8 +160,8 @@ describe("the frame depends only on the window", () => {
 describe("the bottom row has bounded heights", () => {
   it("clamps the description to 3 lines and the note to 1 line", () => {
     const description = rule(".hero__description", ONE_SCREEN).body;
-    expect(description).toMatch(/-webkit-line-clamp:\s*3/);
-    expect(description).toMatch(/line-clamp:\s*3/);
+    expect(description).toMatch(/-webkit-line-clamp:\s*4/);
+    expect(description).toMatch(/line-clamp:\s*4/);
     expect(description).toMatch(/overflow:\s*hidden/);
     expect(rule(".hero__note", ONE_SCREEN).body).toMatch(/-webkit-line-clamp:\s*1/);
     // no clamp in the normal flow (mobile and short windows)
@@ -169,31 +175,41 @@ describe("the bottom row has bounded heights", () => {
     expect(button).toMatch(/padding-block:\s*0/);
   });
 
-  it("keeps the key facts in one row of four where it fits, and wraps cleanly where it does not (never a forced nowrap that would clip)", () => {
-    const list = rule(".hero__facts", WIDE).body;
+  it("keeps the key facts in one row of four where they fit and in two by two where they do not: two pairs that wrap by the browser's own measurement of the content (no breakpoint, no forced nowrap that would clip)", () => {
+    const list = rule(".hero__facts", "").body;
     expect(list).toMatch(/display:\s*flex/);
     expect(list).toMatch(/flex-wrap:\s*wrap/);
-    expect(list).toMatch(/gap:\s*var\(--space-3\) 0/); // only a wrapped row has a gap above it
+    const pair = rule(".hero__facts-pair", WIDE).body;
+    expect(pair).toMatch(/flex:\s*2 1 min-content/); // starts at what its facts need at least, so the pairs wrap only when even that does not fit
+    expect(pair).toMatch(/flex-wrap:\s*nowrap/); // a pair never breaks on wide windows: no stray column
+    expect(pair).toMatch(/min-width:\s*min-content/);
+    const fact = rule(".hero__fact", "").body;
+    expect(fact).toMatch(/flex:\s*1 1 0/); // equal shares where every value fits its share
+    expect(fact).toMatch(/min-width:\s*min-content/); // never narrower than its value
     expect(rules().filter((r) => r.selector === ".hero__facts" && /nowrap/.test(r.body))).toEqual([]);
+    // on phones the pair is a row of two facts that stacks to one column when they do not fit side by side
+    expect(rule(".hero__facts-pair", "").body).toMatch(/flex-wrap:\s*wrap/);
     expect(rule(".hero__facts", COMPACT).body).not.toMatch(/flex-wrap/);
   });
 
-  it("draws the fact dividers as left borders pulled 1px outside a clipped list: none leads a row, none trails, at any wrap", () => {
-    const list = rule(".hero__facts", WIDE).body;
-    expect(list).toMatch(/overflow:\s*hidden/);
-    expect(list).toMatch(/--fact-pad:\s*calc\(var\(--space-2\) \* 0\.875\)/); // 7px each side of a fact: four of the widest set fit the 700px column
-    expect(list).toMatch(/margin-inline-start:\s*calc\(var\(--fact-pad, 0\.4rem\) \* -1\)/); // the first text stays aligned with the description
-    const fact = rule(".hero__fact", WIDE).body;
-    expect(fact).toMatch(/border-left:\s*1px solid var\(--border\)/);
-    expect(fact).toMatch(/margin-left:\s*-1px/);
-    expect(fact).toMatch(/padding-inline:\s*var\(--fact-pad, 0\.4rem\)/);
+  it("puts the same space on each side of every divider (the gap is two --fact-pad, the divider in the middle of it, as tall as the cell) and clips the one that would start a row", () => {
+    const list = rule(".hero__facts", "").body;
+    expect(list).toMatch(/--fact-pad:\s*1rem/);
+    expect(list).toMatch(/gap:\s*var\(--space-4\) calc\(var\(--fact-pad, 1rem\) \* 2\)/);
+    expect(list).toMatch(/overflow:\s*hidden/); // what lies left of the list is the divider of a fact that starts a row
+    expect(rule(".hero__facts-pair", "").body).toMatch(/gap:\s*var\(--space-4\) calc\(var\(--fact-pad, 1rem\) \* 2\)/);
+    const divider = rule(".hero__fact::before", "").body;
+    expect(divider).toMatch(/inset-block:\s*0/);
+    expect(divider).toMatch(/inset-inline-start:\s*calc\(var\(--fact-pad, 1rem\) \* -1 - 1px\)/);
+    expect(divider).toMatch(/width:\s*1px/);
+    expect(divider).toMatch(/background:\s*var\(--border\)/);
     // no rule draws a divider from a sibling or a position (that was the stray one on a wrapped fact)
-    expect(css).not.toMatch(/hero__fact\s*\+\s*\.hero__fact|hero__fact:first-child|hero__fact:last-child/);
+    expect(css).not.toMatch(/hero__fact\s*\+\s*\.hero__fact|hero__fact:first-child|hero__fact:last-child|hero__fact:nth-child/);
   });
 
   it("is more compact on short laptop windows: side-by-side buttons, 2 lines, no trust line, less padding", () => {
     expect(rule(".hero__actions", COMPACT).body).toMatch(/grid-template-columns:\s*repeat\(2,/);
-    expect(rule(".hero__description", COMPACT).body).toMatch(/line-clamp:\s*2/);
+    expect(rule(".hero__description", COMPACT).body).toMatch(/line-clamp:\s*4/);
     expect(rule(".hero__trust", COMPACT).body).toMatch(/display:\s*none/);
     expect(rule(".hero__intro-grid", COMPACT).body).toMatch(/padding-block:\s*var\(--space-3\)/);
     expect(rule(".hero__stage", COMPACT).body).toMatch(/padding-top:\s*var\(--space-3\)/);
@@ -218,7 +234,7 @@ describe("the bottom row has bounded heights", () => {
     }
     // the note is clamped to one line (visible), the description to 2
     expect(rule(".hero__note", ONE_SCREEN).body).toMatch(/line-clamp:\s*1/);
-    expect(rule(".hero__description", COMPACT).body).toMatch(/line-clamp:\s*2/);
+    expect(rule(".hero__description", COMPACT).body).toMatch(/line-clamp:\s*4/);
   });
 
   it("puts the two buttons side by side with equal width in the compact form", () => {
@@ -295,9 +311,9 @@ describe("intro row", () => {
     expect(rule(".hero__intro-grid", WIDE).body).toMatch(/padding-block:\s*var\(--space-6\)/);
   });
 
-  it("has two columns of 55% and 35% on the container edges, same top edge, the right one right-aligned", () => {
+  it("has two columns of 58% and 35% on the container edges, same top edge, the right one right-aligned", () => {
     const grid = rule(".hero__intro-grid", WIDE).body;
-    expect(grid).toMatch(/grid-template-columns:\s*55%\s+35%/);
+    expect(grid).toMatch(/grid-template-columns:\s*58%\s+35%/);
     expect(grid).toMatch(/justify-content:\s*space-between/);
     expect(rule(".hero__intro-grid", "").body).not.toMatch(/align-items:\s*(center|end)/); // default: same top edge
     expect(rule(".hero__intro-aside", WIDE).body).toMatch(/text-align:\s*right/);
@@ -317,9 +333,10 @@ describe("intro row", () => {
     expect(rule(".button", "").body).toMatch(/border:\s*1px solid var\(--accent\)/);
   });
 
-  it("shows the key facts in two columns on mobile and with dividers on wide screens", () => {
-    expect(rule(".hero__facts", "").body).toMatch(/grid-template-columns:\s*repeat\(2,/);
+  it("shows the key facts in two by two on mobile (one column where two do not fit) and with dividers", () => {
+    expect(rule(".hero__facts-pair", "").body).toMatch(/flex:\s*1 1 100%/);
     expect(rule(".hero__fact-value", "").body).toMatch(/font-family:\s*var\(--font-heading\)/);
+    expect(rule(".hero__fact-value", "").body).toMatch(/font-variant-numeric:\s*lining-nums tabular-nums/);
     expect(rule(".hero__fact-label", "").body).toMatch(/text-transform:\s*uppercase/);
   });
 

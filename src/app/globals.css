@@ -204,10 +204,12 @@ main:focus-visible {
   border-bottom: 1px solid var(--border);
 }
 
+/* the header is as wide as the hero's content (.hero__container), so the brand starts where the title does and the button ends where the price does */
 .site-header__inner {
   display: flex;
   flex-wrap: wrap;
   width: 100%;
+  max-width: var(--container-wide, var(--container));
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2) var(--space-3);
@@ -467,43 +469,118 @@ main:focus-visible {
   border-top: 1px solid var(--border);
 }
 
+/* the description has the whole left column and is never hyphenated (the groups above hyphenate; this is the exception, like the fact values) */
 .hero__description {
-  max-width: 40rem;
   color: var(--muted);
+  hyphens: manual;
 }
 
-/* key facts: large serif value over a small uppercase label; two columns of two on mobile */
+/* the first sentence of the description (splitLead): a little larger, in the heading colour (the text colour, as the headline has) */
+.hero__lead {
+  color: var(--text);
+  font-size: 1.1em;
+}
+
+/*
+ * Key facts: a large serif value over a small uppercase label. The list is two PAIRS of facts (Hero.tsx). Facts are separated by a gap of two --fact-pad
+ * (1rem) with a divider in the middle of it (a pseudo-element as tall as the cell), so there is --fact-pad on each side of a divider and no value can touch
+ * one. The list clips what lies left of it, which is exactly the divider of whichever fact starts a row, so no divider starts or ends a row at any wrap; the
+ * first text lines up with the description above. The fit is the browser's own measurement of the content, not a breakpoint: a fact is never narrower than
+ * its value (they do not wrap), the rest of the width is shared equally.
+ * - Narrow (phones, tablets): the pairs are two rows; a pair is two columns where both facts fit side by side, else they stack in one column.
+ * - Wide (below, from 56em): the pairs sit side by side while both fit and wrap one under the other, two by two, where they do not.
+ */
 .hero__facts {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  --fact-pad: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) calc(var(--fact-pad, 1rem) * 2);
   margin: var(--space-4) 0 0;
+  overflow: hidden;
+}
+
+.hero__facts-pair {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  gap: var(--space-4) calc(var(--fact-pad, 1rem) * 2);
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .hero__fact {
+  position: relative;
   display: flex;
+  flex: 1 1 0;
   flex-direction: column;
   gap: var(--space-1);
-  padding-block: var(--space-3);
-  border-top: 1px solid var(--border);
+  min-width: min-content;
+}
+
+.hero__fact::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: calc(var(--fact-pad, 1rem) * -1 - 1px);
+  width: 1px;
+  background: var(--border);
+}
+
+/*
+ * The facts' one entrance (HeroFacts sets data-reveal to "in" the first time the block is on screen): each fact fades in and rises 0.5rem over 400ms, 60ms
+ * after the one before (--i is its number). Only where motion is welcome; with reduced motion the facts are simply there. Opacity and a shift do not move
+ * the layout, so the room is reserved. If the script never runs, the facts show themselves after 2s (the failsafe), they are never left hidden.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .hero__facts[data-reveal="pending"] .hero__fact {
+    opacity: 0;
+    transform: translateY(0.5rem);
+    animation: hero-fact-failsafe 1ms linear 2s forwards;
+  }
+
+  .hero__facts[data-reveal="in"] .hero__fact {
+    transition:
+      opacity 400ms cubic-bezier(0.23, 1, 0.32, 1),
+      transform 400ms cubic-bezier(0.23, 1, 0.32, 1);
+    transition-delay: calc(var(--i, 0) * 60ms);
+  }
+}
+
+@keyframes hero-fact-failsafe {
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .hero__fact-value {
   font-family: var(--font-heading);
   font-size: 1.25rem;
   line-height: 1.1;
-  font-variant-numeric: lining-nums;
+  font-variant-numeric: lining-nums tabular-nums;
   white-space: nowrap; /* a value never wraps inside itself ("ca. / 37.100 / km"); the size is chosen to fit */
   overflow-wrap: normal;
   hyphens: manual;
 }
 
 .hero__fact-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
   color: var(--muted);
   font-size: 0.7rem;
-  letter-spacing: 0.14em;
+  line-height: 1.3;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+  text-wrap: balance; /* a long label wraps in two even lines, not one word on its own */
+}
+
+/* the icon before a label (fact-icons.tsx): as tall as the label's first line, drawn with the label's own colour, so a wrapped label hangs beside it */
+.hero__fact-icon {
+  flex: none;
+  width: 1.3em;
+  height: 1.3em;
 }
 
 .hero__figure {
@@ -588,7 +665,7 @@ main:focus-visible {
   }
 
   .hero__intro-grid {
-    grid-template-columns: 55% 35%;
+    grid-template-columns: 58% 35%; /* the left column holds the description and the facts: four facts with their icons need up to about 690px; 7% between the columns */
     justify-content: space-between;
     padding-block: var(--space-6);
   }
@@ -601,30 +678,18 @@ main:focus-visible {
     align-items: flex-end;
   }
 
-  /*
-   * Key facts on wide screens: one row of four, a divider between neighbours. The dividers are the items' own left borders, pulled 1px
-   * outside the list, whose overflow clips them: the first fact of every row shows none and the last has no trailing one, so a set that does
-   * not fit wraps cleanly (no lone fact with a stray divider and an indent). The list is pulled back by one padding (--fact-pad), so the first
-   * text lines up with the description above it, as before; --fact-pad is the space each side of a fact.
-   */
-  .hero__facts {
-    --fact-pad: calc(var(--space-2) * 0.875); /* 7px: the widest set (light theme, English) needs at most 8px each side to fit four in the 700px column; was --space-3 */
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3) 0; /* only a wrapped row has a gap above it */
-    margin-inline-start: calc(var(--fact-pad, 0.4rem) * -1);
-    overflow: hidden;
+  /* wide: the two pairs side by side while both fit (a pair never breaks), else one under the other */
+  .hero__facts-pair {
+    flex: 2 1 min-content; /* starts at what its facts need at least (so the pairs wrap only when even that does not fit), then shares the rest: a pair of two takes twice a lone fact's */
+    flex-wrap: nowrap;
+    min-width: min-content;
   }
 
-  .hero__fact {
-    padding-block: 0;
-    padding-inline: var(--fact-pad, 0.4rem);
-    border-top: 0;
-    border-left: 1px solid var(--border);
-    margin-left: -1px;
+  .hero__facts-pair[data-count="1"] {
+    flex-grow: 1;
   }
 
-  /* one size for all wide windows: four German values fit one row of the 55% column; never below 1.25rem */
+  /* one size for all wide windows; never below 1.25rem */
   .hero__fact-value {
     font-size: clamp(1.25rem, 1.9vw, 1.5rem);
   }
@@ -698,8 +763,8 @@ main:focus-visible {
     display: -webkit-box;
     overflow: hidden;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
+    -webkit-line-clamp: 4; /* the ellipsis is the last resort, beyond four lines */
+    line-clamp: 4;
   }
 
   .hero__note {
@@ -738,8 +803,8 @@ main:focus-visible {
   }
 
   .hero__description {
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
   }
 
   .hero__facts {
@@ -882,6 +947,65 @@ main:focus-visible {
 
   .hero[data-card] .hero__trust {
     display: flex;
+  }
+}
+
+/*
+ * The thumbnails beside the hero photo (Hero.tsx, heroThumbs: the next two gallery photos, links to #gallery-N): in the one-screen hero, where the left column
+ * is wider than the photo, they fill the room right of it as a column of the photo's own height (the photo's height rule is untouched), a small gap
+ * between them. Where the column has less than HERO_THUMB_MIN_REM to give, HeroThumbs (a small client island that measures the column, which the grid sizes
+ * to the room that is left) does not render them at all, so they are not reachable either; no container query is used. Narrow windows, phones and short
+ * windows have none (the column is display: none there).
+ */
+.hero__thumbs {
+  display: none;
+}
+
+/*
+ * The photo and the thumbnails of the hero with the card have the theme's media radius (--radius-media: 0.75rem in the bundled themes, whose --radius is 0
+ * or 2px; a theme that leaves it out keeps --radius), so they sit beside the card's rounded tile (1.75em). The hero without the card keeps --radius.
+ */
+.hero[data-card] .hero__box,
+.hero[data-card] .hero__thumb {
+  border-radius: var(--radius-media, var(--radius));
+}
+
+@media (min-width: 56em) and (min-height: 37.5em) {
+  .hero__top .hero__photo[data-thumbs] {
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--space-2);
+  }
+
+  .hero__thumbs {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    place-self: stretch; /* the photo's cell centres its items at the start: this one fills its track and the photo's height */
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .hero__thumb {
+    position: relative;
+    display: block;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--surface);
+  }
+
+  .hero__thumb:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .hero__thumb-image {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 }
 

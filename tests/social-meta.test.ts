@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- the metadata object is read loosely */
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { generateMetadata } from "@/app/[lang]/layout";
 import { ogLocale, socialMeta } from "@/lib/social-meta";
 import { FIXTURE_DIR, fixtures } from "./helpers";
@@ -35,7 +35,7 @@ describe("socialMeta", () => {
 });
 
 describe("the page metadata", () => {
-  beforeAll(() => {
+  beforeEach(() => {
     vi.stubEnv("CONTENT_DIR", FIXTURE_DIR);
     vi.stubEnv("CONTENT_PRODUCT", fixtures.ref("fixture-car"));
   });
