@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { AVATAR_ID } from "./avatar-manifest";
+import { isLanguage, unsupportedLanguageMessage } from "./languages";
+import { AVATAR_ID, BUTTON_ICONS, EXAMPLE_SPEAKERS, MAX_EXAMPLE_LINES, MAX_EXAMPLE_TEXT } from "./avatar-manifest";
 import { contactWindowsSchema, formatIssues, languageSchema, localizedSchema, viewingSchema, type Localized } from "./schema";
 import { isTimeZone } from "./viewing";
 
@@ -23,6 +24,14 @@ export type SellerContact = z.infer<typeof sellerContactSchema>;
  * The voice assistant widget (a public embed identifier, no secret). The widget element is mounted only when the seller
  * has this object. `id` is the agent's embed id, so it belongs in the seller's own content folder, never in this repository.
  */
+const exampleLineSchema = z.object({ speaker: z.enum(EXAMPLE_SPEAKERS), text: z.string().trim().min(1).max(MAX_EXAMPLE_TEXT) }).strict();
+const exampleSchema = z
+  .record(z.string(), z.array(exampleLineSchema).min(1).max(MAX_EXAMPLE_LINES))
+  .superRefine((value, ctx) => {
+    for (const key of Object.keys(value)) if (!isLanguage(key)) ctx.addIssue({ code: "custom", path: [key], message: unsupportedLanguageMessage(key) });
+    if (Object.keys(value).length === 0) ctx.addIssue({ code: "custom", message: "needs an example call in at least one language" });
+  });
+
 export const AGENT_VARIANTS = ["inline", "pill", "floating"] as const;
 export const AGENT_PLACEMENTS = ["header", "top", "bottom"] as const;
 export const DEFAULT_VOICE_SERVICE_URL = "https://voice.hanc.ai";
@@ -57,8 +66,25 @@ export const sellerAgentSchema = z
         /** The start button's and the end button's labels (default: the standard "Start call" / "End call" of the page language). */
         startLabel: localizedSchema.optional(),
         endLabel: localizedSchema.optional(),
-        /** The icon in the start button: the status "dot" (default) or a car "wheel" that turns while the agent speaks. */
-        buttonIcon: z.enum(["dot", "wheel"]).default("dot"),
+        /**
+         * What the call bubble says (localized; the default is "Call me" / "Rufen Sie mich an" from ui-strings). The bubble only exists for a pack
+         * whose invite loop has a cue (avatar.json), and is up in that stretch of the loop.
+         */
+        bubble: localizedSchema.optional(),
+        /** The icon in the start button: the glowing "orb" (default), the status "dot" or a car "wheel" that turns while the agent speaks. */
+        buttonIcon: z.enum(BUTTON_ICONS).default("orb"),
+        /** The job line under the name ("Sales advisor"); the line ends with the names of the languages the seller offers. */
+        role: localizedSchema.optional(),
+        /**
+         * An example call, per language, shown as a transcript on the large card while no call runs: lines of { speaker: "agent" | "caller", text }.
+         * Without it the card has no transcript block. Only the default language is required (the others fall back to it).
+         */
+        example: exampleSchema.optional(),
+        /**
+         * The sentence under "Live call" on the large card while a call runs (localized; {name} is the agent's name). The default is "You are live with
+         * {name}." / "Sie sind live mit {name} verbunden." from ui-strings; the connecting sentence is not replaceable.
+         */
+        liveText: localizedSchema.optional(),
       })
       .strict()
       .optional(),

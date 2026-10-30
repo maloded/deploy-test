@@ -4,6 +4,14 @@
   "name": "Example avatar",
   "voiceHint": "neutral",
   "poster": "poster.webp",
+  "invite": {
+    "mp4": "invite.mp4",
+    "webm": "invite.webm",
+    "cue": {
+      "show": 0.58,
+      "hide": 2.45
+    }
+  },
   "license": "Synthetic placeholder, no restrictions",
-  "provenance": "A flat colour generated for the template's examples. Not a real person."
+  "provenance": "A flat colour generated for the template's examples (poster and a 3 s invite loop with a bubble cue). Not a real person."
 }

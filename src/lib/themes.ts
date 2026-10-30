@@ -42,6 +42,17 @@ export const OPTIONAL_VARS = [
   "--radius-dialog",
   "--radius-control",
   "--avatar-card-shadow",
+  "--avatar-ring",
+  "--avatar-glow",
+  "--avatar-pill",
+  "--avatar-orb-a",
+  "--avatar-orb-b",
+  "--avatar-stage",
+  "--avatar-ink",
+  "--avatar-live",
+  "--avatar-danger",
+  "--avatar-card-radius",
+  "--avatar-hero-card-w",
 ];
 
 export const THEMES_DIR = path.join(process.cwd(), "public", "themes");

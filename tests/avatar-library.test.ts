@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
-import { avatarFiles, avatarLoops, avatarManifestSchema, loopFiles, MAX_AVATAR_POSTER_BYTES, MAX_AVATAR_VIDEO_BYTES } from "@/lib/avatar-manifest";
+import { resolveAvatar } from "@/lib/avatar-manifest";
+import { avatarFiles, avatarLoops, avatarManifestSchema, inviteCue, loopFiles, MAX_AVATAR_POSTER_BYTES, MAX_AVATAR_VIDEO_BYTES } from "@/lib/avatar-manifest";
 import { listAvatars, readAvatar, scanAvatars } from "@/lib/avatar-library";
 import { examples } from "./helpers";
 
@@ -45,6 +46,63 @@ describe("avatar manifest", () => {
     }
     expect(avatarManifestSchema.safeParse({ ...base, idle: { mp4: "i.webm" } }).success).toBe(false); // the key decides the format
     expect(avatarManifestSchema.safeParse({ ...base, idle: {} }).success).toBe(false);
+  });
+
+  describe("the invite loop and its cue", () => {
+    const ok = (invite: unknown) => avatarManifestSchema.safeParse({ ...base, invite }).success;
+    it("is a loop like the others: a file name, or one file per format", () => {
+      expect(ok("invite.mp4")).toBe(true);
+      expect(ok({ mp4: "invite.mp4", webm: "invite.webm" })).toBe(true);
+      expect(ok({ webm: "invite.webm" })).toBe(true);
+      expect(ok({ mp4: "invite.webm" })).toBe(false); // the key decides the format
+      expect(ok("../invite.mp4")).toBe(false);
+      expect(ok("invite.gif")).toBe(false);
+      expect(ok({})).toBe(false);
+      expect(ok({ cue: { show: 1, hide: 2 } })).toBe(false); // a cue is not a file
+    });
+    it("takes an optional cue { show, hide } in seconds, hide later than show, and nothing else", () => {
+      const f = { mp4: "invite.mp4", webm: "invite.webm" };
+      expect(ok({ ...f, cue: { show: 0.58, hide: 2.45 } })).toBe(true);
+      expect(ok({ ...f, cue: { show: 0, hide: 0.1 } })).toBe(true);
+      expect(ok({ ...f, cue: { show: 2, hide: 2 } })).toBe(false);
+      expect(ok({ ...f, cue: { show: 3, hide: 1 } })).toBe(false);
+      expect(ok({ ...f, cue: { show: -1, hide: 1 } })).toBe(false);
+      expect(ok({ ...f, cue: { show: 0.5 } })).toBe(false);
+      expect(ok({ ...f, cue: { show: "0.5", hide: 2 } })).toBe(false);
+      expect(ok({ ...f, cue: { show: 1, hide: 2, extra: 1 } })).toBe(false);
+      expect(ok({ ...f, cue: { show: 1, hide: 601 } })).toBe(false);
+      expect(ok({ ...f, extra: 1 })).toBe(false);
+    });
+    it("no other loop can have a cue (strict)", () => {
+      expect(avatarManifestSchema.safeParse({ ...base, idle: { mp4: "i.mp4", cue: { show: 1, hide: 2 } } }).success).toBe(false);
+    });
+    it("is listed first, its files travel with the pack without the cue, and inviteCue reads it", () => {
+      const m = avatarManifestSchema.parse({ ...base, speak: "s.mp4", invite: { mp4: "v.mp4", webm: "v.webm", cue: { show: 0.58, hide: 2.45 } }, idle: "i.mp4" });
+      expect(avatarLoops(m)).toEqual(["invite", "idle", "speak"]);
+      expect(loopFiles(m, "invite")).toEqual({ mp4: "v.mp4", webm: "v.webm" });
+      expect(avatarFiles(m)).toEqual(["poster.webp", "v.mp4", "v.webm", "i.mp4", "s.mp4"]);
+      expect(inviteCue(m)).toEqual({ show: 0.58, hide: 2.45 });
+      expect(inviteCue(avatarManifestSchema.parse({ ...base, invite: "v.mp4" }))).toBeNull();
+      expect(inviteCue(avatarManifestSchema.parse(base))).toBeNull();
+    });
+    it("reaches the card as URLs and a cue (null without one)", () => {
+      const m = avatarManifestSchema.parse({ ...base, id: "p", invite: { mp4: "v.mp4", webm: "v.webm", cue: { show: 0.58, hide: 2.45 } } });
+      const r = resolveAvatar(m);
+      expect(r.invite).toEqual({ mp4: "/avatars/p/v.mp4", webm: "/avatars/p/v.webm" });
+      expect(r.inviteCue).toEqual({ show: 0.58, hide: 2.45 });
+      const plain = resolveAvatar(avatarManifestSchema.parse({ ...base, id: "p", invite: "v.mp4" }));
+      expect(plain.invite).toEqual({ mp4: "/avatars/p/v.mp4" });
+      expect(plain.inviteCue).toBeNull();
+      expect(resolveAvatar(avatarManifestSchema.parse({ ...base, id: "p" })).invite).toBeNull();
+    });
+    it("has the same file limits as the other clips: 4 MB, and a missing file stops the build", () => {
+      write(tmp, "inv-ok", { ...base, id: "inv-ok", invite: { mp4: "v.mp4" } }, { "poster.webp": 10, "v.mp4": MAX_AVATAR_VIDEO_BYTES });
+      write(tmp, "inv-big", { ...base, id: "inv-big", invite: { mp4: "v.mp4" } }, { "poster.webp": 10, "v.mp4": MAX_AVATAR_VIDEO_BYTES + 1 });
+      write(tmp, "inv-none", { ...base, id: "inv-none", invite: { mp4: "v.mp4" } });
+      expect(readAvatar(tmp, "inv-ok").ok).toBe(true);
+      expect(readAvatar(tmp, "inv-big")).toMatchObject({ ok: false, issues: [expect.stringContaining('file "v.mp4" is')] });
+      expect(readAvatar(tmp, "inv-none")).toMatchObject({ ok: false, issues: [expect.stringContaining('file "v.mp4" not found')] });
+    });
   });
 
   it("lists the loops and the files of a pack, once each", () => {
@@ -114,5 +172,6 @@ describe("the avatar library on disk", () => {
     const { avatars, problems } = scanAvatars(examples.root);
     expect(problems).toEqual([]);
     expect(avatars.map((a) => a.id)).toEqual(["example-avatar"]);
+    expect(avatars[0].loops).toEqual(["invite"]); // a synthetic invite loop with a cue, for the template's examples
   });
 });

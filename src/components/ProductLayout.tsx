@@ -29,7 +29,7 @@ export default function ProductLayout({ site }: { site: Site }) {
       {agentTop && <AgentWidget agent={agentTop} lang={site.lang} product={site.ref} />}
       {/* "contact" is rendered by the footer (its contact row), wherever the product lists it */}
       <main tabIndex={-1}>{site.blocks.filter((id) => id !== "contact").map((id) => renderBlock(id, site))}</main>
-      {agent && !agentTop && !agentHeader && <AgentWidget agent={agent} lang={site.lang} product={site.ref} avatar={avatar} requestType={presetFor("header", site)} />}
+      {agent && !agentTop && !agentHeader && <AgentWidget agent={agent} lang={site.lang} product={site.ref} avatar={avatar} requestType={presetFor("header", site)} heroSlot={site.blocks.includes("hero")} />}
       <Footer site={site} />
     </div>
   );

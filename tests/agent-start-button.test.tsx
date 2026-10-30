@@ -101,6 +101,112 @@ describe("AgentStartButton", () => {
     expect(button().dataset.state).toBe("idle");
   });
 
+  describe("the orb icon (agent.avatar.buttonIcon, the default): Hanc's call button", () => {
+    const mountOrb = async (host: WidgetHost, extra: { name?: string; lang?: "en" | "de"; startLabel?: any } = {}) => {
+      box = document.createElement("div");
+      document.body.appendChild(box);
+      root = createRoot(box);
+      await act(async () => root!.render(createElement(AgentStartButton, { host, lang: extra.lang ?? "en", name: extra.name ?? "Sofia", startLabel: extra.startLabel ?? null, endLabel: null })));
+      await act(async () => void (await vi.advanceTimersByTimeAsync(0)));
+      return box.querySelector<HTMLButtonElement>(".avatar-card__start")!;
+    };
+
+    it("is the default: an orb with its rings behind the pill, a dark disc with the level bars, and the label \"Talk to {name} now\" / \"Jetzt mit {name} sprechen\"", async () => {
+      const { host } = widget();
+      const button = await mountOrb(host);
+      expect(button.dataset.icon).toBe("orb");
+      expect(button.classList.contains("call-orb__btn")).toBe(true);
+      expect(button.closest(".call-orb")).not.toBeNull();
+      expect(button.querySelector(".call-orb__icon svg rect")).not.toBeNull(); // the level bars
+      expect(button.querySelector(".call-orb__icon")!.getAttribute("aria-hidden")).toBe("true");
+      expect(button.textContent).toBe("Talk to Sofia now");
+      const orb = box!.querySelector(".call-orb")!;
+      expect(orb.querySelector(".call-orb__glow")!.getAttribute("aria-hidden")).toBe("true");
+      expect(orb.querySelectorAll(".call-orb__rings > i")).toHaveLength(5);
+      expect(box!.querySelector(".avatar-card__wheel, .avatar-card__start-dot")).toBeNull();
+      act(() => root!.unmount());
+      const de = await mountOrb(widget().host, { lang: "de" });
+      expect(de.textContent).toBe("Jetzt mit Sofia sprechen");
+      act(() => root!.unmount());
+      const own = await mountOrb(widget().host, { startLabel: { en: "Call Sofia", de: "Sofia anrufen" } });
+      expect(own.textContent).toBe("Call Sofia"); // a seller's label still wins
+    });
+
+    it("shows the icon of each state: bars while idle, a spinner while connecting, the slashed handset during a call; the label is the state's text", async () => {
+      const { host } = widget();
+      const button = await mountOrb(host);
+      const icon = () => button.querySelector(".call-orb__icon svg")!;
+      expect(icon().querySelector("rect")).not.toBeNull();
+      host.callStatus = "connecting";
+      await tick();
+      expect(icon().classList.contains("call-orb__spinner")).toBe(true);
+      expect(button.textContent).toBe("Connecting...");
+      expect(button.closest(".call-orb")!.getAttribute("data-state")).toBe("connecting");
+      host.callStatus = "connected";
+      await tick();
+      expect(icon().querySelector("line")).not.toBeNull(); // the slash
+      expect(icon().querySelector("rect")).toBeNull();
+      expect(button.textContent).toBe("End call");
+      host.callStatus = "idle";
+      await tick();
+      expect(icon().querySelector("rect")).not.toBeNull();
+    });
+
+    it("measures the label's own width into --call-orb-w (so the label slides out to exactly its text) and again when the label changes", async () => {
+      const { host } = widget();
+      const button = await mountOrb(host);
+      const text = button.querySelector<HTMLElement>(".call-orb__text")!;
+      Object.defineProperty(text, "scrollWidth", { configurable: true, get: () => (text.textContent === "Connecting..." ? 80 : 118) });
+      host.callStatus = "connecting";
+      await tick();
+      expect(button.style.getPropertyValue("--call-orb-w")).toBe("81px");
+      host.callStatus = "idle";
+      await tick();
+      expect(button.style.getPropertyValue("--call-orb-w")).toBe("119px");
+    });
+
+    it("measures again when the pointer arrives or the button takes focus (a font that came late)", async () => {
+      const { host } = widget();
+      const button = await mountOrb(host);
+      const text = button.querySelector<HTMLElement>(".call-orb__text")!;
+      let width = 100;
+      Object.defineProperty(text, "scrollWidth", { configurable: true, get: () => width });
+      width = 140;
+      act(() => void button.dispatchEvent(new Event("pointerenter")));
+      expect(button.style.getPropertyValue("--call-orb-w")).toBe("141px");
+      width = 150;
+      act(() => void button.dispatchEvent(new Event("focus")));
+      expect(button.style.getPropertyValue("--call-orb-w")).toBe("151px");
+    });
+
+    it("a tap or click starts the call through the widget's own button, as for the other icons (no hover is needed)", async () => {
+      const { host, clicks } = widget();
+      const button = await mountOrb(host);
+      act(() => button.click());
+      expect(clicks).toHaveBeenCalledTimes(1);
+    });
+
+    it("the orb button is a sibling of the widget, never its ancestor", async () => {
+      const { host } = widget();
+      const area = document.createElement("div");
+      area.className = "avatar-card__action";
+      document.body.appendChild(area);
+      area.appendChild(host);
+      box = document.createElement("div");
+      area.appendChild(box);
+      root = createRoot(box);
+      await act(async () => root!.render(createElement(AgentStartButton, { host, lang: "en", name: "Sofia", startLabel: null, endLabel: null })));
+      expect(box.querySelector(".call-orb")!.contains(host)).toBe(false);
+      expect(host.closest(".call-orb")).toBeNull();
+      expect(host.parentElement).toBe(area);
+    });
+
+    it("has no orb for the dot and the wheel", async () => {
+      await mount(widget().host, { icon: "wheel" });
+      expect(box!.querySelector(".call-orb")).toBeNull();
+    });
+  });
+
   describe("the wheel icon (agent.avatar.buttonIcon)", () => {
     /** A fake room whose agent publishes lk.agent.state, as the widget's LiveKit room does. */
     const room = () => {
@@ -119,8 +225,8 @@ describe("AgentStartButton", () => {
     const callStart = (host: HTMLElement) => act(async () => void host.dispatchEvent(new Event("call-start", { bubbles: true, composed: true })));
     const callEnd = (host: HTMLElement) => act(async () => void host.dispatchEvent(new Event("call-end", { bubbles: true, composed: true })));
 
-    it("shows the status dot by default and the wheel only for buttonIcon \"wheel\" (never both); aria-hidden", async () => {
-      const dot = await mount(widget().host);
+    it("shows the status dot for buttonIcon \"dot\" and the wheel only for \"wheel\" (never both); aria-hidden", async () => {
+      const dot = await mount(widget().host, { icon: "dot" });
       expect(dot().dataset.icon).toBe("dot");
       expect(dot().querySelector(".avatar-card__start-dot")).not.toBeNull();
       expect(dot().querySelector(".avatar-card__wheel")).toBeNull();

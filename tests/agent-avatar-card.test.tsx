@@ -14,10 +14,13 @@ import { FIXTURE_DIR, fixtures } from "./helpers";
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 vi.mock("hanc-webrtc-widgets", () => ({}));
 
-const pack = (loops: Partial<Record<"idle" | "listen" | "speak", { mp4?: string; webm?: string }>> = {}): ResolvedAvatar => ({
+const pack = (loops: Partial<Record<"invite" | "idle" | "listen" | "speak", { mp4?: string; webm?: string }>> = {}): ResolvedAvatar => ({
   id: "test-pack",
   name: "Test pack",
   poster: "/avatars/test-pack/poster.webp",
+  invite: loops.invite ?? null,
+  inviteCue: null,
+  bubble: null,
   idle: loops.idle ?? null,
   listen: loops.listen ?? null,
   speak: loops.speak ?? null,
@@ -25,6 +28,10 @@ const pack = (loops: Partial<Record<"idle" | "listen" | "speak", { mp4?: string;
   startLabel: null,
   endLabel: null,
   buttonIcon: "dot",
+  role: null,
+  languages: [],
+  example: null,
+  liveText: null,
 });
 const mp4 = (n: string) => ({ mp4: `/avatars/test-pack/${n}.mp4` });
 const FULL = pack({ idle: mp4("i"), listen: mp4("l"), speak: mp4("s") });
@@ -66,6 +73,33 @@ describe("what the card shows (the degradation table)", () => {
     const p = pack({ idle: mp4("i"), speak: mp4("s") });
     expect(activeSlot(p, "call")).toBe("idle");
     expect(activeSlot(p, "speaking")).toBe("speak");
+  });
+});
+
+describe("the invite loop (played before a call)", () => {
+  const FULL4 = pack({ invite: mp4("v"), idle: mp4("i"), listen: mp4("l"), speak: mp4("s") });
+  it("replaces idle while waiting; the call logic is unchanged; after the call the state is idle again, so the invite comes back", () => {
+    expect(activeSlot(FULL4, "idle")).toBe("invite");
+    expect(activeSlot(FULL4, "call")).toBe("listen");
+    expect(activeSlot(FULL4, "speaking")).toBe("speak");
+    expect(activeSlot(FULL4, "idle")).toBe("invite"); // after call-end
+  });
+  it("idle stays as the fallback: a pack without an invite loop waits on idle", () => {
+    expect(activeSlot(FULL, "idle")).toBe("idle");
+    expect(activeSlot(pack({ invite: mp4("v") }), "idle")).toBe("invite"); // only loop: plays always
+  });
+  it("without listen the call uses idle, then the invite loop", () => {
+    expect(activeSlot(pack({ invite: mp4("v"), idle: mp4("i") }), "call")).toBe("idle");
+    expect(activeSlot(pack({ invite: mp4("v"), speak: mp4("s") }), "call")).toBe("invite");
+    expect(activeSlot(pack({ invite: mp4("v"), speak: mp4("s") }), "speaking")).toBe("speak");
+  });
+  it("is loaded when the page is idle, like idle; the idle loop of such a pack only when no listen loop can carry the call", () => {
+    const on = { motion: true, pageIdle: true, touched: false };
+    expect(slotsToMount(FULL4, on)).toEqual(["invite"]);
+    expect(slotsToMount(FULL4, { ...on, touched: true })).toEqual(["invite", "listen", "speak"]);
+    expect(slotsToMount(pack({ invite: mp4("v"), idle: mp4("i") }), on)).toEqual(["invite", "idle"]);
+    expect(slotsToMount(FULL4, { ...on, pageIdle: false })).toEqual([]);
+    expect(slotsToMount(FULL4, { motion: false, pageIdle: true, touched: true })).toEqual([]);
   });
 });
 
@@ -184,6 +218,24 @@ describe("the card in the DOM", () => {
     expect(videos()[0].dataset.active).toBe("false"); // not playing yet: the poster still shows
     await act(async () => void videos()[0].dispatchEvent(new Event("playing")));
     expect(videos()[0].dataset.active).toBe("true");
+  });
+
+  it("a pack with an invite loop plays it before the call and again after it; nothing else changes during the call", async () => {
+    const full4 = pack({ invite: mp4("v"), idle: mp4("i"), listen: mp4("l"), speak: mp4("s") });
+    await mount(full4);
+    await runIdle();
+    expect(videos().map((v) => v.dataset.slot)).toEqual(["invite"]);
+    expect(plays).toContain("invite");
+    plays.length = 0;
+    await act(async () => void document.dispatchEvent(new Event("call-start", { bubbles: true })));
+    expect(videos().map((v) => v.dataset.slot)).toEqual(["invite", "listen", "speak"]);
+    expect(plays).toContain("listen");
+    expect(plays).not.toContain("invite");
+    expect(pauses).toContain("invite");
+    plays.length = 0;
+    await act(async () => void document.dispatchEvent(new Event("call-end", { bubbles: true })));
+    expect(card().dataset.state).toBe("idle");
+    expect(plays).toContain("invite");
   });
 
   it("follows a call and the agent: listen while the call runs, speak while the agent speaks", async () => {

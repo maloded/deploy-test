@@ -55,6 +55,15 @@
   --hero-photo-min-width: 30%; /* optional: narrowest hero photo, a share of the container (default 40%) */
   --hero-frame-max-ratio: 4 / 3; /* optional: widest frame ratio (default 16 / 9); 4 / 3 shows a 4:3 photo without a crop */
   --avatar-card-shadow: 0 1.5rem 3rem -1rem rgba(0, 0, 0, 0.8), 0 0.25rem 0.75rem -0.25rem rgba(0, 0, 0, 0.55), 0 0 2.5rem -0.75rem rgba(212, 175, 90, 0.2); /* optional: the avatar card's lift (deep, with a faint gold glow) */
+  --avatar-ring: linear-gradient(90deg, #f97316 0%, #f43f5e 55%, #ec4899 100%); /* optional: the neon ring of the avatar card and the rings of its orb (the Hanc values) */
+  --avatar-glow: rgba(242, 85, 31, 0.55); /* optional: the glow of the card during a call */
+  --avatar-pill: rgba(247, 241, 236, 0.97); /* optional: the fill of the start pill */
+  --avatar-orb-a: #f97316; /* optional: the two colours of the orb in the start button */
+  --avatar-orb-b: #ec4899;
+  --avatar-stage: #120e0c; /* optional: the dark stage of the card (the card is a screen in both themes) */
+  --avatar-ink: #f7f1ec; /* optional: the text and light parts on that stage */
+  --avatar-live: #22c55e; /* optional: the dot of the live-call pill */
+  --avatar-danger: linear-gradient(135deg, #dc2626, #ef4444); /* optional: the disc of the call button after an error */
 }
 
 :root[data-theme="dark-premium"] :is(h1, h2, h3):not(.label) {

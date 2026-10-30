@@ -9,7 +9,7 @@
     "webm": "listen.webm"
   },
   "license": "Hanc.ai cast asset, used with permission of the Hanc project curator",
-  "provenance": "Hanc.ai cast F1 (Sofia): a synthetic character, not a real person. 5 s image-to-video loop (Kling v3, start frame equals end frame) from an AI-generated 4:5 still. Loops listen and speak cut from the same clip (frames 3-39 and 42-110, played forward then backward) with ffmpeg. Before the call (idle) the listen loop plays (test).",
+  "provenance": "Hanc.ai cast F1 (Sofia), synthetic character. Source: 5 s Kling v3 image-to-video loop (start = end frame) from an AI 4:5 still. listen/speak cut from it with ffmpeg (frames 3-39, 42-110, forward+backward). invite: 5 s Kling 2.5 Turbo Pro from f1's first frame (phrase + open-palm gesture), seam blended with ffmpeg, no audio. idle = listen.",
   "listen": {
     "mp4": "listen.mp4",
     "webm": "listen.webm"
@@ -17,5 +17,13 @@
   "speak": {
     "mp4": "speak.mp4",
     "webm": "speak.webm"
+  },
+  "invite": {
+    "mp4": "invite.mp4",
+    "webm": "invite.webm",
+    "cue": {
+      "show": 0.58,
+      "hide": 2.45
+    }
   }
 }

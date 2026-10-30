@@ -32,15 +32,53 @@
         "de": "KI-Assistentin",
         "en": "AI assistant"
       },
-      "startLabel": {
-        "de": "Gespräch starten",
-        "en": "Start call"
-      },
       "endLabel": {
         "de": "Gespräch beenden",
         "en": "End call"
       },
-      "buttonIcon": "wheel"
+      "buttonIcon": "orb",
+      "role": {
+        "de": "Verkaufsberaterin",
+        "en": "Sales Rep"
+      },
+      "example": {
+        "de": [
+          {
+            "speaker": "caller",
+            "text": "Kann ich den Multivan diese Woche besichtigen?"
+          },
+          {
+            "speaker": "agent",
+            "text": "Gerne. Wann passt es Ihnen am besten?"
+          },
+          {
+            "speaker": "caller",
+            "text": "Am Donnerstagnachmittag."
+          },
+          {
+            "speaker": "agent",
+            "text": "Ich gebe Ihre Anfrage an Good Point weiter. Sie bekommen eine Bestätigung."
+          }
+        ],
+        "en": [
+          {
+            "speaker": "caller",
+            "text": "Can I view the Multivan this week?"
+          },
+          {
+            "speaker": "agent",
+            "text": "Of course. When suits you best?"
+          },
+          {
+            "speaker": "caller",
+            "text": "Thursday afternoon."
+          },
+          {
+            "speaker": "agent",
+            "text": "I'll pass your request to Good Point. You'll get a confirmation."
+          }
+        ]
+      }
     }
   },
   "timezone": "Europe/Vienna"

@@ -768,6 +768,123 @@ main:focus-visible {
   }
 }
 
+/*
+ * The hero with the agent's card (data-card): the eyebrow stays above, centred, as it always was (.hero__lead-in). Below it a row: the
+ * title zone (the headline and the photo) and a slot for the card. The slot only reserves the room; the card is outside the hero and is
+ * laid over the slot by script (AgentAvatarCard, use-card-placement). Below 56em (phones, tablets, narrow windows) the slot is a block under
+ * the photo, centred, in the flow: --avatar-hero-card-w wide on a phone (default 15.5rem, 4:5; 280px at 18px per rem) and 27rem from 40em
+ * (about the 480px of Hanc). From 56em the title zone is the left column, left-aligned, and the slot the right one; the bottom row
+ * (description, facts, price, buttons, trust line) stays below, full width.
+ *
+ * In the one-screen hero the row takes the height that is left above the bottom row, and the slot is stretched to the left column's height:
+ * its top is the headline's top, its bottom the photo's bottom. Its width is 4:5 of that height (use-card-placement hands the row's height over
+ * as --hero-slot-h; at most 36rem and 44vw, not under 18rem; before the script runs it is the 36rem / 44vw cap). The column is that wide, so
+ * the card ends exactly at the container's right edge, in line with the price and the buttons. No container query.
+ */
+.hero__lead-in {
+  padding-block: var(--space-5) var(--space-3);
+  text-align: center;
+}
+
+.hero__top {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero__top .hero__stage {
+  padding: 0;
+}
+
+.hero__top .hero__headline {
+  margin-top: 0;
+}
+
+.hero__slot {
+  width: min(100%, var(--avatar-hero-card-w, 15.5rem));
+  aspect-ratio: 4 / 5;
+  margin: var(--space-5) auto var(--space-5);
+}
+
+@media (min-width: 40em) {
+  .hero__slot {
+    width: min(100%, 27rem);
+  }
+}
+
+@media (min-width: 56em) {
+  .hero__top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    column-gap: max(2.5rem, min(5vw, 5rem));
+  }
+
+  .hero__top .hero__stage {
+    align-items: flex-start;
+    align-self: stretch;
+    text-align: left;
+  }
+
+  .hero__top .hero__headline {
+    max-width: none;
+  }
+
+  .hero__top .hero__photo {
+    justify-content: flex-start;
+  }
+
+  .hero__top .hero__frame {
+    width: 100%;
+  }
+
+  .hero__slot {
+    width: min(36rem, 44vw);
+    margin: 0;
+  }
+}
+
+@media (min-width: 56em) and (min-height: 37.5em) {
+  .hero__lead-in {
+    flex: none;
+  }
+
+  .hero__top {
+    margin-bottom: var(--space-5); /* air between the photo and the card and the divider line of the bottom row: the card's shadow has faded by then (measured: under 1.5% on the line) */
+    flex: 1;
+    min-height: 24rem; /* the floor: a window this short lets the hero grow instead of squeezing the photo to nothing */
+  }
+
+  .hero__top .hero__photo {
+    place-items: center start;
+    margin-bottom: 0;
+  }
+
+  .hero__top .hero__frame {
+    width: auto;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .hero__slot {
+    align-self: stretch;
+    width: min(36rem, 44vw, calc(var(--hero-slot-h, 100vh) * 0.8));
+    min-width: 18rem;
+    aspect-ratio: auto; /* its height is the row's (stretch): the slot must not push the row's height up */
+  }
+}
+
+/* laptop-height windows: the compact bottom row; with the card the trust line stays (the first screen shows it) */
+@media (min-width: 56em) and (min-height: 37.5em) and (max-height: 50em) {
+  .hero__lead-in {
+    padding-top: var(--space-3);
+    padding-bottom: var(--space-2);
+  }
+
+  .hero[data-card] .hero__trust {
+    display: flex;
+  }
+}
+
 /* definition lists: specs and offer details */
 .details {
   margin: 0;
@@ -1857,20 +1974,65 @@ main:focus-visible {
 }
 
 /*
- * The frame owns the border, the radius, the clipping and the background, and it is the one element that tilts toward the pointer
- * (useCardTilt sets its transform inline, perspective included, only while it moves). The widget (.avatar-card__action) is a
- * SIBLING of the frame, so it neither tilts nor sits under a transformed ancestor. No rule in this file sets a transform or a
- * perspective; tests/avatar-card-layout.test.ts guards that.
+ * The look of the card is the Hanc role card (see docs/reference/HANC-HERO-CARD.md for the file each piece comes from). Sizes are in em:
+ * in the hero 1em is 1rem for a card 20rem wide or more, as on Hanc's page (its values are rem and its card is 327 to 576px wide), and a
+ * narrower card (a phone) scales it down with its width / 20, to the proportions Hanc has at its smallest; when docked the card's font-size
+ * is its width / 16, so the small card keeps the proportions. Colours are theme tokens (--avatar-ring, --avatar-glow, --avatar-pill, --avatar-orb-a, --avatar-orb-b, --avatar-stage,
+ * --avatar-ink, and --avatar-card-radius, --avatar-card-shadow); the bundled themes set the Hanc values, a theme that leaves them out gets
+ * values drawn from its accent (no raw colour is written in this file).
+ *
+ * The frame is the one element that tilts toward the pointer (useCardTilt sets its transform inline, perspective included, and the depth of
+ * the caption layers too). The widget (.avatar-card__action) is a SIBLING of the frame, so it neither tilts nor sits under a transformed
+ * ancestor. No rule in this file sets a transform or a perspective on the card; tests/avatar-card-layout.test.ts guards that.
  */
+.avatar-card {
+  font-size: calc(var(--avatar-card-w, 12.5rem) / 16);
+}
+
+.avatar-card[data-placement="hero"] {
+  font-size: clamp(0.75rem, calc(var(--avatar-slot-w, 20rem) / 20), 1rem);
+}
+
+/*
+ * In the hero the card is laid over the hero's slot: absolute in document coordinates (so it scrolls with the page), at the slot's place and
+ * width, which use-card-placement measures. Its ancestors (.pt, body, html) are not positioned, so the initial containing block is the
+ * reference. Before the first measurement it is hidden (visibility is inherited, but there is nothing of the widget to show yet).
+ */
+.avatar-card[data-placement="hero"] {
+  position: absolute;
+  top: var(--avatar-slot-y, 0);
+  left: var(--avatar-slot-x, 0);
+  right: auto;
+  bottom: auto;
+  width: var(--avatar-slot-w, 12.5rem);
+}
+
+.avatar-card[data-ready="false"] {
+  visibility: hidden;
+}
+
 .avatar-card__frame {
   position: absolute;
   inset: 0;
-  overflow: hidden; /* clips the pictures to the rounded box; it does not clip the widget's fixed overlay (the widget is not inside it) */
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  /* lifted off the page; the shadow is drawn outside the frame's own box (overflow clips the content, not the frame's own shadow) and tilts with it */
-  box-shadow: var(--avatar-card-shadow, 0 1rem 2.25rem -0.75rem color-mix(in srgb, var(--text) 40%, transparent), 0 0.25rem 0.625rem -0.25rem color-mix(in srgb, var(--text) 25%, transparent));
+  border-radius: var(--avatar-card-radius, 1.75em);
+  transform-style: preserve-3d;
+  /* lifted off the page; the shadow is drawn outside the frame's own box and tilts with it */
+  box-shadow: var(--avatar-card-shadow, 0 1.875rem 5rem -1.875rem color-mix(in srgb, var(--text) 45%, transparent), 0 0.75rem 1.5rem -0.75rem color-mix(in srgb, var(--text) 25%, transparent));
+}
+
+/* a live call: the lift turns into the glow of the ring */
+.avatar-card[data-call="connected"] .avatar-card__frame {
+  box-shadow: 0 2.5em 5.625em -2.5em var(--avatar-glow, color-mix(in srgb, var(--accent) 55%, transparent));
+}
+
+/* the tile owns the clipping, the radius and the stage colour; the layers above it (shade, glint, ring, text) are the frame's own */
+.avatar-card__tile {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: var(--avatar-card-radius, 1.75em);
+  background: var(--avatar-stage, black);
+  isolation: isolate;
 }
 
 .avatar-card__media {
@@ -1878,113 +2040,287 @@ main:focus-visible {
   inset: 0;
 }
 
-/*
- * The caption is a strip below the picture, inside the frame (so it tilts with it): the picture keeps its full 4:5 and the strip
- * adds --avatar-strip-h to the card. One title line (the name, then the marker after a thin separator), the seller's line under it.
- * Without caption texts there is no strip and the card is the picture only.
- */
+.avatar-card__shade {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 58%;
+  border-radius: 0 0 var(--avatar-card-radius, 1.75em) var(--avatar-card-radius, 1.75em);
+  background: linear-gradient(to top, color-mix(in srgb, var(--avatar-stage, black) 96%, transparent) 0%, color-mix(in srgb, var(--avatar-stage, black) 78%, transparent) 42%, transparent 100%);
+  pointer-events: none;
+}
+
+/* a soft light that follows the pointer (the tilt hook moves it and sets data-tilting on the card) */
+.avatar-card__glint {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--avatar-card-radius, 1.75em);
+  background: radial-gradient(40% 32% at 50% 50%, color-mix(in srgb, var(--avatar-ink, white) 16%, transparent), transparent 70%);
+  opacity: 0;
+  transition: opacity 320ms cubic-bezier(0.23, 1, 0.32, 1);
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.avatar-card[data-tilting] .avatar-card__glint {
+  opacity: 1;
+}
+
+/* the neon ring: a 2px gradient edge, drawn by a mask. Dark while nobody calls, half on while connecting, full on a call */
+.avatar-card__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--avatar-card-radius, 1.75em);
+  padding: 2px;
+  background: var(--avatar-ring, linear-gradient(90deg, var(--accent), var(--accent)));
+  -webkit-mask: linear-gradient(black 0 0) content-box, linear-gradient(black 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(black 0 0) content-box exclude, linear-gradient(black 0 0);
+  opacity: 0;
+  transition: opacity 320ms cubic-bezier(0.23, 1, 0.32, 1);
+  pointer-events: none;
+}
+
+.avatar-card[data-call="connecting"] .avatar-card__ring {
+  opacity: 0.55;
+}
+
+.avatar-card[data-call="connected"] .avatar-card__ring {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* once on load the ring answers: up to 95% and out again */
+  .avatar-card__ring {
+    animation: avatar-ring-answer 700ms cubic-bezier(0.23, 1, 0.32, 1) 480ms backwards;
+  }
+}
+
+@keyframes avatar-ring-answer {
+  0% {
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* name and job line, bottom left; the start button is at the bottom right */
+.avatar-card__plate {
+  position: absolute;
+  left: 1.25em;
+  bottom: 1.35em;
+  right: 9em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+  color: var(--avatar-ink, white);
+  pointer-events: none;
+}
+
+.avatar-card__name {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1.75em;
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+
+.avatar-card__role {
+  /* one line: the full languages when they fit, else their codes (use-role-short); a line that still does not fit wraps */
+  font-size: 0.875em;
+  line-height: 1.3;
+  color: color-mix(in srgb, var(--avatar-ink, white) 70%, var(--avatar-stage, black));
+}
+
 :root {
-  --avatar-strip-h: 8.5rem;
-  --avatar-action-h: 4.25rem; /* the start button, its credit line and their gap, at the foot of the strip */
   /* the wheel icon of the start button (agent.avatar.buttonIcon: "wheel"): its diameter (inside the 2.25rem button) and its gap to the button's left edge */
   --avatar-wheel-size: 1.75rem;
   --avatar-wheel-inset: 0.2rem;
 }
 
-.avatar-card--caption {
-  aspect-ratio: auto;
-  height: calc(var(--avatar-card-w, 12.5rem) * 1.25 + var(--avatar-strip-h, 8.5rem));
-}
-
-:root:has(.avatar-card--caption) {
-  --avatar-card-h: calc(var(--avatar-card-w, 12.5rem) * 1.25 + var(--avatar-strip-h, 8.5rem));
-}
-
-.avatar-card--caption .avatar-card__media {
-  inset: 0 0 var(--avatar-strip-h, 8.5rem);
-}
-
-.avatar-card--caption .avatar-card__action {
-  bottom: var(--space-2);
-}
-
-.avatar-card__caption {
+/* the example call, and the status line that replaces it: the Hanc block over the foot of the tile */
+.avatar-card__captions {
   position: absolute;
-  inset: auto 0 0;
-  display: flex;
-  flex-direction: column; /* the tagline shrinks (and is cut) before it can run into the button below */
-  height: var(--avatar-strip-h, 8.5rem);
-  padding: var(--space-2) var(--space-3) var(--avatar-action-h, 4.25rem);
-  overflow: hidden;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  color: var(--text);
+  left: 1.25em;
+  right: 1.25em;
+  bottom: 8.4em;
+  color: var(--avatar-ink, white);
   pointer-events: none;
 }
 
-.avatar-card__caption p {
-  margin: 0;
-}
-
-.avatar-card__title {
-  flex: none;
+.avatar-card__cap-head {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  column-gap: 0.4rem;
+  align-items: center;
+  gap: 0.55em;
+  margin: 0 0 0.6em;
+  font-family: var(--font-body);
+  font-size: 0.75em;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--avatar-ink, white) 70%, var(--avatar-stage, black));
 }
 
-.avatar-card__name {
-  font-family: var(--font-heading);
-  font-size: 1rem;
-  line-height: 1.2;
+.avatar-card__timer {
+  color: var(--avatar-ink, white);
+  font-variant-numeric: tabular-nums;
 }
 
-.avatar-card__badge {
-  font-size: 0.7rem;
-  line-height: 1.2;
-  opacity: 0.8;
-  white-space: nowrap;
+/* four bars: they move while the agent's words come in the example and for as long as a call is live */
+.avatar-card__bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 1em;
 }
 
-/* the separator is drawn here, not stored in the data */
-.avatar-card__badge::before {
-  content: "\00b7";
-  margin-inline-end: 0.4rem;
+.avatar-card__bars i {
+  display: block;
+  width: 3px;
+  height: 30%;
+  border-radius: 2px;
+  background: var(--avatar-ring, linear-gradient(90deg, var(--accent), var(--accent)));
 }
 
-.avatar-card__tagline {
-  min-height: 0;
-  display: -webkit-box;
-  margin-top: 0.15rem;
-  font-size: 0.8rem;
+@media (prefers-reduced-motion: no-preference) {
+  .avatar-card[data-talking] .avatar-card__bars i,
+  .avatar-card[data-call="connected"] .avatar-card__bars i {
+    animation: avatar-level 900ms ease-in-out infinite;
+  }
+
+  .avatar-card[data-talking] .avatar-card__bars i:nth-child(2),
+  .avatar-card[data-call="connected"] .avatar-card__bars i:nth-child(2) {
+    animation-delay: -300ms;
+  }
+
+  .avatar-card[data-talking] .avatar-card__bars i:nth-child(3),
+  .avatar-card[data-call="connected"] .avatar-card__bars i:nth-child(3) {
+    animation-delay: -600ms;
+  }
+
+  .avatar-card[data-talking] .avatar-card__bars i:nth-child(4),
+  .avatar-card[data-call="connected"] .avatar-card__bars i:nth-child(4) {
+    animation-delay: -150ms;
+  }
+}
+
+@keyframes avatar-level {
+  0%,
+  100% {
+    height: 30%;
+  }
+  50% {
+    height: 100%;
+  }
+}
+
+.avatar-card__lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.avatar-card__line {
+  font-size: 0.9375em;
   line-height: 1.35;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  color: var(--avatar-ink, white);
+  text-wrap: pretty;
 }
 
-/* the narrow card (about 120px) is the picture only */
+.avatar-card__who {
+  margin-right: 0.35em;
+  font-weight: 700;
+}
+
+.avatar-card__line[data-who="caller"] .avatar-card__who {
+  color: color-mix(in srgb, var(--avatar-ink, white) 70%, var(--avatar-stage, black));
+}
+
+.avatar-card__status {
+  margin: 0;
+  font-size: 1em;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* still (no script, reduced motion): the first two lines, whole. Running: only the lines the script switched on, their words coming in one by one */
+.avatar-card__line:nth-child(n + 3) {
+  display: none;
+}
+
+.avatar-card__captions[data-live] .avatar-card__line {
+  display: none;
+}
+
+.avatar-card__captions[data-live] .avatar-card__line[data-on] {
+  display: block;
+}
+
+.avatar-card__captions[data-live] .avatar-card__line[data-past] {
+  opacity: 0.5;
+}
+
+.avatar-card__captions[data-live] [data-w] {
+  opacity: 0.18;
+  transition: opacity 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.avatar-card__captions[data-live] [data-w][data-said] {
+  opacity: 1;
+}
+
+/* the green "live" pill, top left, only while a call is connected */
+.avatar-card__live {
+  position: absolute;
+  top: 0.9em;
+  left: 0.9em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.4em 0.65em;
+  border-radius: 99rem;
+  font-family: var(--font-body);
+  font-size: 0.75em;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--avatar-ink, white);
+  background: color-mix(in srgb, var(--avatar-stage, black) 72%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--avatar-ink, white) 12%, transparent);
+  pointer-events: none;
+}
+
+.avatar-card__live::before {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 99rem;
+  background: var(--avatar-live, var(--accent));
+}
+
+/* the narrow card (about 120px) is the picture only, as before: no plate, no layers, the theme's border and radius */
 @media (width < 40em) {
-  .avatar-card__caption {
+  .avatar-card[data-placement="dock"] .avatar-card__plate,
+  .avatar-card[data-placement="dock"] .avatar-card__shade,
+  .avatar-card[data-placement="dock"] .avatar-card__glint,
+  .avatar-card[data-placement="dock"] .avatar-card__ring {
     display: none;
   }
 
-  .avatar-card--caption {
-    aspect-ratio: 4 / 5;
-    height: auto;
+  .avatar-card[data-placement="dock"] .avatar-card__frame,
+  .avatar-card[data-placement="dock"] .avatar-card__tile {
+    border-radius: var(--radius);
   }
 
-  :root:has(.avatar-card--caption) {
-    --avatar-card-h: calc(var(--avatar-card-w, 12.5rem) * 1.25);
-  }
-
-  .avatar-card--caption .avatar-card__media {
-    inset: 0;
-  }
-
-  .avatar-card--caption .avatar-card__action {
-    bottom: var(--space-2);
+  .avatar-card[data-placement="dock"] .avatar-card__tile {
+    border: 1px solid var(--border);
+    background: var(--surface);
   }
 }
 
@@ -2028,12 +2364,12 @@ main:focus-visible {
 
 /* narrow window: the picture only, with the widget reduced to a small round start button in the corner (the button's text stays in the page for screen readers) */
 @media (22.5em <= width < 40em) and (height >= 32.5em) {
-  .avatar-card__action {
+  .avatar-card[data-placement="dock"] .avatar-card__action {
     inset-inline: auto var(--space-2);
     justify-content: flex-end;
   }
 
-  .avatar-card__action hanc-ai-pill-floating-call::part(pill-button) {
+  .avatar-card[data-placement="dock"] .avatar-card__action hanc-ai-pill-floating-call::part(pill-button) {
     width: 2.625rem;
     height: 2.625rem;
     padding: 3px;
@@ -2053,159 +2389,157 @@ main:focus-visible {
   display: none;
 }
 
+.avatar-card__start {
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  height: 2.25rem; /* the same in every state: no label can change the card's layout */
+  padding: 0 var(--space-2);
+  overflow: hidden;
+  white-space: nowrap;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border: 1px solid var(--accent);
+  border-radius: 99rem;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+.avatar-card__start:hover {
+  background: transparent;
+  color: var(--accent);
+}
+
+.avatar-card__start:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.avatar-card__start[aria-disabled="true"] {
+  cursor: progress;
+  opacity: 0.75;
+}
+
+.avatar-card__start[data-state="connected"] {
+  background: transparent;
+  color: var(--accent);
+}
+
+.avatar-card__start[data-state="connected"]:hover {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.avatar-card__start[data-state="error"] {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.avatar-card__start > span:not(.avatar-card__start-dot) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis; /* a safety net: a long seller label is cut, never wrapped */
+}
+
+.avatar-card__start-dot {
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  background: currentcolor;
+  border-radius: 50%;
+}
+
+/* the longest label (the German error text) gets the dot's room too */
+.avatar-card__start[data-state="error"] .avatar-card__start-dot {
+  display: none;
+}
+
+.avatar-card__start[data-state="connecting"] .avatar-card__start-dot {
+  animation: avatar-start-pulse 1s ease-in-out infinite;
+}
+
+/* the wheel sits inside the pill, on the left (the button keeps overflow: hidden); out of the flow, so the button's padding cannot squeeze it.
+   The label's box starts after the wheel, its gap included, and the text is centred in the width that is left (same box in every state). */
+.avatar-card__start[data-icon="wheel"] {
+  position: relative;
+  padding-inline: calc(var(--avatar-wheel-size, 1.75rem) + var(--avatar-wheel-inset, 0.2rem) + var(--space-2, 0.5rem)) var(--space-2, 0.5rem);
+}
+
+.avatar-card__start[data-icon="wheel"] > span {
+  flex: 1 1 auto;
+  text-align: center;
+}
+
+.avatar-card__wheel {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: var(--avatar-wheel-inset, 0.2rem);
+  inline-size: var(--avatar-wheel-size, 1.75rem);
+  block-size: var(--avatar-wheel-size, 1.75rem);
+  margin-block-start: calc(var(--avatar-wheel-size, 1.75rem) / -2);
+  pointer-events: none;
+}
+
+.avatar-card__wheel .wheel-tyre {
+  fill: var(--avatar-wheel-tyre, color-mix(in srgb, var(--accent) 18%, black));
+}
+
+.avatar-card__wheel .wheel-side {
+  fill: none;
+  stroke: color-mix(in srgb, var(--avatar-wheel-tyre, color-mix(in srgb, var(--accent) 18%, black)) 70%, white);
+  stroke-width: 1.3;
+}
+
+.avatar-card__wheel .wheel-rim {
+  fill: var(--avatar-wheel-rim, color-mix(in srgb, var(--accent) 22%, white));
+}
+
+.avatar-card__wheel .wheel-well {
+  fill: color-mix(in srgb, var(--avatar-wheel-tyre, color-mix(in srgb, var(--accent) 18%, black)) 80%, var(--accent));
+}
+
+.avatar-card__wheel .wheel-brake {
+  fill: none;
+  stroke: color-mix(in srgb, var(--accent) 55%, black);
+  stroke-width: 2.2;
+}
+
+.avatar-card__wheel .wheel-hub {
+  fill: color-mix(in srgb, var(--accent) 45%, white);
+}
+
+.avatar-card__wheel .wheel-lug {
+  fill: var(--avatar-wheel-tyre, color-mix(in srgb, var(--accent) 18%, black));
+}
+
+/* turns for as long as the call is connected; in every other state (and when the call ends) it pauses at its angle (no jump back) */
+.avatar-card__wheel-turn {
+  animation: avatar-wheel-spin 0.8s linear infinite paused;
+}
+
+.avatar-card__start[data-state="connected"] .avatar-card__wheel-turn {
+  animation-play-state: running;
+}
+
+/* where the button shows (a wide card, and the large card of the hero at any width) the real widget hides behind it with its own parts */
 @media (width >= 40em) and (height >= 32.5em) {
   .avatar-card__start {
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-2);
-    width: 100%;
-    height: 2.25rem; /* the same in every state: no label can change the card's layout */
-    padding: 0 var(--space-2);
-    overflow: hidden;
-    white-space: nowrap;
-    background: var(--accent);
-    color: var(--accent-contrast);
-    border: 1px solid var(--accent);
-    border-radius: 99rem;
-    font: inherit;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition:
-      background-color 0.2s,
-      color 0.2s;
-  }
-
-  .avatar-card__start:hover {
-    background: transparent;
-    color: var(--accent);
-  }
-
-  .avatar-card__start:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 3px;
-  }
-
-  .avatar-card__start[aria-disabled="true"] {
-    cursor: progress;
-    opacity: 0.75;
-  }
-
-  .avatar-card__start[data-state="connected"] {
-    background: transparent;
-    color: var(--accent);
-  }
-
-  .avatar-card__start[data-state="connected"]:hover {
-    background: var(--accent);
-    color: var(--accent-contrast);
-  }
-
-  .avatar-card__start[data-state="error"] {
-    background: transparent;
-    color: var(--text);
-    border-color: var(--border);
   }
 
   .avatar-card__start[data-mode="standard"] {
     display: none;
   }
 
-  .avatar-card__start > span:not(.avatar-card__start-dot) {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis; /* a safety net: a long seller label is cut, never wrapped */
-  }
-
-  .avatar-card__start-dot {
-    flex: none;
-    width: 0.5rem;
-    height: 0.5rem;
-    background: currentcolor;
-    border-radius: 50%;
-  }
-
-  /* the longest label (the German error text) gets the dot's room too */
-  .avatar-card__start[data-state="error"] .avatar-card__start-dot {
-    display: none;
-  }
-
-  .avatar-card__start[data-state="connecting"] .avatar-card__start-dot {
-    animation: avatar-start-pulse 1s ease-in-out infinite;
-  }
-
-  /* the wheel sits inside the pill, on the left (the button keeps overflow: hidden); out of the flow, so the button's padding cannot squeeze it.
-     The label's box starts after the wheel, its gap included, and the text is centred in the width that is left (same box in every state). */
-  .avatar-card__start[data-icon="wheel"] {
-    position: relative;
-    padding-inline: calc(var(--avatar-wheel-size, 1.75rem) + var(--avatar-wheel-inset, 0.2rem) + var(--space-2, 0.5rem)) var(--space-2, 0.5rem);
-  }
-
-  .avatar-card__start[data-icon="wheel"] > span {
-    flex: 1 1 auto;
-    text-align: center;
-  }
-
-  .avatar-card__wheel {
-    position: absolute;
-    inset-block-start: 50%;
-    inset-inline-start: var(--avatar-wheel-inset, 0.2rem);
-    inline-size: var(--avatar-wheel-size, 1.75rem);
-    block-size: var(--avatar-wheel-size, 1.75rem);
-    margin-block-start: calc(var(--avatar-wheel-size, 1.75rem) / -2);
-    pointer-events: none;
-  }
-
-  .avatar-card__wheel .wheel-tyre {
-    fill: var(--avatar-wheel-tyre, color-mix(in srgb, var(--accent) 18%, black));
-  }
-
-  .avatar-card__wheel .wheel-side {
-    fill: none;
-    stroke: color-mix(in srgb, var(--avatar-wheel-tyre, color-mix(in srgb, var(--accent) 18%, black)) 70%, white);
-    stroke-width: 1.3;
-  }
-
-  .avatar-card__wheel .wheel-rim {
-    fill: var(--avatar-wheel-rim, color-mix(in srgb, var(--accent) 22%, white));
-  }
-
-  .avatar-card__wheel .wheel-well {
-    fill: color-mix(in srgb, var(--avatar-wheel-tyre, color-mix(in srgb, var(--accent) 18%, black)) 80%, var(--accent));
-  }
-
-  .avatar-card__wheel .wheel-brake {
-    fill: none;
-    stroke: color-mix(in srgb, var(--accent) 55%, black);
-    stroke-width: 2.2;
-  }
-
-  .avatar-card__wheel .wheel-hub {
-    fill: color-mix(in srgb, var(--accent) 45%, white);
-  }
-
-  .avatar-card__wheel .wheel-lug {
-    fill: var(--avatar-wheel-tyre, color-mix(in srgb, var(--accent) 18%, black));
-  }
-
-  /* turns for as long as the call is connected; in every other state (and when the call ends) it pauses at its angle (no jump back) */
-  .avatar-card__wheel-turn {
-    animation: avatar-wheel-spin 0.8s linear infinite paused;
-  }
-
-  .avatar-card__start[data-state="connected"] .avatar-card__wheel-turn {
-    animation-play-state: running;
-  }
-
   .avatar-card:has(.avatar-card__start:not([data-mode="standard"])) .avatar-card__action {
     padding-bottom: 0;
-  }
-
-  /* without the widget's pill and its credit line the foot of the strip needs less room (the card, the footer reserve and the text follow) */
-  :root:has(.avatar-card__start:not([data-mode="standard"])) {
-    --avatar-strip-h: 7.75rem;
-    --avatar-action-h: 3.5rem;
   }
 
   .avatar-card:has(.avatar-card__start:not([data-mode="standard"])) hanc-ai-pill-floating-call {
@@ -2220,6 +2554,31 @@ main:focus-visible {
     visibility: hidden;
     transition: none;
   }
+}
+
+.avatar-card[data-placement="hero"] .avatar-card__start {
+  display: inline-flex;
+}
+
+.avatar-card[data-placement="hero"] .avatar-card__start[data-mode="standard"] {
+  display: none;
+}
+
+.avatar-card[data-placement="hero"]:has(.avatar-card__start:not([data-mode="standard"])) .avatar-card__action {
+  padding-bottom: 0;
+}
+
+.avatar-card[data-placement="hero"]:has(.avatar-card__start:not([data-mode="standard"])) hanc-ai-pill-floating-call {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+}
+
+.avatar-card[data-placement="hero"]:has(.avatar-card__start:not([data-mode="standard"])) hanc-ai-pill-floating-call::part(pill-button),
+.avatar-card[data-placement="hero"]:has(.avatar-card__start:not([data-mode="standard"])) hanc-ai-pill-floating-call::part(floating-container) {
+  visibility: hidden;
+  transition: none;
 }
 
 @keyframes avatar-wheel-spin {
@@ -2245,13 +2604,12 @@ main:focus-visible {
 
 /* very small screens (under 360px wide or 520px tall): no card, just today's floating pill in the corner */
 @media (width < 22.5em), (height < 32.5em) {
-  :root,
-  :root:has(.avatar-card--caption) {
+  :root {
     --avatar-card-h: calc(5rem - var(--space-3));
     --avatar-card-bottom: var(--space-3, 1rem);
   }
 
-  .avatar-card {
+  .avatar-card[data-placement="dock"] {
     width: auto;
     height: auto;
     aspect-ratio: auto;
@@ -2259,15 +2617,544 @@ main:focus-visible {
     bottom: var(--space-4);
   }
 
-  .avatar-card__frame {
+  .avatar-card[data-placement="dock"] .avatar-card__frame {
     display: none;
   }
 
-  .avatar-card__action {
+  .avatar-card[data-placement="dock"] .avatar-card__action {
     position: static;
     padding-bottom: 0;
     inset-inline: auto;
   }
+}
+
+/*
+ * Hanc's call button (agent.avatar.buttonIcon "orb", the default). Source: the widget library's inline-call button (its .call-button,
+ * .button-icon, .button-text, .orb-container rules) with the skin of RoleHero.astro (SHADOW_CSS) and its dock (.rh__dock: 116px, 0.5rem from
+ * the corner, the orb 100px in it). All sizes are those pixels in em (1em = 16px on Hanc). The WebGL orb is the one thing not reproduced: it is
+ * a CSS sphere in the tangerine-neon colours (--avatar-orb-a, --avatar-orb-b and their mixes) with a slow swirl; the rings around it are
+ * Hanc's talk.css. The button drives the hidden widget through the bridge; nothing here is on an ancestor of the widget. The orb button is a
+ * component of its own (.call-orb), a SIBLING of the widget inside the action area: its hover and press scale are transforms, which no rule of
+ * .avatar-card* may carry (tests/avatar-card-layout.test.ts), so they live on .call-orb selectors.
+ */
+.call-orb {
+  position: absolute;
+  inset: 0.5em;
+  display: none;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+/* the WebGL orb of the widget is not reproduced; this is the closest CSS: a salmon sphere (two thirds of the 100px) in a dark halo, the tangerine-neon colours */
+.call-orb__glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle closest-side at 50% 50%, color-mix(in srgb, color-mix(in srgb, var(--avatar-orb-a, var(--accent)) 55%, white) 55%, var(--avatar-orb-b, var(--accent))) 0, color-mix(in srgb, color-mix(in srgb, var(--avatar-orb-a, var(--accent)) 55%, white) 55%, var(--avatar-orb-b, var(--accent))) 52%, color-mix(in srgb, color-mix(in srgb, color-mix(in srgb, var(--avatar-orb-a, var(--accent)) 55%, white) 55%, var(--avatar-orb-b, var(--accent))) 60%, var(--avatar-orb-a, var(--accent))) 64%, color-mix(in srgb, color-mix(in srgb, color-mix(in srgb, var(--avatar-orb-a, var(--accent)) 75%, black) 60%, black) 75%, transparent) 68%, color-mix(in srgb, color-mix(in srgb, color-mix(in srgb, color-mix(in srgb, var(--avatar-orb-a, var(--accent)) 75%, black) 60%, black) 75%, transparent) 55%, transparent) 86%, transparent 100%);
+}
+
+.call-orb__swirl {
+  position: absolute;
+  inset: 17%;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0 18%, color-mix(in srgb, var(--avatar-orb-a, var(--accent)) 40%, white) 32%, transparent 46%, color-mix(in srgb, var(--avatar-orb-b, var(--accent)) 75%, transparent) 70%, transparent 86%);
+  mix-blend-mode: screen;
+  opacity: 0.4;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .call-orb__glow {
+    animation: call-orb-breathe 4s ease-in-out infinite;
+  }
+
+  .call-orb__swirl {
+    animation: call-orb-swirl 9s linear infinite;
+  }
+
+  .call-orb[data-state="connected"] .call-orb__swirl {
+    animation-duration: 3s;
+    opacity: 0.7;
+  }
+}
+
+@keyframes call-orb-breathe {
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+@keyframes call-orb-swirl {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* concentric rings (Hanc's talk.css): two rest rings always, three that travel outward as waves when data-rings says so */
+.call-orb__rings {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.call-orb__rings > i {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 200deg, var(--avatar-orb-a, var(--accent)), var(--avatar-orb-b, var(--accent)) 50%, var(--avatar-orb-a, var(--accent)));
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 0.125rem), black calc(100% - 0.0625rem));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 0.125rem), black calc(100% - 0.0625rem));
+  opacity: 0;
+}
+
+.call-orb__rings > i:nth-child(1) {
+  inset: -8%;
+  opacity: 0.5;
+}
+
+.call-orb__rings > i:nth-child(2) {
+  inset: -17%;
+  opacity: 0.22;
+}
+
+.avatar-card[data-rings="burst"] .call-orb__rings > i:nth-child(n + 3) {
+  animation: avatar-ring-wave 1.9s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.avatar-card[data-rings="burst"] .call-orb__rings > i:nth-child(4) {
+  animation-delay: 0.38s;
+}
+
+.avatar-card[data-rings="burst"] .call-orb__rings > i:nth-child(5) {
+  animation-delay: 0.76s;
+}
+
+.avatar-card[data-rings="idle"] .call-orb__rings > i:nth-child(3) {
+  animation: avatar-ring-rest 7s cubic-bezier(0.23, 1, 0.32, 1) 2s infinite;
+}
+
+.avatar-card[data-rings="busy"] .call-orb__rings > i:nth-child(n + 3) {
+  animation: avatar-ring-wave 1.8s cubic-bezier(0.23, 1, 0.32, 1) infinite;
+}
+
+.avatar-card[data-rings="busy"] .call-orb__rings > i:nth-child(4) {
+  animation-delay: 0.6s;
+}
+
+.avatar-card[data-rings="busy"] .call-orb__rings > i:nth-child(5) {
+  animation-delay: 1.2s;
+}
+
+@keyframes avatar-ring-wave {
+  0% {
+    transform: scale(1);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.75);
+    opacity: 0;
+  }
+}
+
+/* one soft wave, then a long rest */
+@keyframes avatar-ring-rest {
+  0% {
+    transform: scale(1);
+    opacity: 0;
+  }
+  4% {
+    opacity: 0.6;
+  }
+  30%,
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .call-orb__rings > i:nth-child(n + 3) {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+}
+
+/* the pill, centred on the orb (the library centres it with translate(-50%, -50%)) */
+.call-orb .call-orb__btn[data-icon="orb"] {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  width: auto;
+  height: auto;
+  padding: 0.1875em;
+  overflow: hidden;
+  white-space: nowrap;
+  background: var(--avatar-pill, var(--avatar-ink, white));
+  color: var(--avatar-stage, black);
+  border: 0;
+  border-radius: 1.5em;
+  box-shadow: 0 0.625em 1.5em -0.625em color-mix(in srgb, black 70%, transparent);
+  font-family: var(--font-body);
+  font-size: 1em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transform: translate(var(--call-orb-x, -50%), -50%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* the small docked card sits at the window's edge: the label grows to the left there, the disc stays on the orb's centre */
+.avatar-card[data-placement="dock"] .call-orb {
+  --call-orb-x: calc(-100% + 1.5625em);
+}
+
+/* the 44px dark disc with the icon (the skin of RoleHero.astro) */
+.call-orb__icon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75em;
+  height: 2.75em;
+  border-radius: 50%;
+  background: var(--avatar-stage, black);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.call-orb__btn[data-state="error"] .call-orb__icon {
+  background: var(--avatar-danger, red);
+}
+
+.call-orb__spinner {
+  animation: call-orb-spin 1s linear infinite;
+}
+
+@keyframes call-orb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* the label slides out: 0.3s, the library's easing, to the text's own width (script measures it into --call-orb-w, so a long German label gets the same timing; 14em before it has) plus the padding of 8px and 12px */
+.call-orb__label {
+  max-width: 0;
+  padding: 0;
+  overflow: hidden;
+  transition:
+    max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.call-orb__text {
+  display: block;
+  font-size: 0.875em;
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.call-orb__btn[data-state="connecting"] .call-orb__label,
+.call-orb__btn[data-state="error"] .call-orb__label {
+  max-width: calc(var(--call-orb-w, 14em) + 1.25em);
+  padding: 0 0.75em 0 0.5em;
+}
+
+.call-orb__btn[data-state="connecting"] .call-orb__text,
+.call-orb__btn[data-state="error"] .call-orb__text {
+  opacity: 1;
+}
+
+/* hover on the orb (not only the pill) expands the label of an idle button, and keyboard focus does the same; a touch screen has no hover: a tap starts the call */
+@media (hover: hover) {
+  .call-orb:hover {
+    transform: scale(1.02);
+  }
+
+  .call-orb:hover .call-orb__btn[data-state="idle"] {
+    transform: translate(var(--call-orb-x, -50%), -50%) scale(1.05);
+    box-shadow:
+      0 0.375em 1.875em color-mix(in srgb, black 20%, transparent),
+      0 0 0 1px color-mix(in srgb, black 5%, transparent);
+  }
+
+  .call-orb:hover .call-orb__btn[data-state="idle"] .call-orb__label {
+    max-width: calc(var(--call-orb-w, 14em) + 1.25em);
+    padding: 0 0.75em 0 0.5em;
+  }
+
+  .call-orb:hover .call-orb__btn[data-state="idle"] .call-orb__text {
+    opacity: 1;
+  }
+}
+
+.call-orb__btn[data-state="idle"]:focus-visible .call-orb__label {
+  max-width: calc(var(--call-orb-w, 14em) + 1.25em);
+  padding: 0 0.75em 0 0.5em;
+}
+
+.call-orb__btn[data-state="idle"]:focus-visible .call-orb__text {
+  opacity: 1;
+}
+
+.call-orb:active .call-orb__btn {
+  transform: translate(var(--call-orb-x, -50%), -50%) scale(0.97);
+}
+
+.call-orb .call-orb__btn[data-icon="orb"]:focus-visible {
+  outline: 2px solid var(--avatar-orb-a, var(--accent));
+  outline-offset: 3px;
+}
+
+.call-orb .call-orb__btn[data-icon="orb"][aria-disabled="true"] {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* the dock: the action area is a 7.25em square (116px) at the card's lower right, on the large card at any width and on a wide docked card */
+.avatar-card[data-icon="orb"][data-placement="hero"] .avatar-card__action {
+  inset: auto 0.5em 0.5em auto;
+  width: 7.25em;
+  height: 7.25em;
+  display: block;
+  padding: 0;
+}
+
+.avatar-card[data-icon="orb"][data-placement="hero"] .call-orb {
+  display: block;
+}
+
+@media (width >= 40em) and (height >= 32.5em) {
+  .avatar-card[data-icon="orb"][data-placement="dock"] .avatar-card__action {
+    inset: auto 0.5em 0.5em auto;
+    width: 7.25em;
+    height: 7.25em;
+    display: block;
+    padding: 0;
+  }
+
+  .avatar-card[data-icon="orb"][data-placement="dock"] .call-orb {
+    display: block;
+  }
+}
+
+/*
+ * The circle: the docked card on a phone (under 40em wide) or a window under 520px tall. For the orb button the card is only the round button,
+ * fixed at the window's lower right (16px from the edges, the safe area respected, as Hanc's call-back button): no picture, no plate, no frame.
+ * The other icons keep their picture with the widget's small round button. The widget stays hidden behind our button with its own parts, as
+ * on the large card (so the widget's own pill, and with it its "Powered by HANC.ai" line, which lives in the same part, is not shown here).
+ */
+@media (width < 40em), (height < 32.5em) {
+  :root:has(.avatar-card[data-icon="orb"][data-placement="dock"]) {
+    --avatar-card-w: 6.5rem;
+    --avatar-card-h: 6.5rem;
+    --avatar-card-bottom: var(--space-3, 1rem);
+  }
+
+  .avatar-card[data-icon="orb"][data-placement="dock"] {
+    right: max(var(--space-3), env(safe-area-inset-right));
+    bottom: max(var(--space-3), env(safe-area-inset-bottom));
+    width: 7.25em;
+    height: 7.25em;
+    aspect-ratio: auto;
+    font-size: 0.9rem;
+  }
+
+  .avatar-card[data-icon="orb"][data-placement="dock"] .avatar-card__frame {
+    display: none;
+  }
+
+  .avatar-card[data-icon="orb"][data-placement="dock"] .avatar-card__action {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    display: block;
+    padding: 0;
+  }
+
+  .avatar-card[data-icon="orb"][data-placement="dock"] .call-orb {
+    display: block;
+  }
+
+  .avatar-card[data-icon="orb"][data-placement="dock"] .avatar-card__start[data-mode="standard"] {
+    display: none;
+  }
+
+  .avatar-card[data-icon="orb"][data-placement="dock"]:has(.avatar-card__start:not([data-mode="standard"])) .avatar-card__action {
+    padding-bottom: 0;
+  }
+
+  .avatar-card[data-icon="orb"][data-placement="dock"]:has(.avatar-card__start:not([data-mode="standard"])) hanc-ai-pill-floating-call {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+  }
+
+  .avatar-card[data-icon="orb"][data-placement="dock"]:has(.avatar-card__start:not([data-mode="standard"])) hanc-ai-pill-floating-call::part(pill-button),
+  .avatar-card[data-icon="orb"][data-placement="dock"]:has(.avatar-card__start:not([data-mode="standard"])) hanc-ai-pill-floating-call::part(floating-container) {
+    visibility: hidden;
+    transition: none;
+  }
+}
+
+/*
+ * The call bubble: Hanc's "Call me." speech bubble of the home hero (HeroStage.astro, .say), typed as there. A light pill in both themes
+ * (the stage ink), a ring-gradient disc with a phone, the words in the UI font, bold; the sharp corner points up at the head. It is up by the invite
+ * loop's clock (use-call-bubble: data-on), comes in over 260ms and leaves over 180ms (opacity, translate and scale; the phone rings once as it
+ * comes up). Decorative (aria-hidden, no pointer events): the call button is the action. It is a sibling of the frame and of the widget in the
+ * card, never an ancestor of the widget; its transforms are on .call-bubble selectors, which no .avatar-card* rule may carry (the CSS guard).
+ * Where: see the placement rules below (beside the face at the right, a third outside the card; docked, mirrored to the left). Not in the circle.
+ */
+.call-bubble {
+  position: absolute;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  font-size: max(calc(var(--bubble-card-w, 20rem) * 0.0358), 0.5rem);
+  /* Hanc caps at 16rem (57% of its card), but its line is 8 letters; "Rufen Sie mich an" has 17, so the cap that holds it to two lines is what keeps it near 40% */
+  max-width: 12em;
+  margin: 0;
+  padding: 0.75em 1.15em 0.8em 0.8em;
+  border-radius: 0.375em 1.375em 1.375em 1.375em;
+  background: var(--avatar-ink, white);
+  color: var(--avatar-stage, black);
+  box-shadow:
+    0 1.625em 3.375em -1.375em color-mix(in srgb, var(--avatar-stage, black) 65%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--avatar-stage, black) 8%, transparent);
+  font-family: var(--font-body);
+  font-weight: 800;
+  pointer-events: none;
+  transform-origin: 100% 0;
+  opacity: 0;
+  translate: var(--bubble-hide-x, 0.375em) -0.375em;
+  scale: 0.92;
+  transition-duration: 180ms;
+  transition-property: opacity, translate, scale;
+  transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/*
+ * The letters are 1.625em, as Hanc's 26px on 1rem (its clamp tops out there on its 447px card); the box is in the same em: padding, icon, gap and
+ * radius are Hanc's rem values. The em is not the card's but follows the card's width (Hanc's 1rem on a 447px card = 3.58% of its width), so the
+ * "Call me." of the large card is 40% of the card at any width, as there. It stays 0.5rem or more, so the docked card's bubble can still be read.
+ * Its weight is 800 as theirs, in our UI font (the body font: the heading font is a serif in some themes, and Hanc's is not).
+ */
+.call-bubble__text {
+  font-size: 1.625em;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  /* typed letter by letter as on Hanc: the untyped rest is in place but transparent, so the bubble never changes size (use-call-bubble) */
+  white-space: pre-wrap;
+}
+
+.call-bubble__rest {
+  opacity: 0;
+}
+
+.call-bubble[data-on="true"] {
+  opacity: 1;
+  translate: 0 0;
+  scale: 1;
+  transition-duration: 260ms;
+}
+
+.call-bubble__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.25em;
+  height: 2.25em;
+  border-radius: 50%;
+  color: white;
+  background: var(--avatar-ring, linear-gradient(90deg, var(--accent), var(--accent)));
+}
+
+.call-bubble__icon svg {
+  width: 1.125em;
+  height: 1.125em;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* a phone that is ringing: the icon shakes each time the bubble comes up */
+  .call-bubble[data-on="true"] .call-bubble__icon svg {
+    animation: call-bubble-ring 900ms cubic-bezier(0.23, 1, 0.32, 1) 120ms both;
+    transform-origin: 50% 60%;
+  }
+}
+
+@keyframes call-bubble-ring {
+  0%,
+  100% {
+    rotate: 0deg;
+  }
+  20%,
+  60% {
+    rotate: -14deg;
+  }
+  40%,
+  80% {
+    rotate: 14deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .call-bubble {
+    display: none;
+  }
+}
+
+/*
+ * Where: beside the face at mouth and chin level, on the right, a third of the bubble outside the card (Hanc puts it at 0.66 x the width and 0.4 x
+ * the height; with its 8 letters that leaves only 15% outside, a third is what was asked for). The sharp corner points at the mouth. The top is 40%:
+ * her eyes are at 28% and her mouth at 43% in the invite loop, the open hand rises from 68% (at 1.0 s) to 87% (1.5 to 2.0 s) and is at the right
+ * edge from 62% across, so between cue.show and cue.hide (0.58 to 2.45 s) the bubble (40% to about 52% high) stays clear of the hand. The overhang
+ * is clamped to the room right of the card in the window (100vw less the card's right edge, less 1.5rem for a scrollbar), so it never leaves it.
+ */
+.call-bubble[data-placement="hero"] {
+  --bubble-card-w: var(--avatar-slot-w, 20rem);
+  top: 40%;
+  right: 0;
+  --bubble-hide-x: -0.375em;
+  transform: translateX(min(33.333%, max(0rem, calc(100vw - var(--avatar-slot-x, 0rem) - var(--avatar-slot-w, 20rem) - 1.5rem))));
+  transform-origin: 0 0;
+}
+
+/* docked: the same, mirrored to the left of the card (the window's edge is on the card's right) */
+.call-bubble[data-placement="dock"] {
+  --bubble-card-w: var(--avatar-card-w, 12.5rem);
+  top: 40%;
+  left: 0;
+  right: auto;
+  border-radius: 1.375em 0.375em 1.375em 1.375em;
+  transform: translateX(-33.333%);
+  transform-origin: 100% 0;
+}
+
+@media (width < 40em), (height < 32.5em) {
+  .call-bubble[data-placement="dock"] {
+    display: none;
+  }
+}
+
+/* the other icons ("dot", "wheel") keep their pill; the plate and the example then stand above it instead of beside the orb */
+.avatar-card:not([data-icon="orb"]) .avatar-card__plate {
+  right: 1.25em;
+  bottom: calc(var(--space-2) + 3.1rem);
+}
+
+.avatar-card[data-placement="hero"]:not([data-icon="orb"]) .avatar-card__captions {
+  bottom: calc(var(--space-2) + 3.1rem + 4.6em);
 }
 
 /*
@@ -2350,4 +3237,60 @@ body:has(.avatar-card) .theme-switcher {
 
 .status-page .button {
   cursor: pointer;
+}
+
+/*
+ * The ghost of the card in flight between the hero and the dock (components/card-ghost.ts, card-flight-controller.ts). The real card's looks are hidden while the
+ * ghost flies (data-flight): only its visual parts, by visibility (the frame with the tile, ring, plate and transcript, the bubble, and the start button: our
+ * orb, or the pill of the other icons); never the widget, its host or its form overlay, and never the card itself or the action area that holds the
+ * widget. The ghost is a child of <body>, never an ancestor of the widget, and has no widget, plate, bubble or captions. Its box and
+ * radius are set by the script on every frame.
+ */
+.avatar-card[data-flight] .avatar-card__frame,
+.avatar-card[data-flight] .call-bubble,
+.avatar-card[data-flight] .call-orb,
+.avatar-card[data-flight] .avatar-card__start {
+  visibility: hidden;
+}
+
+.card-ghost {
+  position: fixed;
+  z-index: 1101;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--avatar-stage, black);
+  box-shadow: var(--avatar-card-shadow, 0 1.875rem 5rem -1.875rem color-mix(in srgb, var(--text) 45%, transparent), 0 0.75rem 1.5rem -0.75rem color-mix(in srgb, var(--text) 25%, transparent));
+}
+
+.card-ghost__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.card-ghost__shade {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 58%;
+  background: linear-gradient(to top, color-mix(in srgb, var(--avatar-stage, black) 96%, transparent) 0%, color-mix(in srgb, var(--avatar-stage, black) 78%, transparent) 42%, transparent 100%);
+}
+
+.card-ghost__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: var(--avatar-ring, linear-gradient(90deg, var(--accent), var(--accent)));
+  -webkit-mask: linear-gradient(black 0 0) content-box, linear-gradient(black 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(black 0 0) content-box exclude, linear-gradient(black 0 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-ghost {
+    display: none;
+  }
 }

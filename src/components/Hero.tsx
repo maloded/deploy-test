@@ -23,44 +23,66 @@ export function Hero({ site }: { site: Site }) {
   const background = product.media.background ? images[product.media.background] : undefined;
   const facts = heroFacts(product, typeFields, lang);
   const trust = heroTrust(product, lang);
+  const hasCard = Boolean(site.seller.agent && site.avatar);
   const fit = image ? heroFit(image.width, image.height, frameRangeForTheme(site.theme)) : "cover";
 
+  // the title zone: eyebrow, then headline and the photo frame
+  const eyebrow = <p className="hero__eyebrow label">{heroEyebrow(product, lang, getOfferType(product.offerType).label)}</p>;
+  const stage = (
+    <>
+      <h1 className="hero__headline">{heroHeadline(product, lang)}</h1>
+      <div className="hero__photo" data-fit={fit}>
+        <div className="hero__frame">
+          <div className="hero__box">
+            {image ? (
+              <Image
+                className="hero__image"
+                src={image.src}
+                width={image.width}
+                height={image.height}
+                alt={pick(product.title, lang)}
+                sizes="(min-width: 56em) 720px, 100vw"
+                // the focus point only matters when the photo is cropped (cover); contain is centered
+                style={fit === "cover" ? { objectPosition: objectPosition(product.media.heroFocus) } : undefined}
+                // 85, not the default 75: the hero and gallery photo 1 may be the same file, and next/image's
+                // development check (LCP warning) tells images apart by their address, which includes the quality
+                quality={85}
+                priority
+              />
+            ) : (
+              <div className="hero__placeholder" role="img" aria-label={ui("hero.missing", lang)}>
+                {ui("hero.missing", lang)}: {product.media.hero}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
   return (
-    <section className="hero" id="hero" data-block="hero" aria-label={ui("section.hero", lang)}>
+    <section className="hero" id="hero" data-block="hero" data-card={hasCard ? "true" : undefined} aria-label={ui("section.hero", lang)}>
       {background && (
         <Image className="hero__bg" src={background.src} alt="" aria-hidden="true" fill sizes="100vw" />
       )}
 
-      <div className="hero__stage hero__container">
-        <p className="hero__eyebrow label">{heroEyebrow(product, lang, getOfferType(product.offerType).label)}</p>
-        <h1 className="hero__headline">{heroHeadline(product, lang)}</h1>
-        <div className="hero__photo" data-fit={fit}>
-          <div className="hero__frame">
-            <div className="hero__box">
-              {image ? (
-                <Image
-                  className="hero__image"
-                  src={image.src}
-                  width={image.width}
-                  height={image.height}
-                  alt={pick(product.title, lang)}
-                  sizes="(min-width: 56em) 720px, 100vw"
-                  // the focus point only matters when the photo is cropped (cover); contain is centered
-                  style={fit === "cover" ? { objectPosition: objectPosition(product.media.heroFocus) } : undefined}
-                  // 85, not the default 75: the hero and gallery photo 1 may be the same file, and next/image's
-                  // development check (LCP warning) tells images apart by their address, which includes the quality
-                  quality={85}
-                  priority
-                />
-              ) : (
-                <div className="hero__placeholder" role="img" aria-label={ui("hero.missing", lang)}>
-                  {ui("hero.missing", lang)}: {product.media.hero}
-                </div>
-              )}
-            </div>
+      {hasCard ? (
+        // with the agent's card: the eyebrow stays above, centred, as it always was; below it only the headline and the photo form
+        // the left column and the card's slot is the right one (below 56em the slot is a block under the photo). The slot only
+        // reserves the room, the card itself is outside the hero (AgentAvatarCard).
+        <>
+          <div className="hero__lead-in hero__container">{eyebrow}</div>
+          <div className="hero__top hero__container">
+            <div className="hero__stage">{stage}</div>
+            <div className="hero__slot" data-agent-slot aria-hidden="true" />
           </div>
+        </>
+      ) : (
+        <div className="hero__stage hero__container">
+          {eyebrow}
+          {stage}
         </div>
-      </div>
+      )}
 
       <div className="hero__intro">
         <div className="hero__container">

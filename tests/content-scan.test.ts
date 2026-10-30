@@ -43,7 +43,9 @@ describe("content scan", () => {
 
   it("lists the docs folder and every markdown file at the root (a snapshot has fewer of them)", () => {
     const names = listed.map(rel);
-    const present = [...fs.readdirSync(root).filter((f) => f.endsWith(".md")), ...(fs.existsSync(path.join(root, "docs")) ? fs.readdirSync(path.join(root, "docs")).map((f) => `docs/${f}`) : [])];
+    // docs/ may have sub-folders (docs/reference): every file in it is listed, not the folder
+    const inDocs = (dir: string): string[] => fs.readdirSync(path.join(root, dir), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? inDocs(`${dir}/${e.name}`) : [`${dir}/${e.name}`]));
+    const present = [...fs.readdirSync(root).filter((f) => f.endsWith(".md")), ...(fs.existsSync(path.join(root, "docs")) ? inDocs("docs") : [])];
     expect(present.length).toBeGreaterThan(0);
     for (const f of present) expect(names, f).toContain(f);
   });

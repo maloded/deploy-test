@@ -32,9 +32,15 @@ const parse = (avatar: unknown) => validateSeller({ ...fixtures.sellerJson(), ag
 describe("agent.avatar in seller.json", () => {
   it("takes an id and an optional name, nothing else", () => {
     const r = parse({ id: "some-pack", name: "Label" });
-    expect(r.ok && r.seller.agent?.avatar).toEqual({ id: "some-pack", name: "Label", buttonIcon: "dot" });
+    expect(r.ok && r.seller.agent?.avatar).toEqual({ id: "some-pack", name: "Label", buttonIcon: "orb" });
     const only = parse({ id: "some-pack" });
-    expect(only.ok && only.seller.agent?.avatar).toEqual({ id: "some-pack", buttonIcon: "dot" });
+    expect(only.ok && only.seller.agent?.avatar).toEqual({ id: "some-pack", buttonIcon: "orb" });
+  });
+
+  it("takes an optional liveText (localized), the sentence of a live call", () => {
+    const r = parse({ id: "some-pack", liveText: { en: "{name} is on the line.", de: "{name} ist in der Leitung." } });
+    expect(r.ok && r.seller.agent?.avatar?.liveText).toEqual({ en: "{name} is on the line.", de: "{name} ist in der Leitung." });
+    expect(parse({ id: "some-pack", liveText: "plain" }).ok).toBe(false);
   });
 
   it("is strict: no file names, no unknown keys, no bad ids", () => {
@@ -61,13 +67,20 @@ describe("loading a product whose seller has an avatar", () => {
       id: "pack-one",
       name: "Name of pack-one",
       poster: "/avatars/pack-one/poster.webp",
+      invite: null,
+      inviteCue: null,
+      bubble: null,
       idle: null,
       listen: { mp4: "/avatars/pack-one/l.mp4" },
       speak: { mp4: "/avatars/pack-one/s.mp4", webm: "/avatars/pack-one/s.webm" },
       caption: null,
       startLabel: null,
       endLabel: null,
-      buttonIcon: "dot",
+      buttonIcon: "orb",
+      role: null,
+      languages: ["en", "de"],
+      example: null,
+      liveText: null,
     });
   });
 
@@ -167,12 +180,13 @@ describe("the caption texts (agent.avatar.tagline and .badge)", () => {
 });
 
 describe("the button icon (agent.avatar.buttonIcon)", () => {
-  it("is \"dot\" or \"wheel\", \"dot\" when the seller wrote none, and nothing else", () => {
+  it("is \"orb\", \"dot\" or \"wheel\", \"orb\" when the seller wrote none, and nothing else", () => {
     const icon = (avatar: object) => {
       const r = parse(avatar);
       return r.ok ? r.seller.agent?.avatar?.buttonIcon : "invalid";
     };
-    expect(icon({ id: "some-pack" })).toBe("dot");
+    expect(icon({ id: "some-pack" })).toBe("orb");
+    expect(icon({ id: "some-pack", buttonIcon: "orb" })).toBe("orb");
     expect(icon({ id: "some-pack", buttonIcon: "dot" })).toBe("dot");
     expect(icon({ id: "some-pack", buttonIcon: "wheel" })).toBe("wheel");
     expect(icon({ id: "some-pack", buttonIcon: "gear" })).toBe("invalid");
@@ -181,11 +195,69 @@ describe("the button icon (agent.avatar.buttonIcon)", () => {
     expect(icon({ id: "some-pack", buttonIcon: { en: "wheel" } })).toBe("invalid"); // not a localized text
   });
 
-  it("reaches the card; a seller without it gets the dot", () => {
+  it("reaches the card; a seller without it gets the orb", () => {
     pack("pack-icon");
     setAgent({ id: "x", avatar: { id: "pack-icon", buttonIcon: "wheel" } });
     expect(here.loadFor(slug).avatar).toMatchObject({ buttonIcon: "wheel" });
     setAgent({ id: "x", avatar: { id: "pack-icon" } });
-    expect(here.loadFor(slug).avatar).toMatchObject({ buttonIcon: "dot" });
+    expect(here.loadFor(slug).avatar).toMatchObject({ buttonIcon: "orb" });
+  });
+});
+
+describe("the role line and the example call (agent.avatar.role, .example)", () => {
+  const line = (speaker: string, text: string) => ({ speaker, text });
+  const example = { de: [line("caller", "Guten Tag."), line("agent", "Guten Tag, wie kann ich helfen?")], en: [line("caller", "Hello."), line("agent", "Hello, how can I help?")] };
+
+  it("are optional; a card without them has neither a role nor a transcript", () => {
+    const r = parse({ id: "some-pack" });
+    expect(r.ok && r.seller.agent?.avatar).not.toHaveProperty("role");
+    expect(r.ok && r.seller.agent?.avatar).not.toHaveProperty("example");
+  });
+
+  it("take a localized role and an example per language", () => {
+    const r = parse({ id: "some-pack", role: { de: "Berater", en: "Advisor" }, example });
+    expect(r.ok && r.seller.agent?.avatar?.role).toEqual({ de: "Berater", en: "Advisor" });
+    expect(r.ok && r.seller.agent?.avatar?.example).toEqual(example);
+  });
+
+  it("refuse an unknown speaker, an unknown language, an empty call, too many lines and a long text", () => {
+    expect(parse({ id: "p", example: { de: [line("robot", "x")] } }).ok).toBe(false);
+    expect(parse({ id: "p", example: { xx: [line("agent", "x")] } }).ok).toBe(false);
+    expect(parse({ id: "p", example: {} }).ok).toBe(false);
+    expect(parse({ id: "p", example: { de: [] } }).ok).toBe(false);
+    expect(parse({ id: "p", example: { de: Array.from({ length: 9 }, () => line("agent", "x")) } }).ok).toBe(false);
+    expect(parse({ id: "p", example: { de: [line("agent", "x".repeat(201))] } }).ok).toBe(false);
+    expect(parse({ id: "p", example: { de: [{ speaker: "agent", text: "x", extra: 1 }] } }).ok).toBe(false);
+    expect(parse({ id: "p", role: "plain text" }).ok).toBe(false); // not a localized text
+  });
+
+  it("reach the card; a language without a call falls back to the default language's", () => {
+    pack("pack-example");
+    setAgent({ id: "x", avatar: { id: "pack-example", role: { en: "Advisor" }, example: { en: example.en } } });
+    const card = here.loadFor(slug).avatar!;
+    expect(card.role?.de).toBe("Advisor");
+    expect(card.example?.de).toEqual(example.en);
+    expect(card.languages).toEqual(["en", "de"]);
+  });
+});
+
+describe("the call bubble's text (agent.avatar.bubble)", () => {
+  it("is an optional localized text, and nothing else", () => {
+    expect(parse({ id: "some-pack" }).ok).toBe(true);
+    const r = parse({ id: "some-pack", bubble: { de: "Ruf mich an", en: "Call me" } });
+    expect(r.ok && r.seller.agent?.avatar?.bubble).toEqual({ de: "Ruf mich an", en: "Call me" });
+    expect(parse({ id: "some-pack", bubble: "Call me" }).ok).toBe(false); // not a localized text
+    expect(parse({ id: "some-pack", bubble: {} }).ok).toBe(false);
+    expect(parse({ id: "some-pack", bubble: { xx: "?" } }).ok).toBe(false);
+    expect(parse({ id: "some-pack", bubble: { en: "" } }).ok).toBe(false);
+  });
+
+  it("reaches the card, completed with the default language like the other texts", () => {
+    pack("pack-bubble");
+    setAgent({ id: "x", avatar: { id: "pack-bubble", bubble: { en: "Call me" } } });
+    const card = here.loadFor(slug).avatar!;
+    expect(card.bubble).toEqual({ en: "Call me", de: "Call me" });
+    setAgent({ id: "x", avatar: { id: "pack-bubble" } });
+    expect(here.loadFor(slug).avatar!.bubble).toBeNull();
   });
 });
