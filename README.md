@@ -10,4 +10,4 @@ npm test && npm run lint && npm run build
 
 Everything else (contracts, plan, decisions, how to add a theme or product) is in [PROJECT.md](PROJECT.md); history is in [PROGRESS.md](PROGRESS.md).
 
-A private review demo (password, noindex, snapshot repository, Vercel): [DEPLOY.md](DEPLOY.md).
+A private review demo (noindex, snapshot repository, Vercel): [DEPLOY.md](DEPLOY.md).

@@ -142,6 +142,7 @@ describe("the footer line", () => {
 describe("/version.json", () => {
   it("is a static route handler that serves the inlined JSON, or {version:dev}", async () => {
     expect(fs.readFileSync("src/app/version.json/route.ts", "utf8")).toContain('dynamic = "force-static"');
+    vi.stubEnv("NEXT_PUBLIC_PROTOTYPE_NOTE", "1"); // served only where the prototype note is on (see tests/version-route.test.ts)
     vi.stubEnv("VERSION_INFO", JSON.stringify({ version: "0.2.0", template: "9328a8e", content: null, built: "2026-10-28 14:10" }));
     expect(await GET().json()).toEqual({ version: "0.2.0", template: "9328a8e", content: null, built: "2026-10-28 14:10" });
     vi.stubEnv("VERSION_INFO", "");

@@ -26,5 +26,6 @@ export const fields = {
   heroHighlights: ["year", "power", "fuel", "mileage"],
   detailsKey: null,
   detailsFields: [],
+  schemaType: "Car",
   requestTypes: ["viewing", "test_drive", "question", "offer"],
 } as const satisfies ProductTypeFields;

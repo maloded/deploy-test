@@ -28,3 +28,18 @@ export function rootRedirectEnv(env: Env = process.env, projectRoot: string = pr
     return {};
   }
 }
+
+/**
+ * The brand and the theme of the served seller for global-error.tsx (an error in the root layout: no site to read at run time), inlined by
+ * next.config.ts like SITE_DEFAULT_LANGUAGE. Empty when the content cannot be read here.
+ */
+export function siteStatusEnv(env: Env = process.env, projectRoot: string = process.cwd()): Record<string, string> {
+  try {
+    const root = contentRoot(env, projectRoot);
+    const { seller } = splitRef(contentProduct(env, root));
+    const json = JSON.parse(fs.readFileSync(/*turbopackIgnore: true*/ path.join(root, seller, "seller.json"), "utf8")) as { displayName?: unknown; theme?: unknown };
+    return { ...(typeof json.displayName === "string" ? { SITE_BRAND: json.displayName } : {}), ...(typeof json.theme === "string" && /^[a-z0-9-]+$/.test(json.theme) ? { SITE_THEME: json.theme } : {}) };
+  } catch {
+    return {};
+  }
+}

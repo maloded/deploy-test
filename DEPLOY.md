@@ -1,6 +1,7 @@
 # DEPLOY: private review demo on Vercel
 
-This is for a **temporary, password-protected review**, not for a public release. Everything here assumes the
+This is for a **temporary review demo**, not for a public release. The template has no password of its own: if the demo must not be
+open, protect the deployment on the host (for example Vercel Deployment Protection). Everything here assumes the
 demo snapshot repository (see "Make the snapshot"), never the working repository.
 
 ## Make the snapshot
@@ -57,20 +58,19 @@ git push -u origin main
 |---|---|---|
 | `CONTENT_PRODUCT` | (optional) | `<seller>/<product>`: which product is the page (it replaces the old `CONTENT_SLUG`, which now stops with an error). A snapshot holds a single product, so the variable is optional there: the only product is used. |
 | `CONTENT_DIR` | (leave unset) | The content root. The snapshot always has its content in `./content`, so a deployment does not set it. |
-| `REVIEW_PASSWORD` | a long random string | When set, **every** request (pages, images, static files, API) needs HTTP Basic auth: any user name, this password. Without it nothing is protected. Only `/robots.txt` stays open so crawlers read "disallow all". **Known problem (found with `verify:deploy`): with the password set, the image optimizer's internal request for a local photo carries no `Authorization` header, gets the 401, and `/_next/image` answers 404, so the photos do not show. A deployment for the pipeline test therefore sets no password (`noindex` is always sent).** |
-| `NEXT_PUBLIC_PROTOTYPE_NOTE` | `1` | Shows the footer line "Prototype. Content is a draft and not yet confirmed by the seller." (German: "Prototyp. Die Inhalte sind ein Entwurf und noch nicht vom Verkäufer bestätigt."). Leave it out to hide it. It also puts one honest line next to the submit button of the contact dialog: "Prototype: requests are not delivered yet." (German: "Prototyp: Anfragen werden noch nicht zugestellt."), because until a lead store is configured (see "Leads") nothing is delivered. Without the variable nothing changes; with no store the API still answers 503 and the form shows the seller's e-mail link, never a success. |
+| `NEXT_PUBLIC_PROTOTYPE_NOTE` | `1` | Shows the footer line "Prototype. Content is a draft and not yet confirmed by the seller." (German: "Prototyp. Die Inhalte sind ein Entwurf und noch nicht vom Verkäufer bestätigt."). Leave it out to hide it. It also puts one honest line next to the submit button of the contact dialog: "Prototype: requests are not delivered yet." (German: "Prototyp: Anfragen werden noch nicht zugestellt."), because until a lead store is configured (see "Leads") nothing is delivered. It also turns on `/version.json` (version, template and content commit, build time; without the variable it answers 404). Without the variable nothing else changes; with no store the API still answers 503 and the form shows the seller's e-mail link, never a success. |
 | `REVIEW_THEME_SWITCHER` | `1` (optional) | Shows the small theme switcher in production, so the reviewer can compare the two themes. **Must not be set for a final public release.** It also makes the page render per request instead of being static. **Observation, not a proven cause:** on a Vercel deployment, setting `REVIEW_THEME_SWITCHER=1` made the page render at request time and the loader then failed with "file not found in media-web/" (the production build had passed); after removing the variable the page was static and worked. Recommendation: do not set `REVIEW_THEME_SWITCHER` on a host until this is fixed. |
 
 A demo that was deployed from an older snapshot keeps working on that snapshot (it is self-contained and still reads `CONTENT_SLUG`) until you build a new snapshot and update the deployment; only a new snapshot uses `CONTENT_PRODUCT` and the seller layout.
 
 `npm run check:template-clean` (by hand, not part of the build or CI) tells whether this working tree still holds a seller's data. It is expected to fail until `docs/MOVE-CONTENT.md` has been carried out; the snapshot does not depend on it, because the snapshot is a whitelist of one product.
 
-Always on, whatever the variables are: `X-Robots-Tag: noindex, nofollow` on every response, a `noindex` meta tag and
-`robots.txt` with `Disallow: /`. The development theme switcher and development warnings never render in production.
+Indexing: unless `SITE_INDEXABLE=1` is set (a release, see the production checklist), every response carries `X-Robots-Tag: noindex,
+nofollow`, the pages have a `noindex` meta tag and `robots.txt` says `Disallow: /`. The development theme switcher and development
+warnings never render in production. The 404 and error pages are `noindex` whatever the variable says.
 
 ## What the reviewer sees
 
-- A browser password prompt (user name: anything). A wrong password shows the prompt again.
 - One landing page for the product in the snapshot: header strip, hero (title, photo, price, key facts, two buttons), photo gallery with lightbox, specs, the offer, FAQ and footer, in the first language of the product.
 - Light theme by default; dark theme only with `REVIEW_THEME_SWITCHER=1`.
 
@@ -108,12 +108,12 @@ Read at run time (not build time), so a change needs a redeploy only because the
 ## Check a deployment
 
 ```
-npm run verify:deploy -- <url> [--product <seller>/<product>] [--auth user:password]
+npm run verify:deploy -- <url> [--product <seller>/<product>] [--release]
 ```
 
-One GET of `/` (it follows the redirect to the default language) and a few more requests (fetch only). It prints PASS or FAIL with a reason for: status 200 and HTML; `lang` on `<html>`; `X-Robots-Tag: noindex`; the product title in the default language (read from the local content root, `CONTENT_DIR` also from `.env.local`; `--product` or `CONTENT_PRODUCT`) is in the HTML; every id in `data-block-order` has a `<section>`; every `<img>` src and the first `srcset` URL is 200 with an image type; `/robots.txt` disallows all; the footer shows the seller's `displayName`. Then, from the local `seller.json`, the language routes: **`/` redirects to `/<defaultLanguage>`** (a 3xx with that `Location`, not followed), and for **every language of the seller** `GET /<lang>` is 200, `<html lang>` equals the route, the page has `hreflang` links for every language and for `x-default`, a canonical link to itself, and the product title in that language. Finally one check that the footer's contact row (an element with `id="contact"`) exists on every language route, holds no form (the form lives only in the dialog) and has the seller's e-mail link. "contact" in `data-block-order` is the footer row, so it is not required to be a `<section>`. That is 8 checks plus 1 (the redirect) plus one per language plus 1 (the contact section): 12 for the two-language examples. A language the product has no title for must show the default title. Exit code 1 on any FAIL. `--auth` is sent to the site's own host only.
+One GET of `/` (it follows the redirect to the default language) and a few more requests (fetch only). It prints PASS or FAIL with a reason for: status 200 and HTML; `lang` on `<html>`; `X-Robots-Tag: noindex`; the product title in the default language (read from the local content root, `CONTENT_DIR` also from `.env.local`; `--product` or `CONTENT_PRODUCT`) is in the HTML; every id in `data-block-order` has a `<section>`; every `<img>` src and the first `srcset` URL is 200 with an image type; `/robots.txt` disallows all; the footer shows the seller's `displayName`. Then, from the local `seller.json`, the language routes: **`/` redirects to `/<defaultLanguage>`** (a 3xx with that `Location`, not followed), and for **every language of the seller** `GET /<lang>` is 200, `<html lang>` equals the route, the page has `hreflang` links for every language and for `x-default`, a canonical link to itself, and the product title in that language. Finally one check that the footer's contact row (an element with `id="contact"`) exists on every language route, holds no form (the form lives only in the dialog) and has the seller's e-mail link. "contact" in `data-block-order` is the footer row, so it is not required to be a `<section>`. That is 8 checks plus 1 (the redirect) plus one per language plus 1 (the contact section): 12 for the two-language examples. A language the product has no title for must show the default title. Exit code 1 on any FAIL. With `--release` the same run expects the opposite of the demo: no `noindex` in the header or as a meta tag, a `robots.txt` that allows crawling, no prototype note, no theme switcher in the page and a 404 for `/version.json`.
 
-The page routes are `/<lang>` (one static page per language of the seller; any other path is a 404). `/` answers with a 307 from the proxy (so it carries `X-Robots-Tag` and is behind `REVIEW_PASSWORD` like every other path); there is no redirect by `Accept-Language`.
+The page routes are `/<lang>` (one static page per language of the seller; any other path is a 404 with a branded page in the seller's default language, links to the product and every language, and `noindex` whatever `SITE_INDEXABLE` says; errors show a short localized page without the error). **Limit:** `dynamicParams` in `src/app/[lang]/layout.tsx` must stay `false`: the branded 404 (Next's experimental `global-not-found`) only answers URLs that no route matches, and a `notFound()` thrown from the root layout is not caught by it (the visitor would get Next's default English 404 body); a test fails if the flag changes. `/` answers with a 307 from the proxy (so it carries `X-Robots-Tag` ); there is no redirect by `Accept-Language`.
 
 ## Deploy the template alone (preview of the examples)
 
@@ -124,16 +124,29 @@ The template repository (no `content/` folder, no real data) builds and serves t
 | `CONTENT_DIR` | `examples` |
 | `CONTENT_PRODUCT` | `example-seller/example-house` (or `example-seller/example-watch`, `example-seller/example-bag`) |
 
-Nothing else is needed: no `REVIEW_PASSWORD` (the page is `noindex` anyway, see above), no `NEXT_PUBLIC_PROTOTYPE_NOTE`. The old `CONTENT_SLUG` no longer exists; if it is still set, the build stops and tells you to rename it. Without `CONTENT_DIR` (and without a `./content` folder) the build fails on purpose, with a message that names `CONTENT_DIR=examples`. Locally: `CONTENT_DIR=examples CONTENT_PRODUCT=example-seller/example-house npm run build && npm start`, then `npm run verify:deploy -- http://localhost:3000 --product example-seller/example-house` (the content root of that command is read from the same `CONTENT_DIR`).
+Nothing else is needed: no `NEXT_PUBLIC_PROTOTYPE_NOTE` (the page is `noindex` anyway, see above). The old `CONTENT_SLUG` no longer exists; if it is still set, the build stops and tells you to rename it. Without `CONTENT_DIR` (and without a `./content` folder) the build fails on purpose, with a message that names `CONTENT_DIR=examples`. Locally: `CONTENT_DIR=examples CONTENT_PRODUCT=example-seller/example-house npm run build && npm start`, then `npm run verify:deploy -- http://localhost:3000 --product example-seller/example-house` (the content root of that command is read from the same `CONTENT_DIR`).
 
 ## After the demo
 
 1. **Delete the Vercel project** (Settings > General > Delete Project). This also removes the deployment and its URL.
 2. **Archive or delete the snapshot repository.** The photos and notes in it are not for publishing.
-3. **Rotate `REVIEW_PASSWORD`** (or simply do not reuse it): anyone who got it could open an old deployment.
+3. **Switch the host protection off or keep it for as long as the demo should stay closed.** Anyone who has the link can open an old deployment that is not protected.
 4. **Never reuse the snapshot for a public release.** It contains photos that may not be cleaned and unconfirmed draft content. A release is
-   built from the real repository with cleaned photos, real data, no `REVIEW_PASSWORD`, no `REVIEW_THEME_SWITCHER`
-   and no `NEXT_PUBLIC_PROTOTYPE_NOTE`, and the `noindex` settings are removed on purpose (not by accident).
+   built from the real repository with cleaned photos, real data, no `REVIEW_THEME_SWITCHER`
+   and no `NEXT_PUBLIC_PROTOTYPE_NOTE`, and indexing is allowed on purpose with `SITE_INDEXABLE=1` (see the production checklist), not by accident.
+
+## Production checklist (a public release)
+
+A release is built from the real repository (never from the demo snapshot) with cleaned photos and real data. Go through this list for the **Production** environment of the host:
+
+1. **`SITE_INDEXABLE=1`: a build-time variable, for the Production environment only.** `robots.txt`, the `noindex` meta tag and the `X-Robots-Tag` header in `next.config.ts` are fixed when the site is built, so the variable must be present for the build (on Vercel a project variable is, for the environment it is set for). **Set it for Production only, not for Preview or Development**, so preview URLs stay `noindex`. **`SITE_URL` goes with it:** the site's full origin (for example `https://www.example.com`, no path), also a build-time variable. It becomes `metadataBase`, so canonical, hreflang, Open Graph and the sitemap are absolute URLs. With `SITE_INDEXABLE=1` and no (or a wrong) `SITE_URL` the build stops with a message that says what to set; without `SITE_INDEXABLE` it is optional. Unset (the default) keeps everything `noindex`. The 404 and error pages stay `noindex` whatever it says. With both variables set the site also serves `/sitemap.xml` (both language pages with their hreflang alternates) and `robots.txt` names it; without them `/sitemap.xml` is a 404 and `robots.txt` has no Sitemap line.
+2. **Leave these unset** (every environment of the release): `REVIEW_THEME_SWITCHER` (no theme switcher, and pages stay static) and `NEXT_PUBLIC_PROTOTYPE_NOTE` (no "Prototype" lines in the footer and the contact dialog; `/version.json` then answers 404). Both are build-time too. There is no review password in the template: do not protect the release.
+3. **A lead store is configured** (`LEADS_STORE`, see "Leads"). Without one the contact form answers 503 and shows the seller's e-mail instead; the success text is only true when a store accepted the request. Run the "honest failure" check from "Leads" against the release URL.
+4. **Privacy and imprint URLs** in `seller.json` (`privacyUrl`, `imprintUrl`): without them the footer and the consent text show no link. Have a lawyer review the consent text and the legal note, and confirm the offer disclaimer.
+5. **Real contact data** in `seller.json`: the seller's own e-mail (not a placeholder, and an address the seller reads) and, if wanted, the phone. Real price, mileage and other figures confirmed by the owners; the product texts reviewed (the German and English UI strings and the content are AI drafts until a native speaker has read them).
+6. **The Hanc project allows the release domain** (the widget's domain whitelist is a setting in the Hanc project, not code); add the production domain, and any preview domain that should talk to the agent.
+7. **Optional: the seller's icon** (`<seller>/icon.svg` or `icon.png`, see PROJECT.md); without it there is no icon link.
+8. **Run the check:** `npm run verify:deploy -- <release url> --release`. It expects the opposite of the demo: no `noindex` in the header or as a meta tag, a `robots.txt` that allows crawling, no prototype note, no theme switcher in the page and a 404 for `/version.json`; and it checks what a release publishes for search and sharing: absolute canonical and hreflang links on the site's own origin, the Open Graph image (a 1200x630 JPEG that answers 200) with its alt text and the Twitter card, `/sitemap.xml` (every language page with its alternates) named in `robots.txt`, and valid structured data whose price is the content's price. None of this is checked, or needed, in the default (demo) mode.
 
 ## Voice assistant widget
 

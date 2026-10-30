@@ -153,7 +153,10 @@ describe("media-web fallback", () => {
     fs.rmSync(path.join(contentDir, fixtures.seller, SLUG, "media"), { recursive: true });
     const outDir = path.join(tmp, "images-out");
     const results = await makeWebImages({ contentDir, outDir });
-    expect(results.every((r: { action: string }) => r.action === "copied")).toBe(true);
+    // every media-web file is copied as it is; the only other result is the Open Graph image derived from gallery photo 1 (a new file, not a second pass over a copy)
+    const others = results.filter((r: { action: string; file: string }) => r.action !== "copied");
+    expect(others.map((r: { file: string }) => r.file)).toEqual(["og-1200x630.jpg"]);
+    expect(others[0].action).toBe("derived");
     for (const f of fs.readdirSync(webDir)) expect(fs.readFileSync(path.join(outDir, REF, f))).toEqual(fs.readFileSync(path.join(webDir, f)));
   });
 });

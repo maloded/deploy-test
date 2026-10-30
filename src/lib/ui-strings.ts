@@ -1,4 +1,5 @@
 import { pick } from "./i18n";
+import { STATUS_STRINGS } from "./status-texts";
 import type { Language, Localized } from "./schema";
 
 /**
@@ -129,6 +130,7 @@ const STRINGS = {
     en: "Prototype. Content is a draft and not yet confirmed by the seller.",
     de: "Prototyp. Die Inhalte sind ein Entwurf und noch nicht vom Verkäufer bestätigt.",
   },
+  ...STATUS_STRINGS, // the 404 and error pages (src/lib/status-texts.ts)
 } as const satisfies Record<string, Localized>;
 
 export type UiKey = keyof typeof STRINGS;

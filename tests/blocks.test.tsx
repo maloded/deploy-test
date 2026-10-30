@@ -21,7 +21,8 @@ import { Header } from "@/components/Header";
 import { defaultBlocksFor } from "@/lib/fields";
 import { groupSpecs } from "@/lib/specs";
 import { validateProduct } from "@/lib/validate";
-import { examples, fixtures, sampleJson, siteFor } from "./helpers";
+import { buildSite } from "@/lib/site";
+import { FIXTURE_DIR, examples, fixtures, sampleJson, siteFor } from "./helpers";
 import { listThemes } from "@/lib/themes";
 import { AI_DRAFT_LANGUAGES, UI_KEYS, ui, uiEntry } from "@/lib/ui-strings";
 import { loadLayout } from "@/product-types/layouts";
@@ -93,6 +94,20 @@ describe("car layout", () => {
     expect(levels.filter((l) => l === 1)).toHaveLength(1);
     expect(levels[0]).toBe(1);
     levels.forEach((l, i) => i > 0 && expect(l - levels[i - 1]).toBeLessThanOrEqual(1));
+  });
+
+  it("gives the gallery its own heading: a visually hidden h2 in the page language, after the h1 and before the specs' h2, inside the section", async () => {
+    for (const lang of ["de", "en"] as const) {
+      const out = await page(buildSite(null, `${fixtures.seller}/fixture-car`, FIXTURE_DIR, lang));
+      const gallery = /<section[^>]*id="gallery"[\s\S]*?<\/section>/.exec(out)![0];
+      expect(gallery).toContain(`<h2 class="sr-only">${ui("section.gallery", lang)}</h2>`);
+      expect(gallery.match(/<h[1-6][ >]/g)).toEqual(["<h2 "]); // the one heading of the block, no h1, no skipped level
+      const at = (s: string) => out.indexOf(s);
+      expect(at("<h1")).toBeGreaterThan(-1);
+      expect(at('<h2 class="sr-only">')).toBeGreaterThan(at("<h1"));
+      expect(at('<h2 class="sr-only">')).toBeLessThan(at(`<h2 class="section-title">${ui("section.specs", lang)}`));
+      expect(out.match(/<h1[ >]/g)).toHaveLength(1);
+    }
   });
 
   it("gives every image a width, a height and an alt, and preloads only the hero image", async () => {

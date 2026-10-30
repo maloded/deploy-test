@@ -99,15 +99,6 @@ describe("/ redirects to the default language", () => {
     expect(new URL(res.headers.get("location")!).pathname).toBe("/de");
   });
 
-  it("is protected by REVIEW_PASSWORD like every other path", () => {
-    vi.stubEnv("SITE_DEFAULT_LANGUAGE", "de");
-    vi.stubEnv("REVIEW_PASSWORD", "s3cret");
-    expect(req("/").status).toBe(401);
-    const ok = req("/", { authorization: "Basic " + Buffer.from("u:s3cret").toString("base64") });
-    expect(ok.status).toBe(307);
-    expect(ok.headers.get("cache-control")).toBe("private, no-store");
-  });
-
   it("is not redirected when the default language is not known", () => {
     vi.stubEnv("SITE_DEFAULT_LANGUAGE", "");
     expect(req("/").status).toBe(200);

@@ -57,7 +57,8 @@ describe("make-web-images", () => {
   });
 
   it("keeps file names and copies non-image files as they are", () => {
-    expect(fs.readdirSync(out).sort()).toEqual(fs.readdirSync(src).sort());
+    // the same names, plus the Open Graph image the step derives from gallery photo 1 (og-1200x630.jpg)
+    expect(fs.readdirSync(out).sort()).toEqual([...fs.readdirSync(src), "og-1200x630.jpg"].sort());
     expect(fs.readFileSync(path.join(out, "clip.mp4"))).toEqual(fs.readFileSync(path.join(src, "clip.mp4")));
     expect(first.find((r) => r.file === "clip.mp4")?.action).toBe("copied");
   });
@@ -78,7 +79,8 @@ describe("make-web-images", () => {
     const later = new Date(Date.now() + 5000);
     fs.utimesSync(path.join(content, fixtures.ref("fixture-car"), "media", "photo-1.jpg"), later, later);
     const third = await makeWebImages({ contentDir: content, outDir });
-    expect(third.filter((r) => r.action !== "cached").map((r) => r.file)).toEqual(["photo-1.jpg"]);
+    // photo-1.jpg is gallery photo 1, so the Open Graph image cut from it is redone with it
+    expect(third.filter((r) => r.action !== "cached").map((r) => r.file)).toEqual(["photo-1.jpg", "og-1200x630.jpg"]);
   });
 
   it("removes outputs whose source is gone", async () => {

@@ -1,4 +1,6 @@
-// npm run verify:deploy -- <url> [--product <seller>/<product>] [--auth user:password] [--expect-template <hash>]
+// npm run verify:deploy -- <url> [--product <seller>/<product>] [--expect-template <hash>] [--release]
+//   --release: expects indexing allowed (SITE_INDEXABLE=1), no prototype note, no theme switcher and no /version.json, instead of noindex; and checks
+//   what a release publishes for search and sharing (absolute canonical and hreflang, og:image, twitter:card, sitemap.xml, JSON-LD). Never needed in the default mode.
 // Prints PASS or FAIL with a short reason for every check; exit code 1 on any FAIL. See scripts/lib/verify-deploy.mjs.
 // The expected product title, seller name and languages are read from the LOCAL content root (CONTENT_DIR, also from .env.local).
 import fs from "node:fs";
@@ -11,9 +13,9 @@ const opt = (name) => {
   const i = args.indexOf(name);
   return i >= 0 ? args[i + 1] : undefined;
 };
-const url = args.find((a, i) => !a.startsWith("--") && !["--product", "--auth", "--expect-template"].includes(args[i - 1]));
+const url = args.find((a, i) => !a.startsWith("--") && !["--product", "--expect-template"].includes(args[i - 1]));
 if (!url || !/^https?:\/\//i.test(url)) {
-  console.error("Usage: npm run verify:deploy -- <url> [--product <seller>/<product>] [--auth user:password] [--expect-template <hash>]");
+  console.error("Usage: npm run verify:deploy -- <url> [--product <seller>/<product>] [--expect-template <hash>] [--release]");
   process.exit(1);
 }
 
@@ -28,7 +30,16 @@ function localExpectation() {
   const title = productJson.title?.[sellerJson.defaultLanguage] ?? productJson.title?.en;
   if (!title || !sellerJson.displayName) throw new Error(`${ref} has no title in "${sellerJson.defaultLanguage}" or the seller has no displayName`);
   const titles = Object.fromEntries(sellerJson.languages.map((l) => [l, productJson.title?.[l] ?? title]));
-  return { title, displayName: sellerJson.displayName, languages: sellerJson.languages, defaultLanguage: sellerJson.defaultLanguage, titles };
+  return {
+    title,
+    displayName: sellerJson.displayName,
+    languages: sellerJson.languages,
+    defaultLanguage: sellerJson.defaultLanguage,
+    titles,
+    productType: productJson.productType,
+    price: productJson.price ? { amount: productJson.price.amount, currency: productJson.price.currency } : undefined,
+    hasGallery: Array.isArray(productJson.media?.gallery) && productJson.media.gallery.length > 0,
+  };
 }
 
 let expected = null;
@@ -39,7 +50,7 @@ try {
   expectedProblem = `cannot read the local product: ${e.message.split("\n")[0]}`;
 }
 
-const results = await verifyDeploy({ url, expected, expectedProblem, auth: opt("--auth"), expectTemplate: opt("--expect-template") });
+const results = await verifyDeploy({ url, expected, expectedProblem, expectTemplate: opt("--expect-template"), release: args.includes("--release") });
 for (const r of results) {
   const tag = !r.ok ? "FAIL" : r.level === "warn" ? "WARN" : r.level === "info" ? "INFO" : "PASS";
   console.log(`${tag}  ${r.name}${(r.ok && !r.level) || !r.reason ? "" : `: ${r.reason}`}`);

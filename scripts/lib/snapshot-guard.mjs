@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
 import { MAX_AVATAR_POSTER_BYTES, MAX_AVATAR_VIDEO_BYTES } from "../../src/lib/avatar-manifest.ts";
+import { MAX_ICON_BYTES } from "../../src/lib/seller-icon.ts";
 
 const PHOTO_EXT = /\.(jpe?g|heic|heif|tiff?|raw|dng|cr2|nef|arw)$/i;
 const AUDIO_EXT = /\.(mp3|m4a|ogg|wav|flac|aac)$/i;
@@ -22,6 +23,11 @@ export function forbiddenReason(rel, bytes = 0) {
     if (AUDIO_EXT.test(base)) return "an original audio file (a music track belongs in media-web, exported by npm run images:export)";
     if (PHOTO_EXT.test(base)) return "an original photo (content/<seller>/<product>/media)";
     if (bytes > MAX_ORIGINAL_BYTES) return "a large file in content/<seller>/<product>/media (looks like an original)";
+  }
+  // the seller's icon (content/<seller>/icon.svg or icon.png): small
+  if (/^content\/[^/]+\/icon\.[^/]+$/.test(rel)) {
+    if (!/\.(svg|png)$/i.test(base)) return "a seller icon is icon.svg or icon.png";
+    if (bytes > MAX_ICON_BYTES) return "a seller icon over the icon limit";
   }
   // the shared avatar library: only the files a pack is made of, within the pack limits (a pack is web-ready, never an original)
   if (/^content\/_avatars\//.test(rel)) {

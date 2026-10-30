@@ -246,6 +246,7 @@ export function Gallery({ slides, lang, autoplaySeconds }: { slides: GallerySlid
       }}
     >
       <div className="container">
+        <h2 className="sr-only">{ui("section.gallery", lang)}</h2>
         <div className="gallery__viewport" tabIndex={0} onKeyDown={onKeyDown}>
           <ul className="gallery__track" ref={trackRef} onScroll={onScroll}>
             {slides.map((s, i) => (

@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { renderToStaticMarkup } from "react-dom/server";
+import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 import ProductLayout from "@/components/ProductLayout";
 import {
@@ -8,11 +9,19 @@ import {
   canonicalHref,
   contactRow,
   footerText,
+  hasMetaNoindex,
   hasNoindex,
+  hasPrototypeNote,
+  hasThemeSwitcher,
   hreflangLinks,
   htmlLang,
   imageRefs,
+  JSON_LD_TYPES,
+  jpegSize,
+  jsonLdScripts,
+  metaTags,
   pageText,
+  robotsAllowsAll,
   robotsDisallowsAll,
   sectionIds,
   squash,
@@ -109,14 +118,13 @@ describe("parsing", () => {
 
 // ---- the checks, against a fake fetch -----------------------------------------------------------------------------
 
-type Route = { status?: number; type?: string; body?: string; headers?: Record<string, string> };
-const fakeFetch = (routes: Record<string, Route>, seen: { auth: (string | null)[] } = { auth: [] }) =>
-  (async (input: string | URL | Request, init?: RequestInit) => {
+type Route = { status?: number; type?: string; body?: string | Uint8Array; headers?: Record<string, string> };
+const fakeFetch = (routes: Record<string, Route>) =>
+  (async (input: string | URL | Request) => {
     const url = new URL(String(input));
-    seen.auth.push(new Headers(init?.headers).get("authorization"));
     const route = routes[url.pathname + url.search] ?? routes[url.pathname];
     if (!route) return new Response("nope", { status: 404, headers: { "content-type": "text/plain" } });
-    return new Response(route.body ?? "", { status: route.status ?? 200, headers: { "content-type": route.type ?? "text/html", ...route.headers } });
+    return new Response((route.body ?? "") as BodyInit, { status: route.status ?? 200, headers: { "content-type": route.type ?? "text/html", ...route.headers } });
   }) as typeof fetch;
 
 const GOOD: Record<string, Route> = {
@@ -176,22 +184,121 @@ describe("verifyDeploy", () => {
     const r = await verifyDeploy({ url: "http://localhost:1/", expected, fetchImpl: down });
     expect(r).toEqual([{ name: "GET / is 200 and HTML", ok: false, reason: "request failed: ECONNREFUSED" }]);
   });
+});
 
-  it("sends basic auth to the site only, never to another host", async () => {
-    const seen = { auth: [] as (string | null)[] };
-    const other = { ...GOOD, "/": { body: PAGE.replace("/plain.jpg", "https://cdn.example/x.jpg"), headers: { "x-robots-tag": "noindex" } } };
-    const calls: [string, string | null][] = [];
-    const f = fakeFetch(other as Record<string, Route>, seen);
-    const spy = (async (input: string | URL | Request, init?: RequestInit) => {
-      calls.push([new URL(String(input)).host, new Headers(init?.headers).get("authorization")]);
-      return f(input, init);
-    }) as typeof fetch;
-    await verifyDeploy({ url: "https://site.example/", expected, auth: "user:pw", fetchImpl: spy });
-    const own = calls.filter(([h]) => h === "site.example");
-    expect(own.length).toBeGreaterThan(3);
-    expect(own.every(([, a]) => a === `Basic ${Buffer.from("user:pw").toString("base64")}`)).toBe(true);
-    expect(calls.filter(([h]) => h === "cdn.example").every(([, a]) => a === null)).toBe(true);
-    expect(calls.some(([h]) => h === "cdn.example")).toBe(true);
+// ---- --release: indexing allowed, nothing of the review left -------------------------------------------------------------
+
+const jpeg = async (width: number, height: number) => new Uint8Array(await sharp({ create: { width, height, channels: 3, background: "#336699" } }).jpeg().toBuffer());
+const OG = await jpeg(1200, 630);
+const SMALL = await jpeg(800, 400);
+
+describe("verifyDeploy --release", () => {
+  // a release page: absolute canonical and hreflang on the site's own origin, Open Graph and Twitter tags, structured data
+  const LD = JSON.stringify({ "@context": "https://schema.org", "@type": "Car", name: "Café", offers: { "@type": "Offer", price: 12900, priceCurrency: "EUR" } });
+  const HEAD =
+    '<link rel="canonical" href="https://site.example/de"/><link rel="alternate" hrefLang="de" href="https://site.example/de"/><link rel="alternate" hrefLang="en" href="https://site.example/en"/><link rel="alternate" hrefLang="x-default" href="https://site.example/de"/>' +
+    '<meta property="og:title" content="T"/><meta property="og:locale" content="de_DE"/><meta property="og:image" content="https://site.example/media/s/p/og-1200x630.jpg"/><meta property="og:image:alt" content="A"/><meta name="twitter:card" content="summary_large_image"/>';
+  const RPAGE = PAGE.replace("</head>", `${HEAD}</head>`).replace("</main>", `<script type="application/ld+json">${LD}</script></main>`);
+  const SITEMAP = '<?xml version="1.0"?><urlset><url><loc>https://site.example/de</loc><xhtml:link rel="alternate" hreflang="de" href="https://site.example/de"/><xhtml:link rel="alternate" hreflang="x-default" href="https://site.example/de"/></url><url><loc>https://site.example/en</loc></url></urlset>';
+  const routes = (over: Record<string, Route> = {}): Record<string, Route> => ({
+    ...GOOD,
+    "/": { body: RPAGE },
+    "/robots.txt": { type: "text/plain", body: "User-agent: *\nAllow: /\n\nSitemap: https://site.example/sitemap.xml\n" },
+    "/sitemap.xml": { type: "application/xml", body: SITEMAP },
+    "/media/s/p/og-1200x630.jpg": { type: "image/jpeg", body: OG },
+    ...over,
+  });
+  const seo = { productType: "car", price: { amount: 12900, currency: "EUR" }, hasGallery: true, languages: ["de", "en"] };
+  const release = async (r: Record<string, Route>, extra: object = {}) =>
+    (await verifyDeploy({ url: "https://site.example/", expected: { ...expected, ...seo, ...extra }, release: true, fetchImpl: fakeFetch(r) })) as { name: string; ok: boolean; reason: string }[];
+  const RELEASE = routes();
+
+  it("passes for a page with indexing allowed, no prototype note, no theme switcher, no /version.json, and everything a release publishes", async () => {
+    const r = await release(RELEASE);
+    expect(failing(r)).toEqual([]);
+    const names = r.map((x) => x.name);
+    for (const n of [
+      "indexing allowed: no noindex in X-Robots-Tag", "indexing allowed: no noindex meta tag", "no prototype note in the page", "no review theme switcher in the page", "/robots.txt is 200 and allows crawling", "no /version.json (404)",
+      "canonical link is absolute and on this site", "hreflang links are absolute and on this site", "Open Graph title and locale present", "og:image is a 1200x630 JPEG that answers 200", "twitter:card is summary_large_image",
+      "/sitemap.xml lists every language page with its alternates, and robots.txt names it", "structured data (JSON-LD) is valid, carries the content's price and cannot close its script",
+    ]) expect(names, n).toContain(n);
+    expect(names).not.toContain("X-Robots-Tag contains noindex"); // the default mode's check is replaced, not added
+  });
+
+  it.each([
+    ["a noindex header", { ...RELEASE, "/": { body: RPAGE, headers: { "x-robots-tag": "noindex, nofollow" } } }, "indexing allowed: no noindex in X-Robots-Tag"],
+    ["a noindex meta tag", { ...RELEASE, "/": { body: RPAGE.replace("</head>", '<meta name="robots" content="noindex, nofollow"/></head>') } }, "indexing allowed: no noindex meta tag"],
+    ["the prototype note", { ...RELEASE, "/": { body: RPAGE.replace("</main>", '</main><p class="site-footer__prototype">Prototype</p>') } }, "no prototype note in the page"],
+    ["the version line", { ...RELEASE, "/": { body: RPAGE.replace("</main>", '</main><p class="site-footer__version">dev</p>') } }, "no prototype note in the page"],
+    ["the theme switcher", { ...RELEASE, "/": { body: RPAGE.replace("</main>", '</main><aside class="theme-switcher"></aside>') } }, "no review theme switcher in the page"],
+    ["a disallow-all robots.txt", { ...RELEASE, "/robots.txt": { type: "text/plain", body: "User-agent: *\nDisallow: /\n\nSitemap: https://site.example/sitemap.xml\n" } }, "/robots.txt is 200 and allows crawling"],
+    ["a /version.json", { ...RELEASE, "/version.json": { type: "application/json", body: '{"version":"0.6.0"}' } }, "no /version.json (404)"],
+    // what a release publishes for search and sharing, one check at a time
+    ["a relative canonical link (SITE_URL missing at the build)", { ...RELEASE, "/": { body: RPAGE.replace('rel="canonical" href="https://site.example/de"', 'rel="canonical" href="/de"') } }, "canonical link is absolute and on this site"],
+    ["a canonical link on another origin", { ...RELEASE, "/": { body: RPAGE.replace('rel="canonical" href="https://site.example/de"', 'rel="canonical" href="https://other.example/de"') } }, "canonical link is absolute and on this site"],
+    ["a relative hreflang link", { ...RELEASE, "/": { body: RPAGE.replace('hrefLang="en" href="https://site.example/en"', 'hrefLang="en" href="/en"') } }, "hreflang links are absolute and on this site"],
+    ["no og:title", { ...RELEASE, "/": { body: RPAGE.replace('<meta property="og:title" content="T"/>', "") } }, "Open Graph title and locale present"],
+    ["a product with a gallery photo but no og:image", { ...RELEASE, "/": { body: RPAGE.replace(/<meta property="og:image" [^>]*\/>/, "").replace(/<meta property="og:image:alt"[^>]*\/>/, "").replace('content="summary_large_image"', 'content="summary"') } }, "og:image is a 1200x630 JPEG that answers 200"],
+    ["an og:image that is 404", { ...RELEASE, "/media/s/p/og-1200x630.jpg": { status: 404 } }, "og:image is a 1200x630 JPEG that answers 200"],
+    ["an og:image of the wrong size", { ...RELEASE, "/media/s/p/og-1200x630.jpg": { type: "image/jpeg", body: SMALL } }, "og:image is a 1200x630 JPEG that answers 200"],
+    ["a relative og:image", { ...RELEASE, "/": { body: RPAGE.replace("https://site.example/media/s/p/og-1200x630.jpg", "/media/s/p/og-1200x630.jpg") } }, "og:image is a 1200x630 JPEG that answers 200"],
+    ["a twitter card that is not large", { ...RELEASE, "/": { body: RPAGE.replace('content="summary_large_image"', 'content="summary"') } }, "twitter:card is summary_large_image"],
+    ["no og:image alt text", { ...RELEASE, "/": { body: RPAGE.replace('<meta property="og:image:alt" content="A"/>', "") } }, "og:image has an alt text"],
+    ["a missing sitemap", { ...RELEASE, "/sitemap.xml": { status: 404 } }, "/sitemap.xml lists every language page with its alternates, and robots.txt names it"],
+    ["a sitemap without a language", { ...RELEASE, "/sitemap.xml": { type: "application/xml", body: SITEMAP.replace("https://site.example/en", "https://site.example/fr") } }, "/sitemap.xml lists every language page with its alternates, and robots.txt names it"],
+    ["a robots.txt without the Sitemap line", { ...RELEASE, "/robots.txt": { type: "text/plain", body: "User-agent: *\nAllow: /\n" } }, "/sitemap.xml lists every language page with its alternates, and robots.txt names it"],
+    ["no JSON-LD for a car", { ...RELEASE, "/": { body: RPAGE.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, "") } }, "structured data (JSON-LD) is valid, carries the content's price and cannot close its script"],
+    ["a JSON-LD with another price", { ...RELEASE, "/": { body: RPAGE.replace('"price":12900', '"price":99') } }, "structured data (JSON-LD) is valid, carries the content's price and cannot close its script"],
+    ["a JSON-LD with a raw < inside", { ...RELEASE, "/": { body: RPAGE.replace('"name":"Café"', '"name":"a <b> c"') } }, "structured data (JSON-LD) is valid, carries the content's price and cannot close its script"],
+    ["a JSON-LD that is not JSON", { ...RELEASE, "/": { body: RPAGE.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, '<script type="application/ld+json">{nope</script>') } }, "structured data (JSON-LD) is valid, carries the content's price and cannot close its script"],
+  ])("fails for %s", async (_label, routes, check) => {
+    expect(failing(await release(routes as Record<string, Route>))).toEqual([check]);
+  });
+
+  it("does not ask for structured data or an og:image where none is expected (a type without a schemaType, a product without a gallery photo)", async () => {
+    const bare = RPAGE.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, "").replace(/<meta property="og:image[^>]*\/>/g, "").replace('content="summary_large_image"', 'content="summary"');
+    const r = await release({ ...RELEASE, "/": { body: bare } }, { productType: "gadget", hasGallery: false });
+    expect(failing(r)).toEqual([]);
+  });
+
+  it("the default mode needs none of it: no SITE_URL-dependent check runs, and a page without any of it passes", async () => {
+    const r = await run(GOOD);
+    expect(failing(r)).toEqual([]);
+    expect(r.map((x) => x.name).filter((n) => /canonical link is absolute|hreflang links are absolute|og:|twitter:|sitemap\.xml|JSON-LD/.test(n))).toEqual([]);
+  });
+
+  it("the list of types that must carry JSON-LD is the list of shipped descriptors that name a schemaType", async () => {
+    const { fields: car } = await import("@/product-types/car/fields");
+    const { fields: house } = await import("@/product-types/house/fields");
+    const { fields: watch } = await import("@/product-types/watch/fields");
+    const { fields: bag } = await import("@/product-types/bag/fields");
+    const { fields: other } = await import("@/product-types/_base/fields");
+    const named = [car, house, watch, bag, other].filter((f) => (f as { schemaType?: string }).schemaType).map((f) => f.id);
+    expect([...JSON_LD_TYPES].sort()).toEqual(named.sort());
+  });
+
+  it("reads the helpers: meta tags, JSON-LD scripts and a JPEG's size", () => {
+    expect(metaTags('<meta property="og:title" content="A &amp; B"/><meta name="twitter:card" content="summary"/><meta name="x"/>')).toEqual({ "og:title": "A & B", "twitter:card": "summary" });
+    expect(jsonLdScripts('<script>a</script><script type="application/ld+json">{"a":1}</script>')).toEqual(['{"a":1}']);
+    expect(jpegSize(OG)).toEqual({ width: 1200, height: 630 });
+    expect(jpegSize(new Uint8Array([1, 2, 3, 4]))).toBeNull();
+  });
+
+  it("the default mode still expects noindex and does not look at the release checks", async () => {
+    const r = await run(GOOD);
+    expect(r.map((x) => x.name)).toContain("X-Robots-Tag contains noindex");
+    expect(r.map((x) => x.name).filter((n) => /indexing allowed|prototype note|theme switcher/.test(n))).toEqual([]);
+    expect(failing(await run(RELEASE))).toContain("X-Robots-Tag contains noindex"); // a release page fails the demo check
+  });
+
+  it("reads the helpers", () => {
+    expect(robotsAllowsAll("User-agent: *\nAllow: /\n")).toBe(true);
+    expect(robotsAllowsAll("User-agent: *\nDisallow: /\n")).toBe(false);
+    expect(hasMetaNoindex('<meta name="robots" content="index, follow"/>')).toBe(false);
+    expect(hasMetaNoindex('<meta content="noindex" name="robots"/>')).toBe(true);
+    expect(hasMetaNoindex('<meta name="description" content="noindex"/>')).toBe(false);
+    expect(hasPrototypeNote("<p>nothing</p>")).toBe(false);
+    expect(hasThemeSwitcher('<aside class="theme-switcher theme-switcher--x">')).toBe(true);
   });
 });
 

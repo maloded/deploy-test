@@ -100,19 +100,19 @@ describe.skipIf(!hasRealContent)("the vw-multivan sample is a sale in German and
   });
 });
 
-describe.skipIf(!hasRealContent)("mileage lives in one place and matches the odometer photo (37115 km)", () => {
-  it("is a spec, shown as ca. 37.100 km, and nowhere else in the data", () => {
+describe.skipIf(!hasRealContent)("mileage lives in one place: the spec (the owners' figure, ca. 37.500 km since the content update of 2026-10-30)", () => {
+  it("is a spec, shown as ca. 37.500 km, and nowhere else in the data", () => {
     const p = sample();
     const spec = p.specs.find((s: any) => s.key === "mileage");
-    expect(spec.value).toEqual({ de: "ca. 37.100 km", en: "approx. 37,100 km" });
+    expect(spec.value).toEqual({ de: "ca. 37.500 km", en: "approx. 37,500 km" });
     const rest = JSON.stringify({ ...p, specs: p.specs.filter((s: any) => s.key !== "mileage") });
-    expect(rest).not.toMatch(/37[.,]?500/); // the owners' figure contradicts the photo and is not published
-    expect(rest).not.toMatch(/37[.,]?100/);
+    expect(rest).not.toMatch(/37[.,]?500/); // one place only: the spec (the hero takes it through the key)
+    expect(rest).not.toMatch(/37[.,]?100/); // the earlier, photographed figure is not left anywhere
   });
 
   it("reaches the hero through the key", () => {
     const hero = html(<Hero site={content.siteFor("vw-multivan")} />);
-    expect(hero).toContain('<span class="hero__fact-value">ca. 37.100 km</span><span class="hero__fact-label">Kilometerstand</span>');
+    expect(hero).toContain('<span class="hero__fact-value">ca. 37.500 km</span><span class="hero__fact-label">Kilometerstand</span>');
   });
 });
 
@@ -120,7 +120,7 @@ describe.skipIf(!hasRealContent)("hero highlights are spec keys", () => {
   it("take value and label from the spec, in the page language", () => {
     const hero = html(<Hero site={content.siteFor("vw-multivan")} />);
     const facts = [...hero.matchAll(/hero__fact-value">([^<]*)<\/span><span class="hero__fact-label">([^<]*)</g)].map((m) => [m[1], m[2]]);
-    expect(facts).toEqual([["07/2023", "Erstzulassung"], ["ca. 37.100 km", "Kilometerstand"], ["150 PS", "Leistung"], ["7-Gang-DSG", "Getriebe"]]);
+    expect(facts).toEqual([["07/2023", "Erstzulassung"], ["ca. 37.500 km", "Kilometerstand"], ["150 PS", "Leistung"], ["7-Gang-DSG", "Getriebe"]]);
   });
 
   it("never repeat a value: a changed spec changes the hero", () => {
@@ -146,7 +146,7 @@ describe.skipIf(!hasRealContent)("gallery tags", () => {
 
   it("are filled for every photo of the sample and all valid", () => {
     const p = sample();
-    expect(p.media.gallery).toHaveLength(12);
+    expect(p.media.gallery).toHaveLength(14);
     for (const g of p.media.gallery) expect(g.tags?.length, g.file).toBeGreaterThan(0);
     expect(p.media.gallery.find((g: any) => g.file === "mileage.jpg").tags).toEqual(["dashboard", "mileage"]);
   });

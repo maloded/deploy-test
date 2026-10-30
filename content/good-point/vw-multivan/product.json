@@ -323,8 +323,8 @@
         "en": "Mileage"
       },
       "value": {
-        "de": "ca. 37.100 km",
-        "en": "approx. 37,100 km"
+        "de": "ca. 37.500 km",
+        "en": "approx. 37,500 km"
       },
       "group": "condition"
     },
@@ -411,6 +411,16 @@
         }
       },
       {
+        "file": "Front.jpg",
+        "alt": {
+          "de": "Frontansicht des grauen Multivan an einem Bordstein auf nasser Straße: VW-Emblem, Scheinwerfer und Kühlergrill",
+          "en": "Front view of the grey Multivan at a kerb on a wet street: VW emblem, headlights and grille"
+        },
+        "tags": [
+          "exterior"
+        ]
+      },
+      {
         "file": "Side.jpg",
         "alt": {
           "de": "Seitenansicht des Multivan von links mit Schiebetür und Leichtmetallrädern",
@@ -453,6 +463,17 @@
         ]
       },
       {
+        "file": "Steering-wheel-panel.jpg",
+        "alt": {
+          "de": "Cockpit von hinten gesehen: Lenkrad, mittlerer Touchscreen mit Uhr, Klimabedienung und Blick durch die regennasse Windschutzscheibe",
+          "en": "Cockpit seen from behind the front seats: steering wheel, central touchscreen showing a clock, climate controls and the view through the rain-covered windscreen"
+        },
+        "tags": [
+          "interior",
+          "dashboard"
+        ]
+      },
+      {
         "file": "Steering-wheel-panel-zoomed.jpg",
         "alt": {
           "de": "Fahrerbereich mit Lenkrad, Touchscreen und Vordersitzen",
@@ -492,8 +513,8 @@
       {
         "file": "mileage.jpg",
         "alt": {
-          "de": "Anzeige des Gesamtkilometerstands: 37115 km",
-          "en": "Display showing the total distance driven: 37115 km"
+          "de": "Anzeige des Gesamtkilometerstands",
+          "en": "Display showing the total distance driven"
         },
         "tags": [
           "dashboard",

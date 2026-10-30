@@ -4,7 +4,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
-import { listProducts } from "../../src/lib/content-root.ts";
+import { listProducts, listSellers } from "../../src/lib/content-root.ts";
+import { OG_HEIGHT, OG_IMAGE_FILE, OG_WIDTH, ogCropBox } from "../../src/lib/og-image.ts";
+import { iconProblem, sellerIconFile } from "../../src/lib/seller-icon.ts";
 import { readProduct, referencedFiles } from "./referenced.mjs";
 
 const RESIZABLE = { ".jpg": "jpeg", ".jpeg": "jpeg", ".png": "png", ".webp": "webp" };
@@ -20,7 +22,7 @@ function filesBelow(dir, prefix = "") {
   return list;
 }
 
-export async function makeWebImages({ contentDir, outDir, longSide = 2000, quality = 80, log = () => {} }) {
+export async function makeWebImages({ contentDir, outDir, longSide = 2000, quality = 80, log = () => {}, warn = console.warn }) {
   const settings = { version: 2, longSide, quality }; // 2: public/media/<seller>/<product>/ (1 was <product>/)
   const stampFile = path.join(outDir, STAMP);
   let cached = false;
@@ -72,6 +74,51 @@ export async function makeWebImages({ contentDir, outDir, longSide = 2000, quali
         const info = await img.toFile(dest);
         results.push({ slug, file, action: "resized", width: info.width, height: info.height, bytes: info.size, sourceBytes: fs.statSync(src).size });
       }
+    }
+  }
+
+  // the Open Graph image of every product: gallery photo 1 cut to 1200x630 around its focus, from the web copy made above (so it also works from
+  // media-web). A photo smaller than 1200x630 gives no image and a warning (it is never enlarged); the page then has no og:image.
+  if (fs.existsSync(contentDir)) {
+    for (const slug of listProducts(contentDir)) {
+      const first = (readProduct(contentDir, slug) ?? {}).media?.gallery?.[0];
+      if (!first?.file) continue;
+      const photo = path.join(outDir, slug, first.file);
+      if (!fs.existsSync(photo)) continue;
+      const dest = path.join(outDir, slug, OG_IMAGE_FILE);
+      const meta = await sharp(photo, { failOn: "none" }).metadata();
+      const box = ogCropBox(meta.width ?? 0, meta.height ?? 0, first.focus);
+      if (!box) {
+        warn(`WARNING ${slug}: gallery photo 1 (${first.file}) is ${meta.width}x${meta.height}, smaller than ${OG_WIDTH}x${OG_HEIGHT}: no Open Graph image (it is never enlarged). Use a larger first photo.`);
+        continue;
+      }
+      wanted.add(dest);
+      if (fs.existsSync(dest) && fs.statSync(dest).mtimeMs >= fs.statSync(photo).mtimeMs) {
+        results.push({ slug, file: OG_IMAGE_FILE, action: "cached" });
+        continue;
+      }
+      await sharp(photo, { failOn: "none" })
+        .resize({ width: box.width, height: box.height })
+        .extract({ left: box.left, top: box.top, width: OG_WIDTH, height: OG_HEIGHT })
+        .jpeg({ quality: 82, mozjpeg: true })
+        .toFile(dest);
+      results.push({ slug, file: OG_IMAGE_FILE, action: "derived", width: OG_WIDTH, height: OG_HEIGHT });
+    }
+  }
+
+  // the seller's optional icon (<seller>/icon.svg or icon.png): copied as it is next to the seller's photos, never resized; a bad one stops the step
+  if (fs.existsSync(contentDir)) {
+    for (const seller of listSellers(contentDir)) {
+      const sellerDir = path.join(contentDir, seller);
+      const name = sellerIconFile(sellerDir);
+      if (!name) continue;
+      const problem = iconProblem(path.join(sellerDir, name));
+      if (problem) throw new Error(`${seller}/${problem}`);
+      const dest = path.join(outDir, seller, name);
+      fs.mkdirSync(path.dirname(dest), { recursive: true });
+      fs.copyFileSync(path.join(sellerDir, name), dest);
+      wanted.add(dest);
+      results.push({ slug: seller, file: name, action: "copied" });
     }
   }
 

@@ -62,6 +62,11 @@ export type ProductTypeFields = {
   /** Key inside product.details for this type's extra data, or null when the type has none. */
   detailsKey: string | null;
   detailsFields: readonly FieldDescriptor[];
+  /**
+   * The schema.org type of the page's structured data (JSON-LD). Optional on purpose: a type that does not name one gets NO JSON-LD at all (no
+   * guessed type). The types that ship with the template name theirs explicitly.
+   */
+  schemaType?: string;
   /** The kinds of request the contact form offers for this type (see request-types.ts); must include the default, "question". */
   requestTypes: readonly RequestType[];
 };
