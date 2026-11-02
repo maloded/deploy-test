@@ -35,8 +35,8 @@ describe("the timer", () => {
 
 describe("what the two lines say", () => {
   it("waiting: the name and the job over her invitation (German and English)", () => {
-    expect(text()).toEqual({ title: "Sofia", small: "Verkaufsberaterin", timer: "", line: "Rufen Sie mich an – ich beantworte Ihre Fragen" });
-    expect(text({ lang: "en" })).toEqual({ title: "Sofia", small: "Sales Rep", timer: "", line: "Call me – I'll answer your questions" });
+    expect(text()).toEqual({ title: "Sofia", small: "Verkaufsberaterin", timer: "", line: "Fragen? Rufen Sie an" });
+    expect(text({ lang: "en" })).toEqual({ title: "Sofia", small: "Sales Rep", timer: "", line: "Questions? Call me" });
   });
 
   it("waiting without a role: no small text", () => {

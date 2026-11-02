@@ -107,14 +107,14 @@ describe("the call bar in the card", () => {
     const { bar } = await mount(PACK());
     expect(text(bar().querySelector(".avatar-card__bar-title b"))).toBe("Sofia");
     expect(text(bar().querySelector(".avatar-card__bar-title small"))).toBe("Verkaufsberaterin");
-    expect(text(bar().querySelector(".avatar-card__bar-line"))).toBe("Rufen Sie mich an – ich beantworte Ihre Fragen");
+    expect(text(bar().querySelector(".avatar-card__bar-line"))).toBe("Fragen? Rufen Sie an");
     expect(text(bar())).not.toContain("EXAMPLE-LINE");
     expect(bar().dataset.kind).toBe("idle");
   });
 
   it("english", async () => {
     const { bar } = await mount(PACK(), { lang: "en" });
-    expect(text(bar().querySelector(".avatar-card__bar-line"))).toBe("Call me – I'll answer your questions");
+    expect(text(bar().querySelector(".avatar-card__bar-line"))).toBe("Questions? Call me");
     expect(bar().querySelector(".avatar-card__face")!.getAttribute("aria-label")).toBe("Show Sofia");
   });
 

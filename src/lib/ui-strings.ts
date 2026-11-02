@@ -79,7 +79,7 @@ const STRINGS = {
   "agent.status.dropped": { en: "The call dropped. Press \"{label}\" to call again.", de: "Die Verbindung ist abgebrochen. Drücken Sie auf „{label}“, um erneut anzurufen." },
   "agent.status.failed": { en: "The call did not connect. Check your microphone and connection, then press \"{label}\".", de: "Der Anruf kam nicht zustande. Prüfen Sie Mikrofon und Verbindung und drücken Sie dann auf „{label}“." },
   "agent.pill": { en: "Talk to our assistant", de: "Mit unserem Assistenten sprechen" },
-  "agent.bar.invite": { en: "Call me \u2013 I'll answer your questions", de: "Rufen Sie mich an \u2013 ich beantworte Ihre Fragen" },
+  "agent.bar.invite": { en: "Questions? Call me", de: "Fragen? Rufen Sie an" },
   "agent.bar.connecting": { en: "Connecting\u2026", de: "Verbinde\u2026" },
   "agent.bar.mic": { en: "Allow the microphone", de: "Mikrofon erlauben" },
   "agent.bar.listening": { en: "{name} is listening\u2026", de: "{name} h\u00f6rt zu\u2026" },
