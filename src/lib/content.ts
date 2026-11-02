@@ -7,6 +7,7 @@ import { readImageSize } from "./image-size";
 import { AUDIO_FILE, MAX_AUDIO_BYTES } from "./music";
 import { checkViewing, mergeViewing, missingViewingFields, type ViewingConfig, type ViewingSettings } from "./viewing";
 import { completeLocalized, mergeCoverage, reportLocalized, type Coverage } from "./localized";
+import { logoMarkup, logoProblem } from "./seller-logo";
 import { defaultBlocksFor, type ProductTypeFields } from "./fields";
 import type { BlockId, Product } from "./schema";
 import { validateSeller, type SellerFile } from "./seller";
@@ -46,6 +47,8 @@ export type LoadedProduct = {
   coverage: Coverage[];
   /** The voice agent's avatar pack, resolved from the shared library; null without agent.avatar. */
   avatar: ResolvedAvatar | null;
+  /** The seller's logo as inline SVG markup (seller.json "logo", checked); null without one. */
+  logo: string | null;
   /** Missing media files, only reported (instead of thrown) when `strictMedia` is false. */
   warnings: string[];
 };
@@ -84,6 +87,23 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
   }
   const seller = completeLocalized(sellerResult.seller, languages, defaultLanguage);
 
+  // the seller's logo (an SVG next to seller.json): a missing file is an error like a missing photo (a warning when strictMedia is false); a file that is not plain shapes always stops the load
+  let logo: string | null = null;
+  let logoWarning: string | null = null;
+  if (seller.logo) {
+    const file = path.join(/*turbopackIgnore: true*/ sellerDir, seller.logo);
+    if (!fs.existsSync(/*turbopackIgnore: true*/ file)) {
+      const msg = `logo: file "${seller.logo}" not found in ${sellerSlug}/`;
+      if (strictMedia) throw new ContentError(`${sellerSlug}/seller.json`, [msg]);
+      logoWarning = `${sellerSlug}/seller.json: ${msg}`;
+    } else {
+      const text = fs.readFileSync(/*turbopackIgnore: true*/ file, "utf8");
+      const problem = logoProblem(text, fs.statSync(/*turbopackIgnore: true*/ file).size);
+      if (problem) throw new ContentError(`${sellerSlug}/seller.json`, [`logo: "${seller.logo}" ${problem}`]);
+      logo = logoMarkup(text);
+    }
+  }
+
   // the avatar is chosen by id from the shared library; an id that is not there (or a broken pack) stops the build
   let avatar: ResolvedAvatar | null = null;
   if (seller.agent?.avatar) {
@@ -115,7 +135,7 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
   const mediaDirName = fs.existsSync(/*turbopackIgnore: true*/ path.join(dir, "media")) ? "media" : "media-web";
 
   const images: Record<string, MediaImage> = {};
-  const warnings: string[] = [];
+  const warnings: string[] = logoWarning ? [logoWarning] : [];
   for (const r of refs) {
     const abs = path.join(/*turbopackIgnore: true*/ dir, mediaDirName, r.file);
     if (!fs.existsSync(/*turbopackIgnore: true*/ abs)) {
@@ -125,7 +145,8 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
     }
     if (AUDIO_FILE.test(r.file)) {
       const bytes = fs.statSync(/*turbopackIgnore: true*/ abs).size;
-      if (bytes > MAX_AUDIO_BYTES) issues.push(`${r.where}: file "${r.file}" is ${(bytes / 1048576).toFixed(1)} MB, more than the ${MAX_AUDIO_BYTES / 1048576} MB limit for a music track`);
+      // a production build stops on a track over the limit; in development (strictMedia false) it is a warning, like a missing photo, so the page still opens
+      if (bytes > MAX_AUDIO_BYTES) (strictMedia ? issues : warnings).push(`${r.where}: file "${r.file}" is ${(bytes / 1048576).toFixed(1)} MB, more than the ${MAX_AUDIO_BYTES / 1048576} MB limit for a music track`);
       continue;
     }
     if (IMAGE_EXT.test(r.file) && !images[r.file]) {
@@ -165,5 +186,5 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
   // without it gets it last (listing "contact" only decides where it goes)
   const listed = file.blocks ?? defaultBlocksFor(typeFields);
   const blocks: BlockId[] = listed.includes("contact") ? [...listed] : [...listed, "contact"];
-  return { ref, seller, product, typeFields, blocks, viewing, images, translationWarnings, coverage, warnings, avatar };
+  return { ref, seller, product, typeFields, blocks, viewing, images, translationWarnings, coverage, warnings, avatar, logo };
 }

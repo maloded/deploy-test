@@ -51,7 +51,7 @@ export function readAvatar(contentDir: string, id: string): AvatarResult {
       continue;
     }
     const bytes = fs.statSync(/*turbopackIgnore: true*/ abs).size;
-    const poster = file === avatar.poster;
+    const poster = file === avatar.poster || file === avatar.dark?.poster;
     const limit = poster ? MAX_AVATAR_POSTER_BYTES : MAX_AVATAR_VIDEO_BYTES;
     if (bytes > limit) issues.push(`${AVATARS_DIR}/${id}: file "${file}" is ${mb(bytes)}, more than the ${mb(limit)} limit for ${poster ? "a poster" : "an avatar video"}`);
   }

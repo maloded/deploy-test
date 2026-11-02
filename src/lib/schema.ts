@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { SellerContact } from "./seller";
-import { AUDIO_FILE, AUDIO_FILE_MESSAGE, AUTOSTART_MODES, DEFAULT_AUTOSTART, DEFAULT_VOLUME, MAX_TITLE_CHARS, MAX_TRACKS } from "./music";
+import { AUDIO_FILE, AUDIO_FILE_MESSAGE, DEFAULT_VOLUME, MAX_CREDIT_CHARS, MAX_TITLE_CHARS, MAX_TRACKS } from "./music";
 import { isLanguage, unsupportedLanguageMessage, type Language } from "./languages";
 import { parseVideo } from "./video";
 import { checkContactWindows } from "./contact-windows";
@@ -78,7 +78,8 @@ const fileName = z.string().min(1).regex(/^[^/\\]+$/, "must be a plain file name
 /**
  * Optional background music. Not shown on the page: `license` is a note for whoever keeps the content (where the track is
  * licensed from; the proof is kept next to the file in the content repository). The files are checked by the loader
- * (they exist in media/, at most 5 MB each).
+ * (they exist in media/, at most 3 MB each). `credit` (and `creditUrl`, an https address) is the one text of a track that IS shown, in the
+ * footer: set it only when the track's licence requires a credit line; a track without `credit` shows nothing.
  */
 const musicTrackSchema = z
   .object({
@@ -86,14 +87,20 @@ const musicTrackSchema = z
     title: localizedSchema.refine((t) => Object.values(t).every((v) => Array.from(v).length <= MAX_TITLE_CHARS), `at most ${MAX_TITLE_CHARS} characters per language`),
     file: z.string().regex(AUDIO_FILE, AUDIO_FILE_MESSAGE),
     license: z.string().min(1),
+    credit: z.string().trim().min(1).max(MAX_CREDIT_CHARS).optional(),
+    creditUrl: z.string().regex(/^https:\/\/[^\s"'<>]+$/i, "must be an https:// address").optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((t, ctx) => {
+    if (t.creditUrl !== undefined && t.credit === undefined) ctx.addIssue({ code: "custom", path: ["creditUrl"], message: "needs a credit (the text the link is shown with)" });
+  });
 export const musicSchema = z
   .object({
     tracks: z.array(musicTrackSchema).min(1).max(MAX_TRACKS),
     defaultTrack: z.string().min(1).optional(),
     volume: z.number().min(0).max(1).default(DEFAULT_VOLUME),
-    autostart: z.enum(AUTOSTART_MODES).default(DEFAULT_AUTOSTART),
+    /** Removed: the music starts only from the player's button. A product.json that still has it (any of its two old values) loads, and the value is dropped. */
+    autostart: z.enum(["button", "gesture"]).optional(),
   })
   .strict()
   .superRefine((m, ctx) => {
@@ -102,6 +109,10 @@ export const musicSchema = z
       if (ids.indexOf(id) !== i) ctx.addIssue({ code: "custom", path: ["tracks", i, "id"], message: `"${id}" is used twice (ids must be unique)` });
     });
     if (m.defaultTrack !== undefined && !ids.includes(m.defaultTrack)) ctx.addIssue({ code: "custom", path: ["defaultTrack"], message: `"${m.defaultTrack}" is not a track id (${ids.join(", ")})` });
+  })
+  .transform(({ autostart, ...music }) => {
+    void autostart; // dropped
+    return music;
   });
 
 /** A details object: its shape is checked later, against the product type or offer type. */

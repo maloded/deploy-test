@@ -10,7 +10,7 @@ import { roleLine } from "@/lib/avatar-view";
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 vi.mock("hanc-webrtc-widgets", () => ({}));
 
-const PACK: ResolvedAvatar = { id: "p", name: "Test pack", poster: "/p.webp", invite: null, inviteCue: null, bubble: null, idle: null, listen: null, speak: null, caption: null, startLabel: null, endLabel: null, buttonIcon: "orb", role: { en: "Sales advisor", de: "Verkaufsberaterin" }, languages: ["de", "en"], example: null, liveText: null };
+const PACK: ResolvedAvatar = { id: "p", name: "Test pack", poster: "/p.webp", invite: null, inviteCue: null, bubble: null, idle: null, listen: null, speak: null, caption: null, startLabel: null, endLabel: null, buttonIcon: "orb", role: { en: "Sales advisor", de: "Verkaufsberaterin" }, languages: ["de", "en"], example: null, liveText: null, dark: null };
 
 describe("the job line's text", () => {
   it("is the role and the languages' names, or their codes for a card too narrow for them", () => {

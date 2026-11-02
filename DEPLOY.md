@@ -154,5 +154,5 @@ The widget is configured in the seller's `seller.json` (`agent` object, see `doc
 
 ## Background music
 
-A product with a `music` object loads nothing until the visitor starts the music: no audio file is requested on page load (the audio element is created at the first start), and the music comes from the deployment itself, never from a third-party host. The audio files do add to the size of the deployed repository, because the snapshot carries `media-web/audio`. Advice: mp3 at about 128 kbps, at most 3 MB per track (the hard limit is 5 MB), and few tracks. A track needs a commercial licence; the proof stays in the content repository, not in the template.
+A product with a `music` object loads nothing until the visitor starts the music: no audio file is requested on page load (the audio element is created at the first start), and the music comes from the deployment itself, never from a third-party host. The audio files do add to the size of the deployed repository, because the snapshot carries `media-web/audio`. Advice: mp3 at about 128 kbps, at most 3 MB per track (the hard limit: a larger file stops the build), and few tracks. A track needs a commercial licence; the proof stays in the content repository, not in the template.
 

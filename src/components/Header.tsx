@@ -1,36 +1,50 @@
 import { pick } from "@/lib/i18n";
 import { startTrackId } from "@/lib/music";
+import { themePair } from "@/lib/theme-pref";
 import { ui } from "@/lib/ui-strings";
 import type { SellerAgent } from "@/lib/seller";
 import { AgentWidget } from "./AgentWidget";
 import type { Site } from "./blocks";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { MusicPlayer } from "./MusicPlayer";
+import { ThemeToggle } from "./ThemeToggle";
 
 /**
- * Header strip: the seller's brand on the left; on the right the language switcher (only when the seller offers more
- * than one language), the background music player (only when the product has music) and the button to #contact, which scrolls to the footer's
- * contact row (data-contact="scroll": the page's other #contact buttons open the form). Not sticky. With the assistant in the header (`agent`, placement
+ * Header strip, one row: the seller's brand (the logo, when seller.json has one, and the name) on the left; on the right the language
+ * switcher (only when the seller offers more than one language: "DE / EN" as text, on a narrow screen the other language's code), ONE
+ * grouped control with the light/dark toggle (only when the theme has a counterpart) and the music icon (only when the product has
+ * music; its popover holds every music control), and the button to #contact, which scrolls to the footer's contact row
+ * (data-contact="scroll"; hidden below 56.25em: the hero and the offer card have the page's contact buttons). Not sticky. With the assistant in the header (`agent`, placement
  * "header") the button is not rendered: the right side is the language switcher, a short label and the widget (the form
  * stays reachable through the hero and offer buttons and the footer).
  */
 export function Header({ site, agent }: { site: Site; agent?: SellerAgent | null }) {
   const { lang } = site;
   const { languages, music } = site.product;
+  const pair = themePair(site.theme, site.availableThemes);
   return (
     <header className={agent ? "site-header site-header--agent" : "site-header"}>
       <div className="site-header__inner container">
-        <span className="site-header__name">{site.seller.displayName}</span>
+        <span className="site-header__brand">
+          {/* the seller's logo (checked, inline so it takes the theme's text colour); decorative, the name stays next to it */}
+          {site.logo && <span className="site-header__logo" aria-hidden="true" dangerouslySetInnerHTML={{ __html: site.logo }} />}
+          <span className="site-header__name">{site.seller.displayName}</span>
+        </span>
         <div className="site-header__end">
           {languages.length > 1 && <LanguageSwitcher languages={languages} current={lang} label={ui("lang.switch", lang)} />}
-          {music && (
-            <MusicPlayer
-              lang={lang}
-              tracks={music.tracks.map((t) => ({ id: t.id, title: pick(t.title, lang), src: `/media/${site.ref}/${t.file}` }))}
-              defaultTrack={startTrackId(music)}
-              volume={music.volume}
-              autostart={music.autostart}
-            />
+          {(pair || music) && (
+            <div className="header-tools">
+              {pair && <ThemeToggle lang={lang} theme={site.theme} pair={pair} />}
+              {music && (
+                <MusicPlayer
+                  lang={lang}
+                  tracks={music.tracks.map((t) => ({ id: t.id, title: pick(t.title, lang), src: `/media/${site.ref}/${t.file}` }))}
+                  defaultTrack={startTrackId(music)}
+                  volume={music.volume}
+                  assistantName={site.seller.agent ? site.avatar?.name : undefined}
+                />
+              )}
+            </div>
           )}
           {agent ? (
             <div className="site-header__agent">

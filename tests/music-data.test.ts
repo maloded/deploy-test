@@ -36,18 +36,26 @@ function setup(music: unknown, files: Record<string, number | Buffer> = {}) {
 const A = { "audio/a.wav": 100, "audio/b.wav": 100 };
 
 describe("music in product.json", () => {
+  it("a product.json that still has autostart (either old value) loads, and the value is dropped: nothing can autoplay", () => {
+    for (const old of ["gesture", "button"]) {
+      const music = setup({ tracks: [track("a")], autostart: old }, A).load().product.music!;
+      expect(music).not.toHaveProperty("autostart");
+    }
+  });
+
   it("no music object: nothing in the loaded product", () => {
     expect(setup(undefined).load().product.music).toBeUndefined();
     expect(fixtures.loadFor("fixture-car").product.music).toBeUndefined();
   });
 
-  it("a valid object gets its defaults: volume 0.15, autostart button, the first track starts", () => {
+  it("a valid object gets its defaults: volume 0.15, the first track starts, and no autostart exists", () => {
     const { product } = setup({ tracks: [track("a"), track("b")] }, A).load();
-    expect(product.music).toMatchObject({ volume: 0.15, autostart: "button" });
+    expect(product.music).toMatchObject({ volume: 0.15 });
+    expect(product.music).not.toHaveProperty("autostart");
     expect(product.music!.defaultTrack).toBeUndefined();
     expect(startTrackId(product.music as any)).toBe("a");
-    const set = setup({ tracks: [track("a"), track("b")], defaultTrack: "b", volume: 0.4, autostart: "gesture" }, A).load().product.music!;
-    expect(set).toMatchObject({ defaultTrack: "b", volume: 0.4, autostart: "gesture" });
+    const set = setup({ tracks: [track("a"), track("b")], defaultTrack: "b", volume: 0.4 }, A).load().product.music!;
+    expect(set).toMatchObject({ defaultTrack: "b", volume: 0.4 });
     expect(startTrackId(set as any)).toBe("b");
     expect(set.tracks[0].license).toBe("test fixture, generated"); // kept as data, never shown
   });
@@ -76,10 +84,23 @@ describe("music in product.json", () => {
     expect(s.load(false).warnings.join("\n")).toMatch(/music\.tracks\.1\.file: file "audio\/missing\.wav" not found/);
   });
 
-  it("a file over 5 MB is an error with its size, one at exactly 5 MB passes", () => {
+  it("a file over 3 MB is an error with its size (a warning in development), one at exactly 3 MB passes", () => {
     const big = setup({ tracks: [track("a")] }, { "audio/a.wav": MAX_AUDIO_BYTES + 1 });
-    expect(() => big.load(false)).toThrow(/music\.tracks\.0\.file: file "audio\/a\.wav" is 5\.0 MB, more than the 5 MB limit/);
+    expect(() => big.load(true)).toThrow(/music\.tracks\.0\.file: file "audio\/a\.wav" is 3\.0 MB, more than the 3 MB limit/);
+    expect(big.load(false).warnings.join("\n")).toMatch(/music\.tracks\.0\.file: file "audio\/a\.wav" is 3\.0 MB, more than the 3 MB limit/); // development: the page still opens
     expect(setup({ tracks: [track("a")] }, { "audio/a.wav": MAX_AUDIO_BYTES }).load().product.music).toBeDefined();
+  });
+
+  it("a track may carry a credit and an https credit link; a link without a credit, or a link that is not https, is refused", () => {
+    const ok = setup({ tracks: [track("a", { credit: "\"Calm\" by A. Artist, CC BY 4.0", creditUrl: "https://example.org/calm" }), track("b")] }, A).load().product.music!;
+    expect(ok.tracks[0]).toMatchObject({ credit: '"Calm" by A. Artist, CC BY 4.0', creditUrl: "https://example.org/calm" });
+    expect(ok.tracks[1].credit).toBeUndefined();
+    expect(() => setup({ tracks: [track("a", { creditUrl: "https://example.org/x" })] }, A).load()).toThrow(/music\.tracks\.0\.creditUrl: needs a credit/);
+    for (const bad of ["http://example.org/x", "javascript:alert(1)", "https://exa mple.org", "//example.org", "https://x.org/\"onmouseover=1"]) {
+      expect(() => setup({ tracks: [track("a", { credit: "c", creditUrl: bad })] }, A).load(), bad).toThrow(/music\.tracks\.0\.creditUrl/);
+    }
+    expect(() => setup({ tracks: [track("a", { credit: "" })] }, A).load()).toThrow(/music\.tracks\.0\.credit/);
+    expect(() => setup({ tracks: [track("a", { credit: "x".repeat(161) })] }, A).load()).toThrow(/music\.tracks\.0\.credit/);
   });
 
   it("the media scripts see the track files as used (audio/<name>)", () => {

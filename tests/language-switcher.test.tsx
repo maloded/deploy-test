@@ -26,9 +26,11 @@ describe("the header's language switcher", () => {
   it("is present for two languages: a nav named from the UI strings, native names, aria-current on the active one", () => {
     for (const lang of ["de", "en"] as const) {
       const out = html(<Header site={two(lang)} />);
-      expect(out).toContain(`<nav class="lang-switch" aria-label="${ui("lang.switch", lang)}">`);
-      const links = [...out.matchAll(/<a href="([^"]+)" lang="(\w+)" hrefLang="\w+"( aria-current="true")?>([^<]+)<\/a>/g)].map((m) => ({ href: m[1], code: m[2], current: Boolean(m[3]), name: m[4] }));
-      expect(links.map((l) => l.name).sort()).toEqual(["Deutsch", "English"]);
+      expect(out).toContain(`<nav class="lang-switch lang-switch--codes" aria-label="${ui("lang.switch", lang)}">`);
+      const links = [...out.matchAll(/<a href="([^"]+)" lang="(\w+)" hrefLang="\w+"( aria-current="true")? aria-label="([^"]+)">([^<]+)<\/a>/g)].map((m) => ({ href: m[1], code: m[2], current: Boolean(m[3]), name: m[4], text: m[5] }));
+      expect(links.map((l) => l.name).sort()).toEqual(["Deutsch", "English"]); // the accessible name is the language's own name
+      expect(links.map((l) => l.text).sort()).toEqual(["DE", "EN"]); // the visible text is the code
+      expect(out).toContain('<span class="lang-switch__sep" aria-hidden="true">/</span>');
       expect(links.map((l) => l.href).sort()).toEqual(["/de", "/en"]);
       expect(links.filter((l) => l.current).map((l) => l.code)).toEqual([lang]);
     }
@@ -87,7 +89,14 @@ describe("the switcher's styles use theme variables only", () => {
       expect(body, sel).not.toMatch(/#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(|font-family|border-radius:\s*[\d.]+(px|rem)/i);
     }
     expect(block(".lang-switch a")).toContain("var(--muted)");
-    expect(block('.lang-switch a[aria-current="true"]')).toContain("var(--accent-line, var(--accent))");
+    expect(block('.lang-switch a[aria-current="true"]')).toContain("var(--text)"); // the current language is the bright one
+    expect(block(".lang-switch a")).not.toMatch(/background|border:/); // plain text, not a button
+  });
+
+  it("below 56.25em a pair of codes shows only the other language's code, as a 44px text toggle", () => {
+    expect(css).toMatch(/\.lang-switch--codes a\[aria-current="true"\],\s*\.lang-switch--codes \.lang-switch__sep \{\s*display: none;/);
+    expect(css).toMatch(/\.lang-switch--codes a \{[^}]*min-width: var\(--header-control-h, 2\.75rem\)/);
+    expect(css).toMatch(/@media \(width < 56\.25em\) \{[^@]*\.lang-switch--codes a\[aria-current="true"\]/); // inside the below-900px query
   });
 });
 
@@ -110,12 +119,12 @@ describe("how many languages decide the control (a fake registry of 1, 2 and 4)"
     expect(html(<LanguageSwitcher languages={codes(1)} current="aa" label="Language" registry={fake(1)} />)).toBe("");
   });
 
-  it("2 languages: the two text links, as before, no dropdown", () => {
+  it("2 languages: the two code links (DE / EN), no dropdown", () => {
     const out = html(<LanguageSwitcher languages={codes(2)} current="bb" label="Language" registry={fake(2)} />);
-    expect(out).toContain('<nav class="lang-switch" aria-label="Language">');
+    expect(out).toContain('<nav class="lang-switch lang-switch--codes" aria-label="Language">');
     expect(out).not.toMatch(/<details|<summary|lang-menu/);
-    expect(out).toContain('<a href="/aa" lang="aa" hrefLang="aa">Aaland</a>');
-    expect(out).toContain('<a href="/bb" lang="bb" hrefLang="bb" aria-current="true">Бебе</a>');
+    expect(out).toContain('<a href="/aa" lang="aa" hrefLang="aa" aria-label="Aaland">AA</a>');
+    expect(out).toContain('<a href="/bb" lang="bb" hrefLang="bb" aria-current="true" aria-label="Бебе">BB</a>');
   });
 
   it("4 languages: one dropdown that shows the current language's own name, in a nav, with a real link to every language", () => {
@@ -207,7 +216,7 @@ describe("the header controls' styles: theme variables, control-sized targets", 
 
   it("the dropdown, the links and the header button are exactly --header-control-h high (one variable for the row) and use no literal colour or font", () => {
     for (const sel of [".lang-switch a", ".lang-menu__current", ".site-header__end > .button--small"]) {
-      expect(block(sel), sel).toMatch(/height: var\(--header-control-h, 2\.25rem\)/);
+      expect(block(sel), sel).toMatch(/height: var\(--header-control-h, 2\.75rem\)/);
     }
     for (const sel of [".lang-menu", ".lang-menu__current", ".lang-menu__list", ".lang-menu__list a", '.lang-menu__list a[aria-current="true"]']) {
       const body = block(sel);

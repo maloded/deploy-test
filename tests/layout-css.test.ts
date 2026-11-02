@@ -43,16 +43,25 @@ describe("one screen in three zones", () => {
     expect(rule(".hero__intro", ONE_SCREEN).body).toMatch(/flex:\s*none/);
   });
 
-  it("has ONE control height for the header's controls (the button's own height by default, 44px on a narrow screen) and derives the header from it", () => {
+  it("has ONE control height for the header's controls (2.75rem, the size of a touch target, on every screen) and derives the header from it", () => {
     const root = rule(":root", "").body;
-    expect(root).toMatch(/--header-control-h: calc\(0\.7rem \* var\(--line-height, 1\.55\) \+ var\(--space-2\) \* 2 \+ 2px\)/); // the "Get in touch" button's natural height
-    expect(root).toMatch(/--header-h: calc\(var\(--header-control-h, 2\.25rem\) \+ var\(--space-2\) \* 3 \+ 1px\)/);
-    expect(rule(":root", "@media (width < 40em)").body).toMatch(/--header-control-h: 2\.75rem/);
+    expect(root).toMatch(/--header-control-h: 2\.75rem/);
+    expect(root).toMatch(/--header-h: calc\(var\(--header-control-h, 2\.75rem\) \+ var\(--space-2\) \* 3 \+ 1px\)/);
     // every control takes its height from the variable and from nowhere else
-    for (const sel of [".lang-switch a", ".lang-menu__current", ".site-header__end > .button--small", ".music__button", ".music__select"]) {
-      expect(rule(sel).body, sel).toMatch(/height: var\(--header-control-h, 2\.25rem\)/);
+    for (const sel of [".lang-switch a", ".lang-menu__current", ".site-header__end > .button--small", ".music__button", ".music__slider"]) {
+      expect(rule(sel).body, sel).toMatch(/height: var\(--header-control-h, 2\.75rem\)/);
     }
+    // the two icon buttons are a full control high (44px at the default size); the group's 1px border is a ring around it (box-shadow), so the header does not grow
+    for (const sel of [".theme-toggle", ".music__toggle"]) expect(rule(sel).body, sel).toMatch(/[^-]height: var\(--header-control-h, 2\.75rem\)/);
     expect(rule(".site-header__inner").body).toMatch(/padding-block: calc\(var\(--space-2\) \* 1\.5\)/);
+  });
+
+  it("keeps ONE row below 900px: no wrapping, no button in the header, the brand takes what the controls leave", () => {
+    const narrow = (sel: string) => rule(sel, "@media (width < 56.25em)").body;
+    expect(narrow(".site-header:not(.site-header--agent) .site-header__inner")).toMatch(/flex-wrap: nowrap/);
+    expect(narrow(".site-header:not(.site-header--agent) .site-header__end")).toMatch(/flex-wrap: nowrap/);
+    expect(narrow(".site-header:not(.site-header--agent) .site-header__brand")).toMatch(/flex: 1 1 0/);
+    expect(narrow(".site-header:not(.site-header--agent) .site-header__end > .button--small")).toMatch(/display: none/);
   });
 
   it("is as wide as the hero's content: the header and .hero__container share the same max-width, so the brand starts where the title does", () => {
@@ -61,9 +70,9 @@ describe("one screen in three zones", () => {
     expect(rule(".hero__container").body).toMatch(max);
   });
 
-  it("sets the brand name's size from --brand-size (1.7rem, 1.35rem on a narrow screen) with a line shorter than the control, so the header does not grow", () => {
+  it("sets the brand name's size from --brand-size (1.7rem, 1.35rem below 900px) with a line shorter than the control, so the header does not grow", () => {
     expect(rule(":root", "").body).toMatch(/--brand-size: 1\.7rem/);
-    expect(rule(":root", "@media (width < 40em)").body).toMatch(/--brand-size: 1\.35rem/);
+    expect(rule(":root", "@media (width < 56.25em)").body).toMatch(/--brand-size: 1\.35rem/);
     const name = rule(".site-header__name", "").body;
     expect(name).toMatch(/font-size: var\(--brand-size, 1\.7rem\)/);
     expect(name).toMatch(/line-height: 1\.1/); // 1.7rem x 1.1 stays under the control's height

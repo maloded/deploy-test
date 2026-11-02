@@ -31,7 +31,7 @@ const pack = (loops: Partial<Record<"invite" | "idle" | "listen" | "speak", { mp
   role: null,
   languages: [],
   example: null,
-  liveText: null,
+  liveText: null, dark: null,
 });
 const mp4 = (n: string) => ({ mp4: `/avatars/test-pack/${n}.mp4` });
 const FULL = pack({ idle: mp4("i"), listen: mp4("l"), speak: mp4("s") });

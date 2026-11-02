@@ -14,7 +14,7 @@ vi.mock("hanc-webrtc-widgets", () => ({}));
 
 const EXAMPLE = { en: [{ speaker: "caller" as const, text: "Hello there." }, { speaker: "agent" as const, text: "Hi." }] };
 const loop = (n: string) => ({ mp4: `/avatars/p/${n}.mp4` });
-const PACK: ResolvedAvatar = { id: "p", name: "Test pack", poster: "/p.webp", invite: null, inviteCue: null, bubble: null, idle: loop("i"), listen: loop("l"), speak: loop("s"), caption: null, startLabel: null, endLabel: null, buttonIcon: "orb", role: null, languages: ["en"], example: EXAMPLE, liveText: null };
+const PACK: ResolvedAvatar = { id: "p", name: "Test pack", poster: "/p.webp", invite: null, inviteCue: null, bubble: null, idle: loop("i"), listen: loop("l"), speak: loop("s"), caption: null, startLabel: null, endLabel: null, buttonIcon: "orb", role: null, languages: ["en"], example: EXAMPLE, liveText: null, dark: null };
 
 type Observer = { cb: any; targets: Element[]; options?: any };
 let ios: Observer[] = [];

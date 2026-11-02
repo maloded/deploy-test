@@ -20,7 +20,7 @@ import { toggleCall, watchCallStatus, whenWidgetReady, type CallStatus, type Wid
  */
 type Mode = "pending" | "custom" | "standard";
 
-export function AgentStartButton({ host, lang, name, startLabel, endLabel, icon = "orb" }: { host: WidgetHost | null; lang: Language; name?: string; startLabel: Localized | null; endLabel: Localized | null; icon?: ButtonIcon }) {
+export function AgentStartButton({ host, lang, name, startLabel, endLabel, icon = "orb", bar = false }: { host: WidgetHost | null; lang: Language; name?: string; startLabel: Localized | null; endLabel: Localized | null; icon?: ButtonIcon; bar?: boolean }) {
   const [mode, setMode] = useState<Mode>("pending");
   const [status, setStatus] = useState<CallStatus>("idle");
 
@@ -69,7 +69,7 @@ export function AgentStartButton({ host, lang, name, startLabel, endLabel, icon 
     return (
       <>
         {/* Hanc's call button, drawn by us (the widget stays hidden): the orb with its rings, and on it the pill with the dark disc */}
-        <span className="call-orb" data-state={status}>
+        <span className="call-orb" data-state={status} data-bar={bar || undefined}>
           <span className="call-orb__glow" aria-hidden="true">
             <span className="call-orb__swirl" />
           </span>
@@ -90,9 +90,11 @@ export function AgentStartButton({ host, lang, name, startLabel, endLabel, icon 
           </button>
         </span>
         {/* outside the button, so the button's own name stays its label; says what changed to a screen reader */}
-        <span className="sr-only" role="status">
-          {status === "idle" ? "" : label}
-        </span>
+        {!bar && (
+          <span className="sr-only" role="status">
+            {status === "idle" ? "" : label}
+          </span>
+        )}
       </>
     );
   }

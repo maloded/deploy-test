@@ -12,8 +12,10 @@ type Named = { code: string; name: string };
  * Links to the same page in the other languages, labelled with each language's own name (`registry`: the languages' names, the
  * template's own list by default). The server renders plain `/<lang>` links (they work without JavaScript); once mounted, the current
  * #fragment (a block anchor or a gallery deep link) is added so the visitor stays where they were. Shown only by the header when the
- * seller offers several languages: two languages are two text links, LANGUAGE_MENU_FROM or more a dropdown (a <details> disclosure
- * of the same links: it opens and closes without JavaScript, with Escape and a click outside as the script's extras).
+ * seller offers several languages: two languages are two plain text links showing the language CODES ("DE / EN": the current one
+ * bright, the other muted; a wide screen shows both, a narrow one only the other, as one short toggle), LANGUAGE_MENU_FROM or more a
+ * dropdown with the languages' own names (a <details> disclosure of the same links: it opens and closes without JavaScript, with
+ * Escape and a click outside as the script's extras). A code link's accessible name is the language's own name.
  */
 export function LanguageSwitcher({ languages, current, label, registry = LANGUAGE_REGISTRY }: { languages: readonly string[]; current: string; label: string; registry?: readonly Named[] }) {
   const [hash, setHash] = useState("");
@@ -26,17 +28,24 @@ export function LanguageSwitcher({ languages, current, label, registry = LANGUAG
 
   if (languages.length < 2) return null;
   const nameOf = (code: string) => registry.find((l) => l.code === code)?.name ?? code;
-  const link = (code: string) => (
-    <a href={`/${code}${hash}`} lang={code} hrefLang={code} aria-current={code === current ? "true" : undefined}>
-      {nameOf(code)}
+  const link = (code: string, text: string = nameOf(code), name?: string) => (
+    <a href={`/${code}${hash}`} lang={code} hrefLang={code} aria-current={code === current ? "true" : undefined} aria-label={name}>
+      {text}
     </a>
   );
 
   if (languages.length < LANGUAGE_MENU_FROM) {
     return (
-      <nav className="lang-switch" aria-label={label}>
-        {languages.map((code) => (
-          <Fragment key={code}>{link(code)}</Fragment>
+      <nav className="lang-switch lang-switch--codes" aria-label={label}>
+        {languages.map((code, i) => (
+          <Fragment key={code}>
+            {i > 0 && (
+              <span className="lang-switch__sep" aria-hidden="true">
+                /
+              </span>
+            )}
+            {link(code, code.toUpperCase(), nameOf(code))}
+          </Fragment>
         ))}
       </nav>
     );

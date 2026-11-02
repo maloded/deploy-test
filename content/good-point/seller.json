@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "displayName": "Good Point",
+  "logo": "logo.svg",
   "legalNote": {
     "en": "Information on this page is indicative and does not constitute a binding offer.",
     "de": "Die Angaben auf dieser Seite sind unverbindlich und stellen kein verbindliches Angebot dar."

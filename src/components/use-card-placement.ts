@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
+import { BAR_QUERY } from "@/lib/call-bar";
 import { CARD_FLIGHT } from "@/lib/card-flight";
 import { createFlightController, type FlightController } from "./card-flight-controller";
 
@@ -73,13 +74,16 @@ export function useCardPlacement(card: RefObject<HTMLElement | null>, expectSlot
     const flight = createFlightController({ card: el, slot, setPlacement });
     flying.current = flight;
     const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    // a phone (below 900px) with the call bar: the docked card is the bar, so the dock's place is not kept clear (the bar covers what it covers), and the card morphs into
+    // the bar and back (bar-morph.ts, started by the flight controller) instead of flying to a corner
+    const barMode = () => Boolean(window.matchMedia?.(BAR_QUERY).matches) && Boolean(el.querySelector(".avatar-card__bar"));
     let first = true;
     let current: Placement = "hero";
     let ratio = 1;
     const under = new Set<Element>(); // the blocks of the hero that are in the dock's place now
     const wanted = (): Placement => {
       if (ratio >= CARD_FLIGHT.trigger) return "hero";
-      if (ratio === 0 || under.size === 0) return "dock";
+      if (ratio === 0 || under.size === 0 || barMode()) return "dock";
       return current; // under the trigger but something would be covered: stay as it is
     };
     const evaluate = () => {

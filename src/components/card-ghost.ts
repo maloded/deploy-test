@@ -3,7 +3,11 @@
 // (data-flight). It is a child of <body>, never an ancestor of the widget, so its transforms and sizes cannot confine the widget's overlay.
 import { CARD_FLIGHT, cubicBezier, mix, mixRect, type Rect } from "@/lib/card-flight";
 
-export type Ghost = { el: HTMLElement; canvas: HTMLCanvasElement; rect: () => Rect; radius: number };
+/** Where the call button's area is, relative to the card's own box (px), and the card's font size there (the button's sizes are in em). */
+export type OrbRel = { x: number; y: number; w: number; h: number; fs: number };
+/** The button's copy in the ghost: it moves and scales with the ghost, so the button is never anywhere the card is not. */
+export type GhostOrb = { box: HTMLElement; from: OrbRel; to: OrbRel };
+export type Ghost = { el: HTMLElement; canvas: HTMLCanvasElement; rect: () => Rect; radius: number; orb: GhostOrb | null };
 
 export const rectOf = (el: Element): Rect => {
   const r = el.getBoundingClientRect();
@@ -17,6 +21,16 @@ export const frameRadius = (card: HTMLElement): number | null => {
   const style = getComputedStyle(frame);
   return style.display === "none" ? null : parseFloat(style.borderTopLeftRadius) || 0;
 };
+
+/** The area of the call button (the action area that holds the orb) relative to the card, or null when the card has no orb button shown. */
+export function orbRelOf(card: HTMLElement): OrbRel | null {
+  const orb = card.querySelector<HTMLElement>(".avatar-card__action .call-orb"); // the card's own button, not the call bar's
+  const area = card.querySelector<HTMLElement>(".avatar-card__action");
+  if (!orb || !area || getComputedStyle(orb).display === "none") return null;
+  const c = card.getBoundingClientRect();
+  const a = area.getBoundingClientRect();
+  return { x: a.left - c.left, y: a.top - c.top, w: a.width, h: a.height, fs: parseFloat(getComputedStyle(card).fontSize) || 16 };
+}
 
 /** Draws what the card shows now (the playing loop's frame, else the poster) into a 4:5 canvas, covering it like object-fit: cover. */
 function drawSnapshot(card: HTMLElement, canvas: HTMLCanvasElement): void {
@@ -58,9 +72,56 @@ export function createGhost(card: HTMLElement, rect: Rect, radius: number, slotW
   ring.className = "card-ghost__ring";
   ring.style.opacity = card.dataset.call === "connected" ? "1" : card.dataset.call === "connecting" ? "0.55" : "0";
   el.append(canvas, shade, ring);
+  // the call button goes along: a copy of the orb in a box that stands where the button's area stands, and is placed on every frame (placeOrb)
+  let orb: GhostOrb | null = null;
+  const rel = orbRelOf(card);
+  const live = card.querySelector<HTMLElement>(".avatar-card__action .call-orb");
+  if (rel && live) {
+    const box = document.createElement("div");
+    box.className = "card-ghost__orb";
+    const copy = live.cloneNode(true) as HTMLElement;
+    copy.removeAttribute("id");
+    copy.querySelectorAll("[id]").forEach((n) => n.removeAttribute("id"));
+    copy.querySelectorAll("button").forEach((b) => b.setAttribute("tabindex", "-1"));
+    const shiftX = getComputedStyle(live).getPropertyValue("--call-orb-x").trim();
+    if (shiftX) copy.style.setProperty("--call-orb-x", shiftX); // the docked card's label grows to the left; the copy keeps that
+    box.append(copy);
+    el.append(box);
+    orb = { box, from: rel, to: rel };
+  }
   place(el, rect, radius);
   document.body.appendChild(el);
-  return { el, canvas, rect: () => rectOf(el), radius };
+  const ghost: Ghost = { el, canvas, rect: () => rectOf(el), radius, orb };
+  placeOrb(ghost, 0);
+  return ghost;
+}
+
+/** Puts the button's copy where it belongs at `e` (0 = where the flight started, 1 = where it ends): its box and font size are mixed like the ghost's own. */
+export function placeOrb(ghost: Ghost, e: number): void {
+  const o = ghost.orb;
+  if (!o) return;
+  const m = (a: number, b: number) => a + (b - a) * e;
+  o.box.style.left = `${m(o.from.x, o.to.x)}px`;
+  o.box.style.top = `${m(o.from.y, o.to.y)}px`;
+  o.box.style.width = `${m(o.from.w, o.to.w)}px`;
+  o.box.style.height = `${m(o.from.h, o.to.h)}px`;
+  o.box.style.fontSize = `${m(o.from.fs, o.to.fs)}px`;
+}
+
+/** Where the button's copy is now, as a start for a flight that goes on from here (a flight taken over in the air). */
+export function orbNow(ghost: Ghost): OrbRel | null {
+  const o = ghost.orb;
+  if (!o) return null;
+  const g = ghost.el.getBoundingClientRect();
+  const b = o.box.getBoundingClientRect();
+  return { x: b.left - g.left, y: b.top - g.top, w: b.width, h: b.height, fs: parseFloat(o.box.style.fontSize) || o.to.fs };
+}
+
+/** Sets where the button's copy ends up (measured on the real card after it has switched) and starts the flight of it from where it is. */
+export function aimOrb(ghost: Ghost, from: OrbRel | null, to: OrbRel | null): void {
+  if (!ghost.orb) return;
+  ghost.orb.from = from ?? ghost.orb.from;
+  ghost.orb.to = to ?? ghost.orb.from; // the new place has no button area: the copy stays as it is
 }
 
 const place = (el: HTMLElement, r: Rect, radius: number) => {
@@ -84,6 +145,7 @@ export function flyGhost(ghost: Ghost, getFrom: () => Rect, getTo: () => Rect, t
     const p = Math.min(1, (now - t0) / CARD_FLIGHT.ms);
     const e = ease(p);
     place(ghost.el, mixRect(getFrom(), getTo(), e), mix(fromRadius, toRadius, e));
+    placeOrb(ghost, e);
     if (p < 1) raf = requestAnimationFrame(step);
     else done();
   };
@@ -100,6 +162,7 @@ export function followGhost(ghost: Ghost, getTo: () => Rect, toRadius: number, m
   let raf = 0;
   const step = (now: number) => {
     place(ghost.el, getTo(), toRadius);
+    placeOrb(ghost, 1);
     if (now - t0 < ms) raf = requestAnimationFrame(step);
   };
   raf = requestAnimationFrame(step);

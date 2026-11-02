@@ -9,7 +9,7 @@
     "webm": "listen.webm"
   },
   "license": "Hanc.ai cast asset, used with permission of the Hanc project curator",
-  "provenance": "Hanc.ai cast F1 (Sofia), synthetic character. Source: 5 s Kling v3 image-to-video loop (start = end frame) from an AI 4:5 still. listen/speak cut from it with ffmpeg (frames 3-39, 42-110, forward+backward). invite: 5 s Kling 2.5 Turbo Pro from f1's first frame (phrase + open-palm gesture), seam blended with ffmpeg, no audio. idle = listen.",
+  "provenance": "Hanc.ai cast F1 (Sofia), synthetic character. Source: 5 s Kling v3 image-to-video loop (start = end frame) from an AI 4:5 still. listen/speak cut from it with ffmpeg (frames 3-39, 42-110, forward+backward). invite: 5 s Kling 2.5 Turbo Pro from f1's first frame (phrase + open-palm gesture), seam blended with ffmpeg, no audio. idle = listen. dark: gold ring, #243049 background.",
   "listen": {
     "mp4": "listen.mp4",
     "webm": "listen.webm"
@@ -24,6 +24,25 @@
     "cue": {
       "show": 0.58,
       "hide": 2.45
+    }
+  },
+  "dark": {
+    "poster": "poster.dark.webp",
+    "invite": {
+      "mp4": "invite.dark.mp4",
+      "webm": "invite.dark.webm"
+    },
+    "idle": {
+      "mp4": "listen.dark.mp4",
+      "webm": "listen.dark.webm"
+    },
+    "listen": {
+      "mp4": "listen.dark.mp4",
+      "webm": "listen.dark.webm"
+    },
+    "speak": {
+      "mp4": "speak.dark.mp4",
+      "webm": "speak.dark.webm"
     }
   }
 }

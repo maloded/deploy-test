@@ -127,7 +127,7 @@ describe("widget mounting", () => {
     const site = withAgent(parsed({ id: ID, placement: "header" }), "de");
     const html = renderToStaticMarkup(<ProductLayout site={site} />);
     const header = /<header[\s\S]*?<\/header>/.exec(html)![0];
-    expect(header).not.toContain("button");
+    expect(header.replace(/<button[^>]*class="theme-toggle"[\s\S]*?<\/button>/, "")).not.toContain("button"); // the light/dark toggle is a button, the contact button is not there
     expect(header).not.toContain("#contact");
     expect(header).not.toContain(ui("header.cta", "de"));
     expect(header).toContain(ui("agent.ask", "de"));

@@ -1,0 +1,12 @@
+node_modules
+.next
+**/.git
+.github
+.env*.local
+.private
+.test-tmp
+.playwright-mcp
+data/leads
+public/media
+public/avatars
+*.tsbuildinfo

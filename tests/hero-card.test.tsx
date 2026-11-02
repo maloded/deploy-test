@@ -11,7 +11,7 @@ import { FIXTURE_DIR, fixtures } from "./helpers";
 
 vi.mock("hanc-webrtc-widgets", () => ({}));
 
-const AVATAR: ResolvedAvatar = { id: "p", name: "Test pack", poster: "/p.webp", invite: null, inviteCue: null, bubble: null, idle: null, listen: null, speak: null, caption: null, startLabel: null, endLabel: null, buttonIcon: "orb", role: null, languages: ["en"], example: null, liveText: null };
+const AVATAR: ResolvedAvatar = { id: "p", name: "Test pack", poster: "/p.webp", invite: null, inviteCue: null, bubble: null, idle: null, listen: null, speak: null, caption: null, startLabel: null, endLabel: null, buttonIcon: "orb", role: null, languages: ["en"], example: null, liveText: null, dark: null };
 const agent = { id: "test-agent-id", variant: "pill", placement: "header", voiceServiceUrl: "https://voice.hanc.ai" };
 const html = (withCard: boolean) => {
   const s = buildSite(null, `${fixtures.seller}/fixture-car`, FIXTURE_DIR, "en");

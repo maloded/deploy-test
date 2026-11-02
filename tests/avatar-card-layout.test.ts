@@ -75,7 +75,7 @@ describe("the card's look", () => {
   const theme = (t: string) => fs.readFileSync(path.join(process.cwd(), "public", "themes", `${t}.css`), "utf8");
 
   it("the shadow, border and radius are on the tilting frame, never on the container or anything around the widget", () => {
-    expect(body(".avatar-card__frame")).toMatch(/box-shadow: var\(--avatar-card-shadow, /);
+    expect(body(".avatar-card__frame")).toMatch(/box-shadow: var\(--avatar-edge, 0 0 0 0 transparent\), var\(--avatar-card-shadow, /);
     expect(body(".avatar-card__frame")).toMatch(/border-radius: var\(--avatar-card-radius, 1\.75em\)/);
     const SHADOWY = /(^|;|\s)(box-shadow|text-shadow|drop-shadow|mix-blend-mode|isolation|clip-path|mask)\s*:/;
     const hits = all
@@ -87,7 +87,10 @@ describe("the card's look", () => {
 
   it("both themes set the optional shadow variable; the card works with the fallback without it", () => {
     for (const t of ["dark-premium", "light-editorial"]) expect(theme(t), t).toContain("--avatar-card-shadow:");
-    expect(body(".avatar-card__frame")).toMatch(/box-shadow: var\(--avatar-card-shadow, /);
+    // the edge (a 1px accent line and a halo) is the dark theme's own: the light theme does not set it, so its card is exactly as before
+    expect(theme("dark-premium")).toMatch(/--avatar-edge: 0 0 0 1px var\(--accent\), 0 0 0 6px color-mix\(in srgb, var\(--accent\) 8%, transparent\);/);
+    expect(theme("light-editorial")).not.toContain("--avatar-edge");
+    expect(body(".avatar-card__frame")).toMatch(/box-shadow: var\(--avatar-edge, 0 0 0 0 transparent\), var\(--avatar-card-shadow, /);
   });
 
   it("the layers over the picture are the Hanc ones: a shade 58% high, a glint that blends, a 2px masked ring that is dark while idle", () => {
@@ -101,7 +104,7 @@ describe("the card's look", () => {
     expect(ring).toMatch(/opacity: 0/);
     expect(body('.avatar-card[data-call="connecting"] .avatar-card__ring')).toMatch(/opacity: 0\.55/);
     expect(body('.avatar-card[data-call="connected"] .avatar-card__ring')).toMatch(/opacity: 1/);
-    expect(body('.avatar-card[data-call="connected"] .avatar-card__frame')).toMatch(/box-shadow: 0 2\.5em 5\.625em -2\.5em var\(--avatar-glow, /);
+    expect(body('.avatar-card[data-call="connected"] .avatar-card__frame')).toMatch(/box-shadow: var\(--avatar-edge, 0 0 0 0 transparent\), 0 2\.5em 5\.625em -2\.5em var\(--avatar-glow, /);
   });
 
   it("every colour of the card is a theme token (with a fallback drawn from the accent, never a raw colour)", () => {
@@ -346,7 +349,7 @@ describe("Hanc's call button (the orb start button, ported for the hidden widget
     expect(pill).toMatch(/letter-spacing: -0\.01em/);
     expect(pill).toMatch(/box-shadow: 0 0\.625em 1\.5em -0\.625em color-mix\(in srgb, black 70%, transparent\)/);
     expect(pill).toMatch(/transform: translate\(var\(--call-orb-x, -50%\), -50%\)/);
-    expect(pill).toMatch(/transition: all 0\.3s cubic-bezier\(0\.4, 0, 0\.2, 1\)/);
+    expect(pill).toMatch(/transition:\s*all 0\.3s cubic-bezier\(0\.4, 0, 0\.2, 1\),\s*visibility 0s/); // the library's easing for everything; visibility is instant, so the pill hides at once while the card flies
     expect(body(".call-orb__icon")).toMatch(/width: 2\.75em/); // the 44px disc
     expect(body(".call-orb__icon")).toMatch(/background: var\(--avatar-stage, black\)/);
     expect(body(".call-orb__text")).toMatch(/font-size: 0\.875em/);
@@ -378,8 +381,8 @@ describe("Hanc's call button (the orb start button, ported for the hidden widget
   it("the orb is a CSS sphere in the tangerine-neon colours, with Hanc's rings: two rest rings, waves on burst, idle and busy, all off with reduced motion", () => {
     expect(body(".call-orb__glow")).toMatch(/radial-gradient\(circle closest-side at 50% 50%/);
     expect(body(".call-orb__glow")).toMatch(/var\(--avatar-orb-a, var\(--accent\)\)/);
-    expect(body(".call-orb__rings > i:nth-child(1)")).toMatch(/opacity: 0\.5/);
-    expect(body(".call-orb__rings > i:nth-child(2)")).toMatch(/opacity: 0\.22/);
+    expect(body(".call-orb__rings > i:nth-child(1)")).toMatch(/opacity: var\(--call-ring-1, 0\.5\)/); // Hanc's value is the fallback: the light theme sets no token
+    expect(body(".call-orb__rings > i:nth-child(2)")).toMatch(/opacity: var\(--call-ring-2, 0\.22\)/);
     expect(body('.avatar-card[data-rings="burst"] .call-orb__rings > i:nth-child(n + 3)')).toMatch(/avatar-ring-wave 1\.9s/);
     expect(body('.avatar-card[data-rings="idle"] .call-orb__rings > i:nth-child(3)')).toMatch(/avatar-ring-rest 7s [^;]* 2s infinite/);
     expect(body('.avatar-card[data-rings="busy"] .call-orb__rings > i:nth-child(n + 3)')).toMatch(/avatar-ring-wave 1\.8s [^;]* infinite/);
@@ -518,5 +521,42 @@ describe("the hero placement", () => {
 
   it("the hero's own stacking context does not hold the card: it is a sibling of <main>, the CSS file never puts a z-index on .pt or main", () => {
     expect(all.filter((r) => [".pt", "main"].includes(r.selector) && /z-index/.test(r.body))).toEqual([]);
+  });
+});
+
+describe("the call button in the dark theme: gold from theme tokens, the light theme as before", () => {
+  const theme = (t: string) => fs.readFileSync(path.join(process.cwd(), "public", "themes", `${t}.css`), "utf8");
+  const css = fs.readFileSync(path.join(process.cwd(), "src", "app", "globals.css"), "utf8");
+
+  it("dark: the orb and its rings are the theme's gold (the accent and a deeper gold), the rings softer, the live orb brighter, the error disc a darker desaturated red", () => {
+    const dark = theme("dark-premium");
+    expect(dark).toMatch(/--avatar-orb-a: var\(--accent\);/);
+    expect(dark).toMatch(/--avatar-orb-b: #b8923f;/);
+    expect(dark).toMatch(/--call-ring-1: 0\.35;/);
+    expect(dark).toMatch(/--call-ring-2: 0\.15;/);
+    expect(dark).toMatch(/--call-ring-wave: 0\.35;/);
+    expect(dark).toMatch(/--call-live-boost: 1\.12;/);
+    expect(dark).toMatch(/--avatar-danger: linear-gradient\(135deg, #8a3b3b, #a24f4f\);/);
+    // no coral or pink left in the dark theme's card tokens
+    const card = dark.split("\n").filter((l) => /--avatar-(orb|ring|glow|danger)|--call-/.test(l)).join("\n");
+    expect(card).not.toMatch(/#f97316|#f43f5e|#ec4899|242, 85, 31|#dc2626|#ef4444/i);
+  });
+
+  it("light: the Hanc coral values and no call-button token, so the button is exactly as before", () => {
+    const light = theme("light-editorial");
+    expect(light).toContain("--avatar-orb-a: #f97316;");
+    expect(light).toContain("--avatar-orb-b: #ec4899;");
+    expect(light).toContain("--avatar-danger: linear-gradient(135deg, #dc2626, #ef4444);");
+    expect(light).not.toMatch(/--call-ring|--call-live-boost/);
+  });
+
+  it("the waves take their strength from the token (the rest wave is 0.6 of Hanc's 0.9), and the live boost is 1 without a token", () => {
+    expect(css).toMatch(/12% \{\s*opacity: var\(--call-ring-wave, 0\.9\);/);
+    expect(css).toMatch(/4% \{\s*opacity: calc\(var\(--call-ring-wave, 0\.9\) \* 0\.6667\);/);
+    expect(css).toMatch(/\.call-orb\[data-state="connected"\] \.call-orb__glow \{\s*filter: brightness\(var\(--call-live-boost, 1\)\);/);
+  });
+
+  it("the reduced-motion rule that switches the waves off is unchanged", () => {
+    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\.call-orb__rings > i:nth-child\(n \+ 3\) \{\s*animation: none !important;\s*opacity: 0 !important;/);
   });
 });

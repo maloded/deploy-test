@@ -17,7 +17,7 @@ vi.mock("hanc-webrtc-widgets", () => ({}));
 
 const CUE: InviteCue = { show: 0.58, hide: 2.45 };
 const loop = (n: string) => ({ mp4: `/avatars/p/${n}.mp4` });
-const PACK: ResolvedAvatar = { id: "p", name: "Test pack", poster: "/p.webp", invite: loop("invite"), inviteCue: CUE, bubble: null, idle: null, listen: loop("l"), speak: loop("s"), caption: null, startLabel: null, endLabel: null, buttonIcon: "orb", role: null, languages: ["en", "de"], example: null, liveText: null };
+const PACK: ResolvedAvatar = { id: "p", name: "Test pack", poster: "/p.webp", invite: loop("invite"), inviteCue: CUE, bubble: null, idle: null, listen: loop("l"), speak: loop("s"), caption: null, startLabel: null, endLabel: null, buttonIcon: "orb", role: null, languages: ["en", "de"], example: null, liveText: null, dark: null };
 
 describe("when the bubble is up (the invite loop's own clock)", () => {
   it("is on from cue.show up to, not including, cue.hide", () => {

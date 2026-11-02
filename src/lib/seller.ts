@@ -2,6 +2,7 @@ import { z } from "zod";
 import { isLanguage, unsupportedLanguageMessage } from "./languages";
 import { AVATAR_ID, BUTTON_ICONS, EXAMPLE_SPEAKERS, MAX_EXAMPLE_LINES, MAX_EXAMPLE_TEXT } from "./avatar-manifest";
 import { contactWindowsSchema, formatIssues, languageSchema, localizedSchema, viewingSchema, type Localized } from "./schema";
+import { LOGO_FILE, LOGO_FILE_MESSAGE } from "./seller-logo";
 import { isTimeZone } from "./viewing";
 
 /**
@@ -107,6 +108,8 @@ export const sellerShape = {
   languages: z.array(languageSchema).min(1),
   /** The page language. It is not implied by the order of `languages`; it must be one of them. */
   defaultLanguage: languageSchema,
+  /** Optional logo: the name of an SVG file next to seller.json (see seller-logo.ts). The header shows it before the name; without it, the name alone. */
+  logo: z.string().regex(LOGO_FILE, LOGO_FILE_MESSAGE).optional(),
   /** The default theme of the seller's products (a product may override it). */
   theme: z.string().min(1),
   /** The seller is the data controller: this is the consent text of the contact form, per language. */
@@ -150,12 +153,13 @@ export type SellerFieldDescriptor = {
   key: keyof typeof sellerShape;
   label: Localized;
   required: boolean;
-  type: "version" | "text" | "localized" | "contact" | "languages" | "language" | "theme" | "link" | "viewing" | "agent" | "timezone" | "contactWindows";
+  type: "version" | "text" | "file" | "localized" | "contact" | "languages" | "language" | "theme" | "link" | "viewing" | "agent" | "timezone" | "contactWindows";
 };
 
 export const SELLER_FIELDS = [
   { key: "schemaVersion", label: { en: "Schema version", de: "Schemaversion" }, required: true, type: "version" },
   { key: "displayName", label: { en: "Brand shown on the page", de: "Marke auf der Seite" }, required: true, type: "text" },
+  { key: "logo", label: { en: "Logo (SVG file next to seller.json)", de: "Logo (SVG-Datei neben seller.json)" }, required: false, type: "file" },
   { key: "legalName", label: { en: "Legal name", de: "Rechtlicher Name" }, required: false, type: "localized" },
   { key: "legalNote", label: { en: "Legal note in the footer", de: "Rechtlicher Hinweis in der Fußzeile" }, required: false, type: "localized" },
   { key: "contact", label: { en: "Contact (email, phone, website)", de: "Kontakt (E-Mail, Telefon, Website)" }, required: true, type: "contact" },

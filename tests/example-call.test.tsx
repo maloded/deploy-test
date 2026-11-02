@@ -20,7 +20,7 @@ const EXAMPLE = {
   ],
   de: [{ speaker: "caller" as const, text: "Ist das noch frei?" }, { speaker: "agent" as const, text: "Ja." }],
 };
-const PACK: ResolvedAvatar = { id: "p", name: "Test pack", poster: "/p.webp", invite: null, inviteCue: null, bubble: null, idle: null, listen: null, speak: null, caption: null, startLabel: null, endLabel: null, buttonIcon: "orb", role: null, languages: ["en", "de"], example: EXAMPLE, liveText: null };
+const PACK: ResolvedAvatar = { id: "p", name: "Test pack", poster: "/p.webp", invite: null, inviteCue: null, bubble: null, idle: null, listen: null, speak: null, caption: null, startLabel: null, endLabel: null, buttonIcon: "orb", role: null, languages: ["en", "de"], example: EXAMPLE, liveText: null, dark: null };
 
 let io: { cb: IntersectionObserverCallback; el: Element }[] = [];
 let reduced = false;

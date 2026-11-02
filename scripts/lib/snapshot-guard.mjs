@@ -4,6 +4,7 @@ import path from "node:path";
 import sharp from "sharp";
 import { MAX_AVATAR_POSTER_BYTES, MAX_AVATAR_VIDEO_BYTES } from "../../src/lib/avatar-manifest.ts";
 import { MAX_ICON_BYTES } from "../../src/lib/seller-icon.ts";
+import { MAX_LOGO_BYTES } from "../../src/lib/seller-logo.ts";
 
 const PHOTO_EXT = /\.(jpe?g|heic|heif|tiff?|raw|dng|cr2|nef|arw)$/i;
 const AUDIO_EXT = /\.(mp3|m4a|ogg|wav|flac|aac)$/i;
@@ -29,6 +30,8 @@ export function forbiddenReason(rel, bytes = 0) {
     if (!/\.(svg|png)$/i.test(base)) return "a seller icon is icon.svg or icon.png";
     if (bytes > MAX_ICON_BYTES) return "a seller icon over the icon limit";
   }
+  // the seller's logo (an SVG named in seller.json, next to it): a small mark, never a drawing or a photo
+  if (/^content\/[^/]+\/[^/]+\.svg$/i.test(rel) && !/\/icon\.svg$/i.test(rel) && bytes > MAX_LOGO_BYTES) return "a seller logo over the logo limit";
   // the shared avatar library: only the files a pack is made of, within the pack limits (a pack is web-ready, never an original)
   if (/^content\/_avatars\//.test(rel)) {
     if (parts.length !== 4) return "an avatar pack is content/_avatars/<id>/<file>, no deeper folder";

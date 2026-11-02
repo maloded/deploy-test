@@ -9,7 +9,7 @@ import type { ResolvedAvatar } from "@/lib/avatar-manifest";
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
-const PACK: ResolvedAvatar = { id: "test-pack", name: "Test pack", poster: "/avatars/test-pack/poster.webp", invite: null, inviteCue: null, bubble: null, idle: null, listen: null, speak: null, caption: null, startLabel: null, endLabel: null, buttonIcon: "dot", role: null, languages: [], example: null, liveText: null };
+const PACK: ResolvedAvatar = { id: "test-pack", name: "Test pack", poster: "/avatars/test-pack/poster.webp", invite: null, inviteCue: null, bubble: null, idle: null, listen: null, speak: null, caption: null, startLabel: null, endLabel: null, buttonIcon: "dot", role: null, languages: [], example: null, liveText: null, dark: null };
 
 describe("the tilt in the DOM", () => {
   let root: Root | undefined;

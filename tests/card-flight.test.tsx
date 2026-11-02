@@ -7,13 +7,14 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AgentAvatarCard } from "@/components/AgentAvatarCard";
 import type { ResolvedAvatar } from "@/lib/avatar-manifest";
+import { BAR_MORPH } from "@/lib/bar-morph";
 import { CARD_FLIGHT, cubicBezier, mixRect } from "@/lib/card-flight";
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 vi.mock("hanc-webrtc-widgets", () => ({}));
 
 const loop = (n: string) => ({ mp4: `/avatars/p/${n}.mp4` });
-const PACK: ResolvedAvatar = { id: "p", name: "Test pack", poster: "/p.webp", invite: null, inviteCue: null, bubble: null, idle: loop("i"), listen: loop("l"), speak: loop("s"), caption: null, startLabel: null, endLabel: null, buttonIcon: "orb", role: null, languages: ["en"], example: null, liveText: null };
+const PACK: ResolvedAvatar = { id: "p", name: "Test pack", poster: "/p.webp", invite: null, inviteCue: null, bubble: null, idle: loop("i"), listen: loop("l"), speak: loop("s"), caption: null, startLabel: null, endLabel: null, buttonIcon: "orb", role: null, languages: ["en"], example: null, liveText: null, dark: null };
 
 const css = fs.readFileSync(path.join(process.cwd(), "src", "app", "globals.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
 const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ selector: m[1].trim(), body: m[2] }));
@@ -62,6 +63,7 @@ describe("the flight of the ghost in the page", () => {
   let frames: FrameRequestCallback[] = [];
   let clock = 0;
   let reduced = false;
+  let narrow = false; // a phone: below 900px wide
   let slot = { left: 600, top: 120, width: 400, height: 500 };
   const DOCK = { left: 1000, top: 560, width: 200, height: 250 };
   let zone = { left: 1000, top: 560, width: 200, height: 250 };
@@ -72,6 +74,7 @@ describe("the flight of the ghost in the page", () => {
     frames = [];
     clock = 1000;
     reduced = false;
+    narrow = false;
     slot = { left: 600, top: 120, width: 400, height: 500 };
     zone = { ...DOCK };
     (window as any).IntersectionObserver = class {
@@ -98,7 +101,7 @@ describe("the flight of the ghost in the page", () => {
     (window as any).requestAnimationFrame = (cb: FrameRequestCallback) => (frames.push(cb), frames.length);
     (window as any).cancelAnimationFrame = () => void (frames = []);
     vi.spyOn(performance, "now").mockImplementation(() => clock);
-    (window as any).matchMedia = (q: string) => ({ matches: q.includes("reduce") && reduced, addEventListener() {}, removeEventListener() {} });
+    (window as any).matchMedia = (q: string) => ({ matches: (q.includes("reduce") && reduced) || (q.includes("56.25em") && narrow), addEventListener() {}, removeEventListener() {} });
     Object.defineProperty(window, "scrollY", { configurable: true, get: () => 0 });
     Object.defineProperty(window, "scrollX", { configurable: true, get: () => 0 });
     if (!customElements.get("hanc-ai-pill-floating-call")) customElements.define("hanc-ai-pill-floating-call", class extends HTMLElement {});
@@ -243,6 +246,173 @@ describe("the flight of the ghost in the page", () => {
     await share(0.9);
     expect(card.dataset.placement).toBe("hero");
     expect(ghosts()).toHaveLength(0);
+  });
+
+  describe("on a phone: the card morphs into the call bar and back (bar-morph.ts)", () => {
+    const BAR = { left: 12, top: 700, width: 366, height: 72 };
+    const morphs = () => Array.from(document.querySelectorAll<HTMLElement>(".card-morph"));
+    const tops = () => Array.from(document.querySelectorAll<HTMLElement>(".card-morph__top"));
+    const bar = () => document.querySelector<HTMLElement>(".avatar-card__bar")!;
+    /** The first number of the shell's clip-path: how far its top edge is from the top of the window. */
+    const shellTop = () => parseFloat(/inset\(([\d.]+)px/.exec(document.querySelector<HTMLElement>(".card-morph__shell")!.style.clipPath)![1]);
+    const phone = async (props = {}) => {
+      narrow = true;
+      const p = await first(props);
+      bar().getBoundingClientRect = () => box4(BAR);
+      return p;
+    };
+
+    it("starts a morph, not the desktop ghost: a back and a front layer in the body, the real card switched at once with its looks hidden, the real bar held by the script", async () => {
+      const { card } = await phone();
+      await share(0.1);
+      expect(ghosts()).toHaveLength(0);
+      expect(morphs()).toHaveLength(1);
+      expect(tops()).toHaveLength(1);
+      expect(card.dataset.placement).toBe("dock");
+      expect(card.dataset.flight).toBe("dock");
+      expect(bar().style.opacity).toBe("0"); // not yet there: it fades in with the shape
+      expect(bar().style.transition).toBe("none"); // the stylesheet's own fade is off while the script moves it
+      expect(morphs()[0].getAttribute("aria-hidden")).toBe("true");
+    });
+
+    it("the shape goes from the card's slot to the bar's box in 350 ms, ease-out, and the bar's own parts come in as it gets there", async () => {
+      await phone();
+      await share(0.1);
+      const top0 = shellTop();
+      fly(60);
+      const top1 = shellTop();
+      fly(180);
+      const top2 = shellTop();
+      expect(top1).toBeGreaterThan(top0);
+      expect(top2).toBeGreaterThan(top1);
+      expect(top2).toBeLessThan(BAR.top);
+      fly(349);
+      expect(Number(bar().style.opacity)).toBeGreaterThan(0.5);
+      fly(BAR_MORPH.ms + 1);
+      expect(shellTop()).toBeCloseTo(BAR.top, 0);
+      expect(bar().style.opacity).toBe("1");
+    });
+
+    it("lands: the card's flight attribute goes, the bar is given back to the stylesheet exactly as shown, the ghost fades out and is gone", async () => {
+      const { card } = await phone();
+      await share(0.1);
+      fly(BAR_MORPH.ms + 1);
+      expect(card.dataset.flight).toBeUndefined();
+      fly(BAR_MORPH.ms + 20); // the frame that clears the bar's inline styles
+      expect(bar().style.opacity).toBe("");
+      expect(bar().style.clipPath).toBe("");
+      expect(bar().style.transition).toBe("");
+      expect(bar().style.visibility).toBe("");
+      expect(morphs()[0].style.opacity).toBe("0"); // fading out over the landed bar
+      await wait(BAR_MORPH.crossfadeMs + 120);
+      expect(morphs()).toHaveLength(0);
+      expect(tops()).toHaveLength(0);
+    });
+
+    it("the bar is never copied: the very same nodes (timer, lines, button, face) are there before, during and after, so nothing flickers or remounts", async () => {
+      await phone({ callStatus: "connected" });
+      const nodes = () => [".avatar-card__bar-title", ".avatar-card__bar-line", ".avatar-card__bar-button", ".avatar-card__face"].map((q) => bar().querySelector(q));
+      const before = nodes();
+      await share(0.1);
+      fly(120);
+      expect(nodes()).toEqual(before);
+      fly(BAR_MORPH.ms + 1);
+      fly(BAR_MORPH.ms + 20);
+      expect(nodes()).toEqual(before);
+      expect(bar().querySelectorAll("[data-flight]").length).toBe(0);
+    });
+
+    it("carries the card's layers (picture, name and captions) and the call button's copy; the copy has no ids and cannot be tabbed to", async () => {
+      await phone();
+      await share(0.1);
+      const back = morphs()[0];
+      expect(back.querySelector("canvas")).not.toBeNull();
+      expect(back.querySelector(".card-ghost__shade")).not.toBeNull();
+      expect(back.querySelector(".card-morph__card")).not.toBeNull();
+      expect(back.querySelector("[id]")).toBeNull();
+      expect(tops()[0].querySelector("[id]")).toBeNull();
+    });
+
+    it("goes back the same way: the bar's own parts fade out, the card comes in at the slot, and the real card shows at the end", async () => {
+      const { card } = await phone();
+      await share(0.1);
+      fly(BAR_MORPH.ms + 1);
+      fly(BAR_MORPH.ms + 20);
+      await wait(BAR_MORPH.crossfadeMs + 120);
+      clock = 1000;
+      await share(0.9);
+      expect(card.dataset.placement).toBe("hero");
+      expect(card.dataset.flight).toBe("hero");
+      expect(morphs()).toHaveLength(1);
+      expect(bar().style.opacity).toBe("1"); // starts as the bar is
+      fly(BAR_MORPH.ms + 1);
+      expect(card.dataset.flight).toBeUndefined();
+      expect(shellTop()).toBeCloseTo(slot.top, 0);
+    });
+
+    it("taken over in the air it goes on from where it is: one morph, the other way, with no jump of the shape", async () => {
+      await phone();
+      await share(0.1);
+      fly(120);
+      const before = shellTop();
+      const opBefore = Number(bar().style.opacity);
+      clock = 1000 + 120;
+      await share(0.9); // back up while the shape is still on its way down
+      expect(morphs()).toHaveLength(1);
+      fly(120); // the same instant: the first frame of the new flight
+      expect(Math.abs(shellTop() - before)).toBeLessThan(2);
+      expect(Math.abs(Number(bar().style.opacity) - opBefore)).toBeLessThan(0.05);
+      fly(120 + BAR_MORPH.ms + 1);
+      expect(shellTop()).toBeCloseTo(slot.top, 0);
+    });
+
+    it("is instant under reduced motion: no ghost, the card and the bar switch at once, still one of them", async () => {
+      reduced = true;
+      const { card } = await phone();
+      await share(0.1);
+      expect(card.dataset.placement).toBe("dock");
+      expect(morphs()).toHaveLength(0);
+      expect(card.dataset.flight).toBeUndefined();
+      expect(bar().style.opacity).toBe("");
+    });
+
+    it("is instant while the idle bar steps aside over the offer or the footer (it would morph into nothing)", async () => {
+      const { card } = await phone();
+      card.dataset.barZone = "off";
+      await share(0.1);
+      expect(card.dataset.placement).toBe("dock");
+      expect(morphs()).toHaveLength(0);
+      expect(card.dataset.flight).toBeUndefined();
+    });
+
+    it("a call does not stop it from morphing, and in a call the zone does not make it instant", async () => {
+      const { card, host } = await phone({ callStatus: "connected" });
+      host.callStatus = "connected";
+      card.dataset.barZone = "off";
+      card.dataset.call = "connected";
+      await share(0.1);
+      expect(morphs()).toHaveLength(1);
+      expect(card.dataset.flight).toBe("dock");
+    });
+
+    it("a window that grows past 900px mid-morph ends it: the usual flight takes over", async () => {
+      const { card } = await phone();
+      await share(0.1);
+      expect(morphs()).toHaveLength(1);
+      narrow = false;
+      clock = 1000;
+      await share(0.9);
+      expect(morphs()).toHaveLength(0);
+      expect(card.dataset.flight).toBe("hero");
+      expect(ghosts()).toHaveLength(1);
+    });
+
+    it("does not hold the card back for what is under the dock's place: the bar covers what it covers", async () => {
+      const { card } = await phone({ content: true });
+      gateIO()?.cb([{ isIntersecting: true, target: gateIO()!.targets[0] }], {});
+      await share(0.1);
+      expect(card.dataset.placement).toBe("dock");
+    });
   });
 
   it("the ghost has no widget, plate, bubble or captions, and is not an ancestor of the widget; the widget and the action area are never touched", async () => {

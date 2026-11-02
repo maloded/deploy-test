@@ -9,6 +9,7 @@ import { OG_HEIGHT, OG_WIDTH, ogImagePath } from "@/lib/og-image";
 import { sellerIconHref } from "@/lib/seller-icon";
 import { socialMeta } from "@/lib/social-meta";
 import { themeColor } from "@/lib/theme-color";
+import { themeBootScript, themePair } from "@/lib/theme-pref";
 import { siteUrl } from "@/lib/site-url";
 import { getSite, themeSwitcherEnabled } from "@/lib/site";
 import { ui } from "@/lib/ui-strings";
@@ -67,12 +68,16 @@ export default async function RootLayout({ children, params }: { children: React
   // Reading headers makes the page dynamic, so it is done only when the theme switcher exists
   // (development, or REVIEW_THEME_SWITCHER=1 for a review).
   const override = themeSwitcherEnabled() ? ((await headers()).get("x-theme-override") ?? null) : null;
-  const { theme, lang, seller } = await siteFor(params, override);
+  const { theme, lang, seller, availableThemes } = await siteFor(params, override);
+  const pair = themePair(theme, availableThemes);
 
+  // suppressHydrationWarning: the head script below may already have set data-theme to the visitor's choice (React must not undo it)
   return (
-    <html lang={lang} data-theme={theme}>
+    <html lang={lang} data-theme={theme} suppressHydrationWarning>
       <head>
-        <link rel="stylesheet" href={`/themes/${theme}.css`} />
+        {/* the visitor's stored or system theme, before the first paint (src/lib/theme-pref.ts); only when the product can switch */}
+        {pair && <script dangerouslySetInnerHTML={{ __html: themeBootScript(theme, pair) }} />}
+        <link rel="stylesheet" href={`/themes/${theme}.css`} data-theme-css={theme} />
       </head>
       <body>
         {/* the error boundary (error.tsx) is a client component: it gets only the few strings of the error page, not the UI string bundle */}

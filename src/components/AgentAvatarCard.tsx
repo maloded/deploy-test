@@ -1,14 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { CardState } from "@/lib/agent-state";
 import type { WidgetHost } from "@/lib/hanc-bridge";
 import type { Language } from "@/lib/languages";
 import type { AvatarSlot, ResolvedAvatar } from "@/lib/avatar-manifest";
 import { activeSlot, bubbleTextOf, hasBubble, isSingleLoop, liveTextOf, motionAllowed, pickFormat, roleLine, slotsToMount, startLabelOf } from "@/lib/avatar-view";
-import { ui } from "@/lib/ui-strings";
+import { barKind, barText } from "@/lib/call-bar";
+import { ui, uiFmt } from "@/lib/ui-strings";
 import { useAgentState } from "./use-agent-state";
+import { useDarkTheme } from "./use-dark-theme";
 import { useCallStatus } from "./use-call-status";
+import { useCallTimer } from "./use-call-timer";
+import { useBarZone } from "./use-bar-zone";
+import { AgentStartButton } from "./AgentStartButton";
 import { useCallOutcome } from "./use-call-outcome";
 import { useOrbRings } from "./use-orb-rings";
 import { AgentCaptions } from "./AgentCaptions";
@@ -50,7 +55,7 @@ const subscribeMotion = (notify: () => void) => {
 const motionNow = () =>
   motionAllowed({ reducedMotion: Boolean(reducedMotion()?.matches), saveData: Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData) });
 
-export function AgentAvatarCard({ avatar, lang, host, slot = false, placement: pinned, children }: { avatar: ResolvedAvatar; lang?: Language; host?: WidgetHost | null; slot?: boolean; placement?: Placement; children: ReactNode }) {
+export function AgentAvatarCard({ avatar, lang, host, slot = false, placement: pinned, theme, children }: { avatar: ResolvedAvatar; lang?: Language; host?: WidgetHost | null; slot?: boolean; placement?: Placement; theme?: string; children: ReactNode }) {
   // reduced motion and Save-Data mean poster only (it follows a change of the system setting); false on the server, where no video is rendered
   const motion = useSyncExternalStore(subscribeMotion, motionNow, () => false);
   const canWebm = useSyncExternalStore(noSubscription, webmSupported, () => false);
@@ -60,6 +65,17 @@ export function AgentAvatarCard({ avatar, lang, host, slot = false, placement: p
   const [playing, setPlaying] = useState<Partial<Record<AvatarSlot, boolean>>>({});
   const [failed, setFailed] = useState<Partial<Record<AvatarSlot, boolean>>>({});
   const videos = useRef<Partial<Record<AvatarSlot, HTMLVideoElement | null>>>({});
+  // the dark theme shows the pack's recoloured poster and loops (where it has them); a dark file that fails to load falls back to the original
+  const darkTheme = useDarkTheme(theme);
+  const [darkFailed, setDarkFailed] = useState(false);
+  const variant = darkTheme && !darkFailed ? avatar.dark : null;
+  const loopOf = (slot: AvatarSlot) => variant?.[slot] ?? avatar[slot];
+  // a switch of variant reloads the video: it picks up where the old one was, so the loop (and the call bubble's clock) goes on
+  const times = useRef<Partial<Record<AvatarSlot, number>>>({});
+  const resume = useRef<Partial<Record<AvatarSlot, number>>>({});
+  useLayoutEffect(() => {
+    resume.current = { ...times.current };
+  }, [variant]);
   const cardRef = useRef<HTMLElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const overlay = useWidgetOverlay(cardRef);
@@ -67,6 +83,14 @@ export function AgentAvatarCard({ avatar, lang, host, slot = false, placement: p
   const { placement, ready } = useCardPlacement(cardRef, slot, pinned, overlay);
   const state: CardState = useAgentState(cardRef, host);
   const call = callAttribute(phase);
+  // the call bar: on a phone the docked card is a pill at the bottom (CSS decides when it is shown; this is what it holds)
+  const kind = barKind(phase);
+  const barOn = Boolean(lang) && avatar.buttonIcon === "orb";
+  const seconds = useCallTimer(barOn && kind === "live");
+  const zoneOff = useBarZone(barOn && kind === "idle");
+  const barSlots = barOn && kind === "live" && motion ? ([...new Set([activeSlot(avatar, "call"), activeSlot(avatar, "speaking")])].filter((slot): slot is AvatarSlot => slot !== null)) : [];
+  const barVideos = useRef<Partial<Record<AvatarSlot, HTMLVideoElement | null>>>({});
+  const [barPlaying, setBarPlaying] = useState<Partial<Record<AvatarSlot, boolean>>>({});
   const rings = useOrbRings(cardRef, phase);
   // the example call and the status line are for the large card only (the docked card is small, and the circle is the picture)
   const example = placement === "hero" && lang ? (avatar.example?.[lang] ?? null) : null;
@@ -108,15 +132,34 @@ export function AgentAvatarCard({ avatar, lang, host, slot = false, placement: p
     }
   });
 
+  // the bar's face plays the call loops (the listening one, the speaking one) while a call is live and the tab is visible, crossfaded by CSS
+  useEffect(() => {
+    const showing = activeSlot(avatar, state);
+    for (const slot of barSlots) {
+      const video = barVideos.current[slot];
+      if (!video) continue;
+      if (slot === showing && visible) void video.play().catch(() => {});
+      else video.pause();
+    }
+  });
+  // a tap on the face scrolls to the full card (the hero's slot); without one, to the top of the page
+  const showCard = () => {
+    const behavior: ScrollBehavior = motion ? "smooth" : "auto";
+    const slotEl = document.querySelector<HTMLElement>("[data-agent-slot]");
+    if (slotEl) slotEl.scrollIntoView({ behavior, block: "center" });
+    else window.scrollTo({ top: 0, behavior });
+  };
+  const barText_ = lang && barOn ? barText({ kind, phase, state, avatar, lang, seconds }) : null;
+
   return (
-    <section ref={cardRef} className="avatar-card" data-block="agent" data-placement={placement} data-ready={ready} data-avatar={avatar.id} data-state={state} data-call={call} data-icon={avatar.buttonIcon} data-rings={rings} aria-label={avatar.name} onPointerDown={touch} onPointerEnter={touch} onFocusCapture={touch}>
+    <section ref={cardRef} className="avatar-card" data-block="agent" data-placement={placement} data-ready={ready} data-avatar={avatar.id} data-state={state} data-call={call} data-icon={avatar.buttonIcon} data-rings={rings} data-bar-zone={zoneOff ? "off" : undefined} aria-label={avatar.name} onPointerDown={touch} onPointerEnter={touch} onFocusCapture={touch}>
       <div ref={frameRef} className="avatar-card__frame">
         <div className="avatar-card__tile">
           <div className="avatar-card__media" aria-hidden="true">
             {/* eslint-disable-next-line @next/next/no-img-element -- a pack file served as it is from /avatars, sized by the card */}
-            <img className="avatar-card__poster" src={avatar.poster} alt="" decoding="async" />
+            <img className="avatar-card__poster" src={variant?.poster ?? avatar.poster} alt="" decoding="async" onError={variant ? () => setDarkFailed(true) : undefined} />
             {mounted.map((slot) => {
-              const file = pickFormat(avatar[slot]!, canWebm);
+              const file = pickFormat(loopOf(slot)!, canWebm);
               if (!file) return null;
               return (
                 <video
@@ -136,7 +179,16 @@ export function AgentAvatarCard({ avatar, lang, host, slot = false, placement: p
                   tabIndex={-1}
                   disablePictureInPicture
                   onPlaying={() => setPlaying((p) => ({ ...p, [slot]: true }))}
-                  onError={() => setFailed((f) => ({ ...f, [slot]: true }))}
+                  onEmptied={() => setPlaying((p) => ({ ...p, [slot]: false }))} // the source changed (the theme): not shown until the new one plays
+                  onTimeUpdate={(e) => void (times.current[slot] = e.currentTarget.currentTime)}
+                  onLoadedMetadata={(e) => {
+                    const at = resume.current[slot];
+                    if (at === undefined) return;
+                    delete resume.current[slot];
+                    const video = e.currentTarget;
+                    if (Number.isFinite(video.duration) && video.duration > 0) video.currentTime = Math.min(at, Math.max(0, video.duration - 0.05));
+                  }}
+                  onError={() => (variant ? setDarkFailed(true) : setFailed((f) => ({ ...f, [slot]: true })))}
                 />
               );
             })}
@@ -173,6 +225,52 @@ export function AgentAvatarCard({ avatar, lang, host, slot = false, placement: p
             <span className="call-bubble__rest" data-rest />
           </span>
         </p>
+      )}
+      {lang && barText_ && (
+        // the call bar (phones): ONE pill that moves as one element; CSS shows it when the full card is out of view, and during a call
+        <div className="avatar-card__bar" data-kind={kind} role="group" aria-label={uiFmt("agent.bar.group", lang, { name: avatar.name })}>
+          <button type="button" className="avatar-card__face" aria-label={uiFmt("agent.bar.show", lang, { name: avatar.name })} onClick={showCard}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- a pack file served as it is, cropped by CSS */}
+            <img className="avatar-card__face-img" src={variant?.poster ?? avatar.poster} alt="" decoding="async" />
+            {barSlots.map((slot) => {
+              const file = pickFormat(loopOf(slot)!, canWebm);
+              if (!file) return null;
+              return (
+                <video
+                  key={slot}
+                  ref={(el) => {
+                    barVideos.current[slot] = el;
+                    if (el) el.muted = true;
+                  }}
+                  className="avatar-card__face-video"
+                  data-slot={slot}
+                  data-active={slot === active && barPlaying[slot] ? "true" : "false"}
+                  src={file}
+                  muted
+                  loop
+                  playsInline
+                  preload="auto"
+                  tabIndex={-1}
+                  disablePictureInPicture
+                  onPlaying={() => setBarPlaying((p) => ({ ...p, [slot]: true }))}
+                  onEmptied={() => setBarPlaying((p) => ({ ...p, [slot]: false }))}
+                />
+              );
+            })}
+          </button>
+          <div className="avatar-card__bar-text" aria-live="polite">
+            <span className="avatar-card__bar-title">
+              {kind === "live" && <i className="avatar-card__bar-dot" aria-hidden="true" />}
+              <b>{barText_.title}</b>
+              {barText_.small && <small>{barText_.small}</small>}
+              {barText_.timer && <time className="avatar-card__bar-timer">{barText_.timer}</time>}
+            </span>
+            <span className="avatar-card__bar-line">{barText_.line}</span>
+          </div>
+          <div className="avatar-card__bar-button">
+            <AgentStartButton host={host ?? null} lang={lang} name={avatar.name} startLabel={avatar.startLabel} endLabel={avatar.endLabel} icon="orb" bar />
+          </div>
+        </div>
       )}
       <div className="avatar-card__action">{children}</div>
     </section>

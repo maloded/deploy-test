@@ -63,6 +63,21 @@ const inviteSchema = z.union([
     .refine((l) => l.mp4 !== undefined || l.webm !== undefined, "needs an mp4 or a webm file"),
 ]);
 
+/**
+ * The dark-theme variants of a pack: the same poster and loops with another background (the page's dark theme shows these, the light
+ * theme the originals). Every part is optional, and a slot without a dark file plays its original. No cue here: the dark invite loop is
+ * the same loop recoloured, so the original's `invite.cue` applies to it.
+ */
+const darkSchema = z
+  .object({
+    poster: z.string().regex(AVATAR_POSTER_FILE, "must be a plain file name ending in .webp").optional(),
+    invite: loopSchema.optional(),
+    idle: loopSchema.optional(),
+    listen: loopSchema.optional(),
+    speak: loopSchema.optional(),
+  })
+  .strict();
+
 export const avatarManifestSchema = z
   .object({
     schema: z.literal(1),
@@ -77,12 +92,20 @@ export const avatarManifestSchema = z
     idle: loopSchema.optional(),
     listen: loopSchema.optional(),
     speak: loopSchema.optional(),
+    /** Optional recoloured poster and loops for the dark theme (see darkSchema). */
+    dark: darkSchema.optional(),
     /** Who made it and under which licence it may be used. */
     license: z.string().trim().min(1).max(200),
     /** Where the material comes from (a person's name is fine here, a client's is not: this is a shared library). */
     provenance: z.string().trim().min(1).max(400),
   })
-  .strict();
+  .strict()
+  .superRefine((m, ctx) => {
+    // a dark loop recolours a loop the pack has: one without an original has nothing to replace
+    for (const slot of AVATAR_SLOTS) {
+      if (m.dark?.[slot] !== undefined && m[slot] === undefined) ctx.addIssue({ code: "custom", path: ["dark", slot], message: `the pack has no "${slot}" loop to recolour` });
+    }
+  });
 export type AvatarManifest = z.infer<typeof avatarManifestSchema>;
 
 /** The formats of one loop: the file names by container. */
@@ -96,6 +119,14 @@ export function loopFiles(manifest: AvatarManifest, slot: AvatarSlot): LoopFiles
   return /\.webm$/i.test(loop) ? { webm: loop } : { mp4: loop };
 }
 
+/** The file(s) of a loop of the dark variant, or null when the pack has none for that slot. */
+export function darkLoopFiles(manifest: AvatarManifest, slot: AvatarSlot): LoopFiles | null {
+  const loop = manifest.dark?.[slot];
+  if (loop === undefined) return null;
+  if (typeof loop !== "string") return { ...(loop.mp4 !== undefined ? { mp4: loop.mp4 } : {}), ...(loop.webm !== undefined ? { webm: loop.webm } : {}) };
+  return /\.webm$/i.test(loop) ? { webm: loop } : { mp4: loop };
+}
+
 /** The cue of the invite loop, or null (no invite loop, a plain file name, or no cue). */
 export const inviteCue = (manifest: AvatarManifest): InviteCue | null => (manifest.invite !== undefined && typeof manifest.invite !== "string" ? (manifest.invite.cue ?? null) : null);
 
@@ -105,9 +136,11 @@ export const avatarLoops = (manifest: AvatarManifest): AvatarSlot[] => AVATAR_SL
 /** Every file of a pack that must travel with it: the poster and each loop file, once, relative to the pack's folder. */
 export function avatarFiles(manifest: AvatarManifest): string[] {
   const files = [manifest.poster];
+  if (manifest.dark?.poster) files.push(manifest.dark.poster);
   for (const slot of AVATAR_SLOTS) {
-    const f = loopFiles(manifest, slot);
-    if (f) files.push(...[f.mp4, f.webm].filter((x): x is string => x !== undefined));
+    for (const f of [loopFiles(manifest, slot), darkLoopFiles(manifest, slot)]) {
+      if (f) files.push(...[f.mp4, f.webm].filter((x): x is string => x !== undefined));
+    }
   }
   return [...new Set(files)];
 }
@@ -132,6 +165,8 @@ export type ExampleCall = Partial<Record<Language, ExampleLine[]>>;
 
 /** A loop for the card: the URL(s) by container. The card picks one container and loads only that. */
 export type ResolvedLoop = LoopFiles;
+/** The dark theme's poster and loops as URLs; each is null when the pack has no dark file for it (the original is used then). */
+export type ResolvedDark = { poster: string | null; invite: ResolvedLoop | null; idle: ResolvedLoop | null; listen: ResolvedLoop | null; speak: ResolvedLoop | null };
 /** The pack as the card gets it (plain data, safe to hand to a client component): URLs, no file system. */
 export type ResolvedAvatar = {
   id: string;
@@ -145,6 +180,8 @@ export type ResolvedAvatar = {
   idle: ResolvedLoop | null;
   listen: ResolvedLoop | null;
   speak: ResolvedLoop | null;
+  /** The recoloured poster and loops for the dark theme; null: the pack has none, the originals play in both themes. */
+  dark: ResolvedDark | null;
   /** The caption over the foot of the card (agent.avatar.tagline and .badge in seller.json, completed with the default language); null when the seller wrote neither. */
   caption: { tagline: Localized | null; badge: Localized | null } | null;
   /** The start and end button labels from seller.json (agent.avatar.startLabel / .endLabel); null: the page's standard labels. */
@@ -179,6 +216,15 @@ export function resolveAvatar(manifest: AvatarManifest, nameOverride?: string, t
     idle: url(loopFiles(manifest, "idle")),
     listen: url(loopFiles(manifest, "listen")),
     speak: url(loopFiles(manifest, "speak")),
+    dark: manifest.dark
+      ? {
+          poster: manifest.dark.poster ? avatarUrl(manifest.id, manifest.dark.poster) : null,
+          invite: url(darkLoopFiles(manifest, "invite")),
+          idle: url(darkLoopFiles(manifest, "idle")),
+          listen: url(darkLoopFiles(manifest, "listen")),
+          speak: url(darkLoopFiles(manifest, "speak")),
+        }
+      : null,
     caption: texts.tagline || texts.badge ? { tagline: texts.tagline ?? null, badge: texts.badge ?? null } : null,
     startLabel: texts.startLabel ?? null,
     endLabel: texts.endLabel ?? null,

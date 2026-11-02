@@ -180,24 +180,25 @@ main:focus-visible {
 }
 
 /*
- * header strip: full width, not sticky. ONE height for every control in it (the button, the player's button and track select, the language
- * links or dropdown): --header-control-h, by default the height the "Get in touch" button always had (its 0.7rem text, the line height, its
- * 0.5rem padding and hairline), so the three sit on one level. The header is that plus modest padding. On a narrow screen the controls are 44px.
+ * header strip: full width, not sticky, ONE row. ONE height for every control in it (the language links, the icon buttons, the button):
+ * --header-control-h, 44px, which is also the size of a touch target. The header is that plus modest padding (--header-h). The brand
+ * is below 900px a little smaller; the controls keep 44px.
  */
 :root {
-  --header-control-h: calc(0.7rem * var(--line-height, 1.55) + var(--space-2) * 2 + 2px);
-  --header-h: calc(var(--header-control-h, 2.25rem) + var(--space-2) * 3 + 1px);
+  --header-control-h: 2.75rem;
+  --header-h: calc(var(--header-control-h, 2.75rem) + var(--space-2) * 3 + 1px);
   --brand-size: 1.7rem; /* the seller's name in the header; its line (1.1) stays below the control height, so it never makes the header taller */
 }
 
-@media (width < 40em) {
+@media (width < 56.25em) {
   :root {
-    --header-control-h: 2.75rem;
     --brand-size: 1.35rem;
   }
 }
 
 .site-header {
+  position: relative; /* the music panel of a narrow screen hangs from the header's lower edge */
+  z-index: 1200; /* above the avatar card (1100), so the music panel opens over it; below the widget's privacy modal (10000) and the top-layer dialogs */
   display: flex;
   align-items: center;
   min-height: var(--header-h, 3.75rem);
@@ -228,24 +229,47 @@ main:focus-visible {
 
 .lang-switch {
   display: flex;
-  gap: var(--space-3);
+  align-items: center;
+  gap: var(--space-1);
   font-size: 1rem;
 }
 
-/* plain text links, the current language underlined, each the height of a control: narrow enough for the header at 390 px */
+/* plain text links, each the height of a control (a 44px target), no background: "DE / EN" with the current language bright and the other muted */
 .lang-switch a {
   display: inline-flex;
   align-items: center;
   box-sizing: border-box;
-  height: var(--header-control-h, 2.25rem);
-  border-bottom: 2px solid transparent;
+  height: var(--header-control-h, 2.75rem);
+  padding-inline: var(--space-1);
   color: var(--muted);
   text-decoration: none;
 }
 
-.lang-switch a[aria-current="true"] {
-  border-bottom-color: var(--accent-line, var(--accent));
+.lang-switch a {
+  cursor: pointer;
+}
+
+/* hover: the code brightens and gets an accent underline */
+.lang-switch a:hover {
   color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--accent-line, var(--accent));
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.3em;
+}
+
+.lang-switch a[aria-current="true"] {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.lang-switch a:focus-visible {
+  outline: 2px solid var(--accent-line, var(--accent));
+  outline-offset: 2px;
+}
+
+.lang-switch__sep {
+  color: var(--muted);
 }
 
 /* three languages or more: a dropdown showing the current language (a <details> of the same links, so it works without JavaScript) */
@@ -258,7 +282,7 @@ main:focus-visible {
   align-items: center;
   gap: var(--space-2);
   box-sizing: border-box;
-  height: var(--header-control-h, 2.25rem);
+  height: var(--header-control-h, 2.75rem);
   padding-inline: var(--space-3);
   border: 1px solid var(--border);
   border-radius: var(--radius, 0);
@@ -317,39 +341,70 @@ main:focus-visible {
   color: var(--accent-line, var(--accent));
 }
 
-/* the button to the footer's contact row: its own size (the generic small button), only made exactly as high as the other controls */
+/* the button to the footer's contact row: its own size (the generic small button), exactly as high as the other controls */
 .site-header__end > .button--small {
   display: inline-flex;
   align-items: center;
   box-sizing: border-box;
-  height: var(--header-control-h, 2.25rem);
+  height: var(--header-control-h, 2.75rem);
   padding-block: 0;
 }
 
-/* a narrow screen: the brand and the button share the first row, the language control and the player the second (two rows, not three) */
-@media (width < 40em) {
-  .site-header:not(.site-header--agent) .site-header__end {
-    display: contents;
-  }
-
-  .site-header:not(.site-header--agent) .site-header__end > .button--small {
-    order: 1;
-    margin-inline-start: auto;
-  }
-
+/* below 900px: still ONE row. The language control shows only the other language's code, the controls come close together, and the
+   button is not in the header (the hero and the offer card have the page's contact buttons) */
+@media (width < 56.25em) {
   .site-header:not(.site-header--agent) .site-header__inner {
+    flex-wrap: nowrap;
     column-gap: var(--space-2);
   }
 
-  /* second row: the language control (its original 0.875rem size here) and the player, 327px at 390px */
-  .site-header:not(.site-header--agent) .lang-switch {
-    order: 2;
-    font-size: 0.875rem;
+  .site-header:not(.site-header--agent) .site-header__brand {
+    flex: 1 1 0;
+    gap: var(--space-1);
   }
 
-  .site-header:not(.site-header--agent) .music {
-    order: 3;
+  .site-header:not(.site-header--agent) .site-header__end {
+    flex: none;
+    flex-wrap: nowrap;
+    gap: var(--space-1);
   }
+
+  .site-header:not(.site-header--agent) .site-header__end > .button--small {
+    display: none;
+  }
+
+  /* two languages: "DE / EN" becomes the one other code, as a text toggle */
+  .lang-switch--codes a[aria-current="true"],
+  .lang-switch--codes .lang-switch__sep {
+    display: none;
+  }
+
+  .lang-switch--codes a {
+    min-width: var(--header-control-h, 2.75rem);
+    justify-content: center;
+    color: var(--text);
+  }
+}
+
+/* the brand: the seller's logo (when it has one) before the name. The mark is a little taller than the name's text but shorter than the controls, so the header does not grow;
+   its currentColor is the theme's text colour, so it reads in both themes */
+.site-header__brand {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.site-header__logo {
+  display: inline-flex;
+  flex: none;
+  color: var(--text);
+}
+
+.site-header__logo svg {
+  display: block;
+  width: auto;
+  height: calc(var(--brand-size, 1.7rem) * 1.15);
 }
 
 .site-header__name {
@@ -1043,6 +1098,135 @@ main:focus-visible {
 
 .specs__group .label {
   margin-bottom: var(--space-3);
+}
+
+/*
+ * The group's title is a button (SpecsGroups.tsx). On a wide screen it is only the title, as ever: inert, no chevron, every panel shown. On a phone (below 900px)
+ * it is a row of 44px with a chevron that opens and closes its group, and a text button under the groups opens them all.
+ */
+.specs__toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  opacity: 1;
+  text-align: start;
+  text-transform: inherit;
+  cursor: default;
+}
+
+.specs__chevron,
+.specs__all {
+  display: none;
+}
+
+@media (width < 56.25em) {
+  .specs__group {
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .specs__group:first-child {
+    border-top: 1px solid var(--border);
+  }
+
+  .specs__group[data-open="true"] {
+    border-bottom: 0; /* the open group's last row has its own line */
+  }
+
+  .specs__group .label {
+    margin-bottom: 0;
+  }
+
+  .specs__toggle {
+    min-height: 2.75rem;
+    cursor: pointer;
+  }
+
+  .specs__toggle:focus-visible,
+  .specs__all:focus-visible {
+    outline: 2px solid var(--accent-line, var(--accent));
+    outline-offset: 2px;
+  }
+
+  .specs__chevron {
+    display: block;
+    flex: none;
+    transition: transform 250ms ease;
+  }
+
+  .specs__group[data-open="true"] .specs__chevron {
+    transform: rotate(180deg);
+  }
+
+  /* the height animates from 0 to its own: grid rows 0fr to 1fr. A closed panel is also hidden (visibility, after the close), so its links and text are out of the tab order */
+  .specs__panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    visibility: hidden;
+    transition:
+      grid-template-rows 250ms ease,
+      visibility 0s 250ms;
+  }
+
+  .specs__group[data-open="true"] .specs__panel {
+    grid-template-rows: 1fr;
+    visibility: visible;
+    transition:
+      grid-template-rows 250ms ease,
+      visibility 0s;
+  }
+
+  .specs__panel > .details {
+    min-height: 0;
+    overflow: hidden;
+    border-top: 0; /* a collapsed panel is exactly 0 high: the line above the rows is the first row's own */
+  }
+
+  .specs__panel .details__row:first-child {
+    border-top: 1px solid var(--border);
+  }
+
+  .specs__all {
+    display: flex;
+    width: 100%;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    margin: var(--space-3) 0 0;
+    padding: 0 var(--space-3);
+    border: 0;
+    background: none;
+    color: var(--accent-line, var(--accent));
+    font: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+    cursor: pointer;
+  }
+
+  /* a link to a row inside a closed group opens it at once, without the animation */
+  .specs__body[data-instant] .specs__panel,
+  .specs__body[data-instant] .specs__chevron {
+    transition: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .specs__group .specs__panel,
+    .specs__group[data-open="true"] .specs__panel,
+    .specs__group .specs__chevron {
+      transition: none;
+    }
+  }
 }
 
 /* two balanced columns of groups on wide screens (no gaps under shorter groups) */
@@ -1840,6 +2024,13 @@ main:focus-visible {
   font-size: 1.1rem;
 }
 
+/* the music credit line (only when a track's licence asks for it): quiet, like the legal note */
+.site-footer__credit {
+  color: var(--muted);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
 .site-footer__prototype {
   color: var(--text);
   font-size: 0.75rem;
@@ -1922,68 +2113,396 @@ main:focus-visible {
   min-height: 3.5rem;
 }
 
-/* background music (only for a product with music): a play/pause button and an optional track select showing the title, right after the language switcher;
-   the button and the select are exactly --header-control-h high, like the header's other controls */
-.music {
+/* the two icon buttons of the header share ONE bordered group with a thin divider between them: [light/dark] | [music]. The group is
+   its buttons are full 44px squares (2.75rem) with no border of their own; the group's 1px border is a ring drawn around it. The pressed state (dark theme on) fills the theme button */
+.header-tools {
   display: flex;
+  align-items: stretch;
+  border-radius: 0.75rem;
+  box-shadow: 0 0 0 1px var(--border); /* the group's 1px border, drawn outside the box: the group stays exactly one control high, so the header does not grow */
+}
+
+.header-tools > * + * {
+  border-inline-start: 1px solid var(--border);
+}
+
+.theme-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--header-control-h, 2.75rem);
+  height: var(--header-control-h, 2.75rem);
+  padding: 0;
+  border: 0;
+  border-radius: 0.75rem 0 0 0.75rem;
+  background: transparent;
+  color: color-mix(in srgb, var(--text) 78%, transparent); /* a little softer at rest, full text colour on hover */
+  cursor: pointer;
+}
+
+.header-tools > .theme-toggle:only-child {
+  border-radius: 0.75rem;
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent-line, var(--accent));
+  outline-offset: 2px;
+}
+
+/* background music (only for a product with music): ONE equalizer icon in the header group, accent-coloured while the music plays. It opens a
+   popover with every control. On a wide screen the popover hangs under the icon (about 300px); below 900px it is a panel under the header,
+   full width minus 1rem margins. */
+.music {
+  position: relative;
+  display: flex;
+}
+
+.music__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--header-control-h, 2.75rem);
+  height: var(--header-control-h, 2.75rem);
+  padding: 0;
+  border: 0;
+  border-radius: 0 0.75rem 0.75rem 0;
+  background: transparent;
+  color: color-mix(in srgb, var(--text) 78%, transparent);
+  cursor: pointer;
+}
+
+.header-tools > .music:only-child .music__toggle {
+  border-radius: 0.75rem;
+}
+
+.music[data-playing="true"] .music__toggle {
+  color: var(--accent-line, var(--accent));
+}
+
+.music__toggle[aria-expanded="true"] {
+  background: var(--surface, var(--bg));
+}
+
+.music__toggle:disabled,
+.music__button:disabled,
+.music__next:disabled,
+.music__mute:disabled,
+.music__slider:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.music__toggle:focus-visible,
+.music__button:focus-visible,
+.music__next:focus-visible,
+.music__mute:focus-visible,
+.music__slider:focus-visible {
+  outline: 2px solid var(--accent-line, var(--accent));
+  outline-offset: 2px;
+}
+
+/* the bars dance only while it plays, and only for a visitor who has not asked for less motion */
+@media (prefers-reduced-motion: no-preference) {
+  .music[data-playing="true"] .music__bar {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: music-bar 0.9s ease-in-out infinite alternate;
+  }
+
+  .music[data-playing="true"] .music__bar--2 {
+    animation-delay: -0.3s;
+  }
+
+  .music[data-playing="true"] .music__bar--3 {
+    animation-delay: -0.6s;
+  }
+}
+
+@keyframes music-bar {
+  from {
+    transform: scaleY(0.45);
+  }
+
+  to {
+    transform: scaleY(1);
+  }
+}
+
+/* the popover: a two-column grid. Column 1 is one control wide (play/pause, and under it mute, centred); column 2 is the rest (title and next
+   on row 1, the slider and its percent on row 2). 1rem padding on every side and 0.75rem between the rows; the note sits under a thin divider */
+.music__panel {
+  position: absolute;
+  z-index: 1;
+  top: calc(100% + var(--space-2));
+  inset-inline-end: 0;
+  display: none;
+  grid-template-columns: var(--header-control-h, 2.75rem) minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem var(--space-3);
+  box-sizing: border-box;
+  width: min(18.5rem, calc(100vw - 2rem));
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface, var(--bg));
+  box-shadow: 0 0.5rem 1.5rem color-mix(in srgb, var(--text) 16%, transparent);
+  color: var(--text);
+}
+
+.music[data-open="true"] .music__panel {
+  display: grid;
+}
+
+/* title and "n of N" on the left, the next button at the right edge */
+.music__now {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+/* the slider fills the row up to the right edge, the percent ends it */
+.music__volume {
+  display: flex;
+  min-width: 0;
   align-items: center;
   gap: var(--space-2);
 }
 
+/* the round play/pause button */
 .music__button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  width: var(--header-control-h, 2.25rem);
-  height: var(--header-control-h, 2.25rem);
+  width: var(--header-control-h, 2.75rem);
+  height: var(--header-control-h, 2.75rem);
   padding: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius, 0);
-  background: transparent;
-  color: var(--text);
+  border: 1px solid var(--accent-line, var(--accent));
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-contrast);
   cursor: pointer;
 }
 
-.music__button[aria-pressed="true"] {
-  border-color: var(--accent-line, var(--accent));
-  background: var(--accent);
-  color: var(--accent-contrast);
+.music__track {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
 }
 
-.music__button:disabled,
-.music__select:disabled {
-  cursor: default;
-  opacity: 0.6;
+.music__title {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.music__button:focus-visible,
-.music__select:focus-visible {
-  outline: 2px solid var(--accent-line, var(--accent));
-  outline-offset: 2px;
-}
-
-.music__select {
-  box-sizing: border-box;
-  max-width: 9rem;
-  height: var(--header-control-h, 2.25rem);
-  padding-inline: var(--space-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius, 0);
-  background: transparent;
-  color: var(--text);
-  font: inherit;
-  font-size: 0.875rem;
-}
-
-.music__select option {
-  background: var(--bg);
-  color: var(--text);
-}
-
-.music__error {
+.music__position {
   color: var(--muted);
   font-size: 0.8rem;
+}
+
+.music__next,
+.music__mute {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--header-control-h, 2.75rem);
+  height: var(--header-control-h, 2.75rem);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: color-mix(in srgb, var(--text) 78%, transparent);
+  cursor: pointer;
+}
+
+.music__mute[aria-pressed="true"] {
+  color: var(--muted);
+}
+
+/* hover and press, for the four icon controls: a subtle background from the text colour (8% on hover, 12% pressed) and the icon in the full text colour.
+   Only for a pointer that can hover; a disabled control shows nothing. */
+@media (hover: hover) {
+  .theme-toggle:hover:not(:disabled),
+  .music__toggle:hover:not(:disabled),
+  .music__next:hover:not(:disabled),
+  .music__mute:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--text) 8%, transparent);
+    color: var(--text);
+  }
+
+  .music[data-playing="true"] .music__toggle:hover {
+    color: var(--accent-line, var(--accent));
+  }
+}
+
+.theme-toggle:active,
+.music__toggle:active,
+.music__next:active,
+.music__mute:active {
+  background: color-mix(in srgb, var(--text) 12%, transparent);
+  color: var(--text);
+}
+
+.music[data-playing="true"] .music__toggle:active {
+  color: var(--accent-line, var(--accent));
+}
+
+/* the round play/pause: a brighter accent (12% white; "white" is the one literal colour here, it has no theme token) with a soft ring on hover, a small press */
+@media (hover: hover) {
+  .music__button:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--accent) 88%, white);
+    box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--accent) 20%, transparent);
+  }
+}
+
+.music__button:active:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 88%, white);
+  box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+/* motion only for a visitor who has not asked for less: 150ms changes, the press scales the play button to 0.96 */
+@media (prefers-reduced-motion: no-preference) {
+  .lang-switch a,
+  .theme-toggle,
+  .music__toggle,
+  .music__button,
+  .music__next,
+  .music__mute {
+    transition:
+      background-color 150ms ease,
+      color 150ms ease,
+      box-shadow 150ms ease,
+      transform 150ms ease;
+  }
+
+  .music__button:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+
+  .music__slider::-webkit-slider-thumb,
+  .music__slider::-moz-range-thumb {
+    transition:
+      transform 150ms ease,
+      box-shadow 150ms ease;
+  }
+}
+
+/* no scale for a reduced-motion visitor: the slider thumb keeps its size and only gets the ring */
+@media (prefers-reduced-motion: reduce) {
+  .music__slider:hover::-webkit-slider-thumb,
+  .music__slider:active::-webkit-slider-thumb,
+  .music__slider:hover::-moz-range-thumb,
+  .music__slider:active::-moz-range-thumb {
+    transform: none;
+  }
+}
+
+/* the slider: a thin track filled up to the value (--music-fill, set from the component) and a round thumb. Hovering or dragging makes the thumb a little
+   larger with a soft accent ring. The box is a control high, the hit area of a control. The WebKit and Firefox parts need separate rules. */
+.music__slider {
+  min-width: 0;
+  flex: 1;
+  height: var(--header-control-h, 2.75rem);
+  margin: 0;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.music__slider::-webkit-slider-runnable-track {
+  height: 0.25rem;
+  border-radius: 0.125rem;
+  background: linear-gradient(to right, var(--accent-line, var(--accent)) var(--music-fill, 0%), var(--border) var(--music-fill, 0%));
+}
+
+.music__slider::-moz-range-track {
+  height: 0.25rem;
+  border-radius: 0.125rem;
+  background: var(--border);
+}
+
+.music__slider::-moz-range-progress {
+  height: 0.25rem;
+  border-radius: 0.125rem;
+  background: var(--accent-line, var(--accent));
+}
+
+.music__slider::-webkit-slider-thumb {
+  width: 1rem;
+  height: 1rem;
+  margin-top: -0.375rem; /* centres the thumb on the 0.25rem track */
+  appearance: none;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent-line, var(--accent));
+}
+
+.music__slider::-moz-range-thumb {
+  width: 1rem;
+  height: 1rem;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent-line, var(--accent));
+}
+
+.music__slider:hover::-webkit-slider-thumb,
+.music__slider:active::-webkit-slider-thumb {
+  box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--accent) 20%, transparent);
+  transform: scale(1.15);
+}
+
+.music__slider:hover::-moz-range-thumb,
+.music__slider:active::-moz-range-thumb {
+  box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--accent) 20%, transparent);
+  transform: scale(1.15);
+}
+
+/* a fixed width (room for "100%") and tabular digits, so the slider does not move while it is dragged */
+.music__percent {
+  width: 4ch;
+  flex: none;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+/* the note across both columns, under a thin divider */
+.music__note,
+.music__error {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.music__note {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+/* below 900px the panel is not tied to the icon: it hangs 0.5rem below the header, the width of the page minus 1rem margins (the same radius and shadow) */
+@media (width < 56.25em) {
+  .site-header .music {
+    position: static;
+  }
+
+  .site-header .music__panel {
+    inset-inline: 1rem;
+    top: calc(100% + 0.5rem);
+    width: auto;
+  }
 }
 
 /* placement "header": label and pill in the header's right group; the slot has a fixed height (no jump when the widget mounts) */
@@ -2140,13 +2659,13 @@ main:focus-visible {
   inset: 0;
   border-radius: var(--avatar-card-radius, 1.75em);
   transform-style: preserve-3d;
-  /* lifted off the page; the shadow is drawn outside the frame's own box and tilts with it */
-  box-shadow: var(--avatar-card-shadow, 0 1.875rem 5rem -1.875rem color-mix(in srgb, var(--text) 45%, transparent), 0 0.75rem 1.5rem -0.75rem color-mix(in srgb, var(--text) 25%, transparent));
+  /* the theme's edge (the dark theme: a 1px accent line and a faint halo; nothing in the light theme), then lifted off the page; both are drawn outside the frame's own box and tilt with it */
+  box-shadow: var(--avatar-edge, 0 0 0 0 transparent), var(--avatar-card-shadow, 0 1.875rem 5rem -1.875rem color-mix(in srgb, var(--text) 45%, transparent), 0 0.75rem 1.5rem -0.75rem color-mix(in srgb, var(--text) 25%, transparent));
 }
 
 /* a live call: the lift turns into the glow of the ring */
 .avatar-card[data-call="connected"] .avatar-card__frame {
-  box-shadow: 0 2.5em 5.625em -2.5em var(--avatar-glow, color-mix(in srgb, var(--accent) 55%, transparent));
+  box-shadow: var(--avatar-edge, 0 0 0 0 transparent), 0 2.5em 5.625em -2.5em var(--avatar-glow, color-mix(in srgb, var(--accent) 55%, transparent));
 }
 
 /* the tile owns the clipping, the radius and the stage colour; the layers above it (shade, glint, ring, text) are the frame's own */
@@ -2801,6 +3320,11 @@ main:focus-visible {
   }
 }
 
+/* a running call may be a little brighter (--call-live-boost; 1 = no change, the light theme's value) */
+.call-orb[data-state="connected"] .call-orb__glow {
+  filter: brightness(var(--call-live-boost, 1));
+}
+
 @keyframes call-orb-breathe {
   50% {
     transform: scale(1.04);
@@ -2831,14 +3355,15 @@ main:focus-visible {
   opacity: 0;
 }
 
+/* the strength of the rings is theme tokens (--call-ring-1, --call-ring-2 and, for the waves that travel outward, --call-ring-wave); these are the Hanc values */
 .call-orb__rings > i:nth-child(1) {
   inset: -8%;
-  opacity: 0.5;
+  opacity: var(--call-ring-1, 0.5);
 }
 
 .call-orb__rings > i:nth-child(2) {
   inset: -17%;
-  opacity: 0.22;
+  opacity: var(--call-ring-2, 0.22);
 }
 
 .avatar-card[data-rings="burst"] .call-orb__rings > i:nth-child(n + 3) {
@@ -2875,7 +3400,7 @@ main:focus-visible {
     opacity: 0;
   }
   12% {
-    opacity: 0.9;
+    opacity: var(--call-ring-wave, 0.9);
   }
   100% {
     transform: scale(1.75);
@@ -2890,7 +3415,7 @@ main:focus-visible {
     opacity: 0;
   }
   4% {
-    opacity: 0.6;
+    opacity: calc(var(--call-ring-wave, 0.9) * 0.6667); /* 0.6 of Hanc's 0.9 */
   }
   30%,
   100% {
@@ -2932,7 +3457,10 @@ main:focus-visible {
   letter-spacing: -0.01em;
   cursor: pointer;
   transform: translate(var(--call-orb-x, -50%), -50%);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* everything but visibility: the later, instant entry wins for it, so the button hides at once when the card is flying (data-flight) instead of staying up for 0.3s at its new place */
+  transition:
+    all 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0s;
 }
 
 /* the small docked card sits at the window's edge: the label grows to the left there, the disc stays on the orb's centre */
@@ -2951,7 +3479,9 @@ main:focus-visible {
   border-radius: 50%;
   background: var(--avatar-stage, black);
   color: white;
-  transition: all 0.3s ease;
+  transition:
+    all 0.3s ease,
+    visibility 0s;
 }
 
 .call-orb__btn[data-state="error"] .call-orb__icon {
@@ -3386,6 +3916,17 @@ body:has(.avatar-card) .theme-switcher {
   box-shadow: var(--avatar-card-shadow, 0 1.875rem 5rem -1.875rem color-mix(in srgb, var(--text) 45%, transparent), 0 0.75rem 1.5rem -0.75rem color-mix(in srgb, var(--text) 25%, transparent));
 }
 
+/* the call button's copy: its box is placed by the script on every frame (the button's area on the card, mixed from where the flight starts to where it ends); the copy inside is the orb itself,
+   sized in em from the box's font size, so it grows and shrinks with the card */
+.card-ghost__orb {
+  position: absolute;
+  pointer-events: none;
+}
+
+.card-ghost__orb .call-orb {
+  display: block;
+}
+
 .card-ghost__canvas {
   position: absolute;
   inset: 0;
@@ -3415,6 +3956,298 @@ body:has(.avatar-card) .theme-switcher {
 
 @media (prefers-reduced-motion: reduce) {
   .card-ghost {
+    display: none;
+  }
+}
+
+/*
+ * The call bar (phones, below 900px; components/AgentAvatarCard.tsx `.avatar-card__bar`, text in lib/call-bar.ts). The docked Sofia card (the circle) is replaced by ONE
+ * pill across the bottom of the screen: her face on the left (the poster; the listening and speaking loops, crossfaded, during a call), two lines of text in the
+ * middle, the call button (the same component, the same states) on the right. The pill is a fixed child of the card: no ancestor of the card has a transform, so
+ * it is relative to the window, and it takes the card's state attributes (data-call, data-rings, data-state) and the theme's tokens like the card does.
+ * It is shown only while the full card is out of view (data-placement="dock"), in a call too: exactly one Sofia is ever on screen. It steps aside over the offer card and the footer while idle
+ * (data-bar-zone). It appears and disappears as one element (opacity, 200ms), never as parts; under reduced motion at once. Desktop is unchanged: there it is not drawn.
+ */
+.avatar-card__bar {
+  display: none;
+}
+
+@media (width < 56.25em) {
+  /* the compact docked card is not drawn (the widget inside it stays mounted: its form overlay belongs to it), and its bubble goes with it */
+  .avatar-card[data-icon="orb"][data-placement="dock"] {
+    width: 0;
+    height: 0;
+    aspect-ratio: auto;
+  }
+
+  .avatar-card[data-icon="orb"][data-placement="dock"] .avatar-card__frame,
+  .avatar-card[data-icon="orb"][data-placement="dock"] .avatar-card__action .call-orb,
+  .avatar-card[data-icon="orb"][data-placement="dock"] .avatar-card__action .avatar-card__start,
+  .call-bubble[data-placement="dock"] {
+    display: none;
+  }
+
+  .avatar-card[data-icon="orb"] .avatar-card__bar {
+    position: fixed;
+    z-index: 1;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0rem));
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-sizing: border-box;
+    height: 4.5rem;
+    padding: 0.5rem 0.5rem 0.5rem 0.625rem;
+    border-radius: 99rem;
+    background: var(--avatar-stage, black);
+    color: var(--avatar-ink, white);
+    box-shadow: var(--avatar-edge, 0 0 0 1px color-mix(in srgb, var(--avatar-ink, white) 16%, transparent)), 0 1rem 2rem -0.75rem color-mix(in srgb, black 55%, transparent);
+    font-size: 1rem;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 200ms ease,
+      visibility 0s 200ms;
+  }
+
+  /* shown ONLY while the full card is out of view (docked), so there is exactly one Sofia on screen: in a call the full card stays while it is in view and the bar
+     takes over past the same threshold. While idle it also steps aside over the offer card and the footer (data-bar-zone); in a call it does not. */
+  .avatar-card[data-icon="orb"][data-placement="dock"]:not([data-bar-zone]) .avatar-card__bar,
+  .avatar-card[data-icon="orb"][data-placement="dock"]:not([data-call="idle"]) .avatar-card__bar {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 200ms ease;
+  }
+
+  /* her face: a round crop of the poster and of the loops, all the same: the whole head with air round it (hair top at about 6%, eyes at 40%, chin at 71% of the circle), so nothing jumps when they crossfade */
+  .avatar-card__face {
+    position: relative;
+    flex: none;
+    width: 3.5rem;
+    height: 3.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--avatar-stage, black);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--avatar-ink, white) 22%, transparent);
+    cursor: pointer;
+  }
+
+  .avatar-card__face:focus-visible {
+    outline: 2px solid var(--accent-line, var(--accent));
+    outline-offset: 2px;
+  }
+
+  .avatar-card__face-img,
+  .avatar-card__face-video {
+    max-width: none; /* the page's img rule caps the width at 100%; the crop needs it larger */
+    position: absolute;
+    left: -13%;
+    top: -8%;
+    width: 124%;
+    height: 155%;
+    object-fit: cover;
+    pointer-events: none;
+  }
+
+  .avatar-card__face-video {
+    opacity: 0;
+    transition: opacity 300ms ease;
+  }
+
+  .avatar-card__face-video[data-active="true"] {
+    opacity: 1;
+  }
+
+  /* two lines, each on one line with an ellipsis: bold title (and the small role), then the line under it */
+  .avatar-card__bar-text {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 0.125rem;
+    line-height: 1.2;
+  }
+
+  .avatar-card__bar-title {
+    display: flex;
+    min-width: 0;
+    align-items: baseline;
+    gap: 0.4rem;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .avatar-card__bar-title b {
+    min-width: 0;
+    flex: 0 1 auto;
+    overflow: hidden;
+    font-size: 0.9375rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+  }
+
+  .avatar-card__bar-title small {
+    min-width: 0;
+    flex: 0 1000 auto; /* the role gives way first, long before the name */
+    overflow: hidden;
+    color: color-mix(in srgb, var(--avatar-ink, white) 62%, var(--avatar-stage, black));
+    font-size: 0.75rem;
+    text-overflow: ellipsis;
+  }
+
+  /* the timer is bold, in tabular digits and never cut: the words before it give way instead */
+  .avatar-card__bar-timer {
+    flex: none;
+    font-size: 0.9375rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+  }
+
+  .avatar-card__bar-dot {
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    align-self: center;
+    border-radius: 50%;
+    background: var(--avatar-live, var(--accent));
+  }
+
+  .avatar-card__bar-line {
+    overflow: hidden;
+    color: color-mix(in srgb, var(--avatar-ink, white) 72%, var(--avatar-stage, black));
+    font-size: 0.8125rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* the call button: the orb of the card (sphere 3.5rem; its sizes are in em, so the em here is what scales it), without the label that slides out: the text beside it says the state */
+  .avatar-card__bar-button {
+    position: relative;
+    flex: none;
+    width: 7.25em;
+    height: 7.25em;
+    margin-block: -0.5em;
+    font-size: calc(3.5rem / 6.25);
+  }
+
+  .avatar-card[data-icon="orb"] .avatar-card__bar-button .call-orb {
+    --call-orb-x: -50%;
+    display: block;
+  }
+
+  .avatar-card__bar-button .call-orb__label {
+    display: none;
+  }
+}
+
+/* a 360px phone: the pieces come a little closer, so "Live-Anruf 00:02" fits */
+@media (width < 24em) {
+  .avatar-card[data-icon="orb"] .avatar-card__bar {
+    gap: 0.5rem;
+  }
+
+  .avatar-card__bar-title {
+    gap: 0.25rem;
+  }
+}
+
+@media (width < 56.25em) and (prefers-reduced-motion: no-preference) {
+  .avatar-card__bar[data-kind="live"] .avatar-card__bar-dot {
+    animation: avatar-bar-dot 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes avatar-bar-dot {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (width < 56.25em) and (prefers-reduced-motion: reduce) {
+  .avatar-card[data-icon="orb"] .avatar-card__bar,
+  .avatar-card__face-video {
+    transition: none;
+  }
+}
+
+/* room under the last line of the page for the bar, whether it is shown now or not (the page does not change height as it comes and goes) */
+@media (width < 56.25em) {
+  :root:has(.avatar-card[data-icon="orb"]) {
+    --avatar-card-h: 4.5rem;
+    --avatar-card-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0rem) + 0.75rem);
+  }
+
+  .site-footer--agent-card {
+    padding-bottom: calc(var(--space-5) + var(--avatar-card-h, 4.5rem) + var(--avatar-card-bottom, 1.5rem));
+  }
+
+  .site-footer--agent-card .site-footer__inner {
+    padding-right: 0;
+  }
+}
+
+/*
+ * The morph of the card into the call bar and back (phones; components/bar-morph.ts, lib/bar-morph.ts). A ghost in <body>, never an ancestor of the widget: a back layer under
+ * the card (the shadow, a shell in the stage colour cut to the shape, the card's picture and name) and a front layer over it (the call button's copy). Everything that moves is set
+ * inline by the script as a transform, a clip-path or an opacity; these rules only say what the layers are, and none of them carries a transform.
+ * While it runs the real bar is moved by the script alone (opacity, visibility, clip-path and transition: none, inline), so the stylesheet's own fade is off.
+ */
+.card-morph,
+.card-morph__top {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.card-morph {
+  z-index: 1099;
+}
+
+.card-morph__top {
+  z-index: 1101;
+}
+
+.card-morph__shell,
+.card-morph__layers,
+.card-morph__clip {
+  position: absolute;
+  inset: 0;
+}
+
+.card-morph__shell {
+  background: var(--avatar-stage, black);
+}
+
+.card-morph__shadow,
+.card-morph__pic,
+.card-morph__card,
+.card-morph__orb {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+}
+
+.card-morph__shadow {
+  box-shadow: var(--avatar-edge, 0 0 0 0 transparent), var(--avatar-card-shadow, 0 1.875rem 5rem -1.875rem color-mix(in srgb, var(--text) 45%, transparent), 0 0.75rem 1.5rem -0.75rem color-mix(in srgb, var(--text) 25%, transparent));
+}
+
+.card-morph__pic {
+  overflow: hidden;
+}
+
+.card-morph__orb .call-orb {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-morph,
+  .card-morph__top {
     display: none;
   }
 }

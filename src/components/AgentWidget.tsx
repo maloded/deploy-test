@@ -23,7 +23,7 @@ import { AgentStartButton } from "./AgentStartButton";
  * start button (<hanc-ai-pill-floating-call position="static">, the one pill without `contain: layout`, see AgentAvatarCard), and
  * variant and placement are ignored. If the widget package cannot be loaded, the card offers the contact link instead.
  */
-export function AgentWidget({ agent, lang, product, avatar, requestType, heroSlot = false }: { agent: SellerAgent; lang: Language; product: string; avatar?: ResolvedAvatar | null; requestType?: string; heroSlot?: boolean }) {
+export function AgentWidget({ agent, lang, product, avatar, requestType, heroSlot = false, theme }: { agent: SellerAgent; lang: Language; product: string; avatar?: ResolvedAvatar | null; requestType?: string; heroSlot?: boolean; theme?: string }) {
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [host, setHost] = useState<WidgetHost | null>(null); // the widget element of the avatar card, for its own start button
@@ -55,7 +55,7 @@ export function AgentWidget({ agent, lang, product, avatar, requestType, heroSlo
 
   if (avatar) {
     return (
-      <AgentAvatarCard avatar={avatar} lang={lang} host={host} slot={heroSlot}>
+      <AgentAvatarCard avatar={avatar} lang={lang} host={host} slot={heroSlot} theme={theme}>
         {ready ? (
           <>
             {createElement("hanc-ai-pill-floating-call", { ...common, position: "static", "button-end-text": ui("agent.end", lang), "orb-size": "36", ref: setHost })}

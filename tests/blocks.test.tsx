@@ -55,8 +55,9 @@ describe("car layout", () => {
     expect(out.indexOf("<footer")).toBeGreaterThan(at("faq"));
   });
 
+  const withoutToggle = (markup: string) => markup.replace(/<button[^>]*class="theme-toggle"[\s\S]*?<\/button>/, ""); // the toggle shows which theme is on, so it is the one part of the markup that follows the theme
   it("is the same markup for both themes", async () => {
-    const outs = await Promise.all(listThemes().map((t) => page(siteFor("fixture-car", t))));
+    const outs = (await Promise.all(listThemes().map((t) => page(siteFor("fixture-car", t))))).map(withoutToggle);
     expect(new Set(outs).size).toBe(1);
   });
 
