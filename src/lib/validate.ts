@@ -28,6 +28,31 @@ function checkDetails(
   if (!r.success) issues.push(...formatIssues(r.error, path));
 }
 
+/** Ids are the addresses the page and the voice agent use, so they must be unambiguous: unique photo ids and aliases, unique spot ids, real spec keys. */
+function checkGallery(p: ProductFile, issues: string[]) {
+  const photoNames = new Map<string, string>(); // id or alias -> where it was first used
+  const spotIds = new Map<string, string>();
+  const specKeys = new Set(p.specs.map((s) => s.key));
+  p.media.gallery.forEach((g, i) => {
+    const claim = (name: string, where: string) => {
+      const first = photoNames.get(name);
+      if (first) issues.push(`${where}: "${name}" is already used by ${first} (ids and aliases are unique in the gallery)`);
+      else photoNames.set(name, where);
+    };
+    claim(g.id, `media.gallery.${i}.id`);
+    g.aliases?.forEach((a, j) => claim(a, `media.gallery.${i}.aliases.${j}`));
+    g.hotspots?.forEach((h, j) => {
+      const where = `media.gallery.${i}.hotspots.${j}`;
+      const first = spotIds.get(h.id);
+      if (first) issues.push(`${where}.id: "${h.id}" is already used by ${first} (spot ids are unique in the gallery)`);
+      else spotIds.set(h.id, where);
+      h.specKeys?.forEach((key, k) => {
+        if (!specKeys.has(key)) issues.push(`${where}.specKeys.${k}: no spec with key "${key}". Spec keys: ${[...specKeys].join(", ") || "(none)"}`);
+      });
+    });
+  });
+}
+
 /**
  * Validation chain: base structure, then the product type, then the offer type (must be allowed for the
  * product type), then the offer's details object, price rules, and the product type's details and specs.
@@ -131,6 +156,8 @@ export function validateProduct(raw: unknown, reg: Registries = defaultRegistrie
       }
     }
   }
+
+  checkGallery(p, issues);
 
   if (issues.length || !type) return { ok: false, issues };
   return { ok: true, product: p, typeFields: type };

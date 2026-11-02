@@ -68,7 +68,7 @@ describe("images:export", () => {
 
   it("processes the photos: 2000 px long side, rotation applied, EXIF and GPS stripped; video copied as it is", async () => {
     const { contentDir, webDir } = setup("processed", (p) => {
-      p.media.gallery.push({ file: "big.jpg", alt: { en: "big" } });
+      p.media.gallery.push({ id: "big", category: "details", file: "big.jpg", alt: { en: "big" } });
       p.media.video = "clip.mp4";
     });
     await exportMediaWeb({ contentDir });

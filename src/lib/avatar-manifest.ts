@@ -199,10 +199,12 @@ export type ResolvedAvatar = {
   example: ExampleCall | null;
   /** The sentence under "Live call" while a call runs (agent.avatar.liveText, {name} is replaced); null: the page's standard sentence. */
   liveText: Localized | null;
+  /** The invitation above the card (agent.avatar.intro): the heading (null: the page's standard) and the running line's items (empty: no running line); null when the seller wrote none. */
+  intro?: { heading: Localized | null; items: Localized[] } | null;
 };
 
 /** The manifest turned into URLs. `nameOverride` is agent.avatar.name from seller.json, `texts` its tagline and badge. */
-export function resolveAvatar(manifest: AvatarManifest, nameOverride?: string, texts: { tagline?: Localized; badge?: Localized; startLabel?: Localized; endLabel?: Localized; buttonIcon?: ButtonIcon; role?: Localized; languages?: Language[]; example?: ExampleCall; bubble?: Localized; liveText?: Localized } = {}): ResolvedAvatar {
+export function resolveAvatar(manifest: AvatarManifest, nameOverride?: string, texts: { tagline?: Localized; badge?: Localized; startLabel?: Localized; endLabel?: Localized; buttonIcon?: ButtonIcon; role?: Localized; languages?: Language[]; example?: ExampleCall; bubble?: Localized; liveText?: Localized; intro?: { heading?: Localized; items?: Localized[] } } = {}): ResolvedAvatar {
   const url = (f: LoopFiles | null): ResolvedLoop | null => {
     if (!f) return null;
     return { ...(f.mp4 ? { mp4: avatarUrl(manifest.id, f.mp4) } : {}), ...(f.webm ? { webm: avatarUrl(manifest.id, f.webm) } : {}) };
@@ -234,5 +236,6 @@ export function resolveAvatar(manifest: AvatarManifest, nameOverride?: string, t
     languages: texts.languages ?? [],
     example: texts.example ?? null,
     liveText: texts.liveText ?? null,
+    intro: texts.intro ? { heading: texts.intro.heading ?? null, items: texts.intro.items ?? [] } : null,
   };
 }

@@ -36,8 +36,8 @@ describe.skipIf(!hasRealContent)("the vw-multivan sample is a sale in German and
     expect(p.lease).toBeUndefined();
     expect(p.rent).toBeUndefined();
     expect(p.price.per).toBeUndefined();
-    expect(p.price.note).toBeUndefined(); // stays empty until the accountant confirms the VAT statement
-    expect(p.price).toEqual({ amount: 53900, currency: "EUR" });
+    // the seller confirmed "inkl. MwSt." in writing (2026-11-02): it is the only tax statement, and it is the price note
+    expect(p.price).toEqual({ amount: 53900, currency: "EUR", note: { de: "inkl. MwSt.", en: "incl. VAT" } });
   });
 
   it("has German and English for every text field", () => {
@@ -67,7 +67,9 @@ describe.skipIf(!hasRealContent)("the vw-multivan sample is a sale in German and
   });
 
   it("makes no claim about warranty, VAT, a bank, the absence of damage or a new car, and discloses the 2025 damage event", () => {
-    const text = JSON.stringify(sample()).toLowerCase();
+    const { note: confirmedVatNote, ...price } = sample().price; // the one confirmed tax statement (see the price test above)
+    expect(confirmedVatNote).toEqual({ de: "inkl. MwSt.", en: "incl. VAT" });
+    const text = JSON.stringify({ ...sample(), price }).toLowerCase();
     const stems = ["garantie", "warranty", "steuer", "neuwagen", "new car", "unfall", "accident"]; // also match longer words
     const words = ["mwst", "ust", "vat", "bank"]; // short: whole words only ("ust" is inside "Ausstattung")
     for (const bad of stems) expect(text, bad).not.toContain(bad);
@@ -159,7 +161,7 @@ describe.skipIf(!hasRealContent)("gallery tags", () => {
 
   it("are rejected for a product type that has no tag list yet", () => {
     const p = examples.sampleJson("example-watch");
-    p.media.gallery = [{ file: "hero.png", alt: { en: "x" }, tags: ["exterior"] }];
+    p.media.gallery = [{ id: "hero", category: "exterior", file: "hero.png", alt: { en: "x" }, tags: ["exterior"] }];
     expect(issues(p).join("\n")).toMatch(/media\.gallery\.0\.tags: tags are not defined for product type "watch" yet/);
   });
 

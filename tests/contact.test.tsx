@@ -90,7 +90,7 @@ describe("the contact block (the footer's contact row)", () => {
       expect(out).not.toMatch(/<section[^>]*contact/);
       expect(out).not.toMatch(/class="[^"]*contact__(open|actions|inner)/);
       // the buttons of the page: links with the shared button class; the only one that is not for the contact is "View specifications"
-      const ctas = [...out.matchAll(/<a class="button[^"]*" href="([^"]+)"[^>]*>([^<]+)<\/a>/g)].map((m) => ({ href: m[1], text: m[2] }));
+      const ctas = [...out.matchAll(/<a class="button[^"]*" href="([^"]+)"[^>]*>(.*?)<\/a>/g)].map((m) => ({ href: m[1], text: m[2].replace(/<[^>]+>/g, "") }));
       expect(ctas.filter((c) => c.href !== "#specs").map((c) => c.href)).toEqual(["#contact", "#contact", "#contact"]); // header, hero, offer: one per place
       expect(ctas.filter((c) => c.href === "#specs")).toHaveLength(1);
       expect(out).not.toMatch(/<button[^>]*class="button/); // nothing else renders a call-to-action button

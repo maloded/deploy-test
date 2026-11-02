@@ -13,7 +13,11 @@
   },
   "price": {
     "amount": 53900,
-    "currency": "EUR"
+    "currency": "EUR",
+    "note": {
+      "de": "inkl. MwSt.",
+      "en": "incl. VAT"
+    }
   },
   "hero": {
     "eyebrow": [
@@ -49,7 +53,15 @@
         "de": "Zusätzlicher Satz Sommerreifen",
         "en": "Additional set of summer tyres"
       }
-    ]
+    ],
+    "priceLabel": {
+      "de": "Kaufpreis",
+      "en": "Price"
+    },
+    "shortCta": {
+      "de": "Termin",
+      "en": "Book a visit"
+    }
   },
   "specs": [
     {
@@ -397,65 +409,226 @@
     },
     "gallery": [
       {
+        "id": "front-side",
+        "category": "exterior",
         "file": "Front-side.jpg",
         "alt": {
           "de": "Dreiviertelansicht von vorn: der graue Multivan an einem Bordstein auf nasser Pflasterstraße, Schiebetür offen, Scheinwerfer und Kühlergrill",
           "en": "Front three-quarter view of the grey Multivan at a kerb on a wet cobbled street, sliding door open, headlight and grille"
         },
-        "tags": [
-          "exterior"
-        ],
+        "caption": {
+          "de": "Dreiviertelansicht von vorn",
+          "en": "Front three-quarter view"
+        },
         "focus": {
           "x": 0.6,
           "y": 0.4
-        }
+        },
+        "tags": [
+          "exterior"
+        ],
+        "hotspots": [
+          {
+            "id": "sliding-door",
+            "x": 0.2,
+            "y": 0.42,
+            "label": {
+              "de": "Schiebetür",
+              "en": "Sliding door"
+            },
+            "specKeys": [
+              "doors"
+            ]
+          }
+        ]
       },
       {
+        "id": "front",
+        "category": "exterior",
         "file": "Front.jpg",
         "alt": {
           "de": "Frontansicht des grauen Multivan an einem Bordstein auf nasser Straße: VW-Emblem, Scheinwerfer und Kühlergrill",
           "en": "Front view of the grey Multivan at a kerb on a wet street: VW emblem, headlights and grille"
         },
+        "caption": {
+          "de": "Frontansicht",
+          "en": "Front view"
+        },
         "tags": [
           "exterior"
+        ],
+        "hotspots": [
+          {
+            "id": "headlights",
+            "x": 0.26,
+            "y": 0.47,
+            "label": {
+              "de": "Scheinwerfer",
+              "en": "Headlights"
+            },
+            "specKeys": [
+              "lights"
+            ]
+          }
         ]
       },
       {
+        "id": "side",
+        "category": "exterior",
         "file": "Side.jpg",
         "alt": {
           "de": "Seitenansicht des Multivan von links mit Schiebetür und Leichtmetallrädern",
           "en": "Left side view of the Multivan with the sliding door and alloy wheels"
         },
+        "caption": {
+          "de": "Seitenansicht",
+          "en": "Side view"
+        },
         "tags": [
           "exterior"
+        ],
+        "hotspots": [
+          {
+            "id": "door-repair",
+            "x": 0.43,
+            "y": 0.48,
+            "label": {
+              "de": "Schiebetür ersetzt",
+              "en": "Sliding door replaced"
+            },
+            "specKeys": [
+              "damage"
+            ]
+          }
         ]
       },
       {
+        "id": "rear",
+        "aliases": [
+          "back"
+        ],
+        "category": "exterior",
         "file": "Back.jpg",
         "alt": {
           "de": "Heck des Multivan mit geschlossener Heckklappe und dem Schriftzug Multivan",
           "en": "Rear of the Multivan with the tailgate closed and the Multivan lettering"
         },
+        "caption": {
+          "de": "Heckansicht",
+          "en": "Rear view"
+        },
         "tags": [
           "exterior"
+        ],
+        "hotspots": [
+          {
+            "id": "tailgate",
+            "x": 0.5,
+            "y": 0.62,
+            "label": {
+              "de": "Heckklappe",
+              "en": "Tailgate"
+            },
+            "text": {
+              "de": "Elektrische Heckklappe",
+              "en": "Power tailgate"
+            }
+          }
         ]
       },
       {
+        "id": "wheel",
+        "aliases": [
+          "wheel-rim"
+        ],
+        "category": "exterior",
+        "file": "Wheel-rim.jpg",
+        "alt": {
+          "de": "Nahaufnahme eines silbernen Leichtmetallrads mit Reifen",
+          "en": "Close-up of a silver alloy wheel with its tyre"
+        },
+        "caption": {
+          "de": "Leichtmetallrad",
+          "en": "Alloy wheel"
+        },
+        "focus": {
+          "x": 0.5,
+          "y": 0.52
+        },
+        "tags": [
+          "exterior",
+          "wheels"
+        ],
+        "hotspots": [
+          {
+            "id": "tyres",
+            "x": 0.5,
+            "y": 0.5,
+            "label": {
+              "de": "Räder und Reifen",
+              "en": "Wheels and tyres"
+            },
+            "specKeys": [
+              "tyres"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "interior",
+        "category": "interior",
         "file": "Interior.jpg",
         "alt": {
           "de": "Rücksitze in Grau und Beige mit Panorama-Glasdach darüber",
           "en": "Rear seats in grey and beige with the panoramic glass roof above"
         },
+        "caption": {
+          "de": "Rücksitze mit Panorama-Glasdach",
+          "en": "Rear seats under the panoramic glass roof"
+        },
         "tags": [
           "interior",
           "seats"
+        ],
+        "hotspots": [
+          {
+            "id": "seats",
+            "x": 0.3,
+            "y": 0.55,
+            "label": {
+              "de": "Sitze",
+              "en": "Seats"
+            },
+            "specKeys": [
+              "seats"
+            ]
+          },
+          {
+            "id": "roof",
+            "x": 0.45,
+            "y": 0.07,
+            "label": {
+              "de": "Dach",
+              "en": "Roof"
+            },
+            "text": {
+              "de": "Panorama-Glasdach",
+              "en": "Panoramic glass roof"
+            }
+          }
         ]
       },
       {
+        "id": "trunk",
+        "category": "interior",
         "file": "Trunk.jpg",
         "alt": {
           "de": "Laderaum hinter den Rücksitzen, durch die geöffnete Heckklappe gesehen",
           "en": "Luggage area behind the rear seats, seen through the open tailgate"
+        },
+        "caption": {
+          "de": "Laderaum",
+          "en": "Luggage compartment"
         },
         "tags": [
           "interior",
@@ -463,105 +636,221 @@
         ]
       },
       {
+        "id": "cockpit",
+        "aliases": [
+          "steering-wheel-panel"
+        ],
+        "category": "interior",
         "file": "Steering-wheel-panel.jpg",
         "alt": {
           "de": "Cockpit von hinten gesehen: Lenkrad, mittlerer Touchscreen mit Uhr, Klimabedienung und Blick durch die regennasse Windschutzscheibe",
           "en": "Cockpit seen from behind the front seats: steering wheel, central touchscreen showing a clock, climate controls and the view through the rain-covered windscreen"
         },
-        "tags": [
-          "interior",
-          "dashboard"
-        ]
-      },
-      {
-        "file": "Steering-wheel-panel-zoomed.jpg",
-        "alt": {
-          "de": "Fahrerbereich mit Lenkrad, Touchscreen und Vordersitzen",
-          "en": "Driver area with the steering wheel, touchscreen and front seats"
+        "caption": {
+          "de": "Cockpit",
+          "en": "Cockpit"
         },
         "tags": [
           "interior",
           "dashboard"
+        ],
+        "hotspots": [
+          {
+            "id": "infotainment",
+            "x": 0.57,
+            "y": 0.46,
+            "label": {
+              "de": "Infotainment",
+              "en": "Infotainment"
+            },
+            "specKeys": [
+              "multimedia"
+            ]
+          }
         ]
       },
       {
+        "id": "dashboard",
+        "aliases": [
+          "interior-panel"
+        ],
+        "category": "interior",
         "file": "Interior-panel.jpg",
         "alt": {
           "de": "Armaturenbrett mit zentralem Touchscreen, Getriebewahlschalter und Klimabedienung",
           "en": "Dashboard with the central touchscreen, gear selector and climate controls"
+        },
+        "caption": {
+          "de": "Armaturenbrett",
+          "en": "Dashboard"
+        },
+        "focus": {
+          "x": 0.5,
+          "y": 0.4
         },
         "tags": [
           "interior",
           "dashboard",
           "controls"
         ],
-        "focus": {
-          "x": 0.5,
-          "y": 0.4
-        }
+        "hotspots": [
+          {
+            "id": "comfort",
+            "x": 0.47,
+            "y": 0.65,
+            "label": {
+              "de": "Komfort",
+              "en": "Comfort"
+            },
+            "specKeys": [
+              "comfort"
+            ]
+          }
+        ]
       },
       {
+        "id": "driver-door",
+        "aliases": [
+          "side-door"
+        ],
+        "category": "interior",
+        "file": "Side-door.jpg",
+        "alt": {
+          "de": "Geöffnete Fahrertür mit Türverkleidung, Fensterhebern und Außenspiegel",
+          "en": "Open driver door with the door panel, window switches and the mirror"
+        },
+        "caption": {
+          "de": "Fahrertür",
+          "en": "Driver's door"
+        },
+        "focus": {
+          "x": 0.5,
+          "y": 0.7
+        },
+        "tags": [
+          "interior",
+          "door"
+        ]
+      },
+      {
+        "id": "instrument-cluster",
+        "aliases": [
+          "driving-panel"
+        ],
+        "category": "details",
         "file": "Driving_Panel.jpg",
         "alt": {
           "de": "Digitales Kombiinstrument mit Ganganzeige, Reichweite und Geschwindigkeit",
           "en": "Digital instrument cluster showing the gear position, range and speed"
+        },
+        "caption": {
+          "de": "Digitales Kombiinstrument",
+          "en": "Digital instrument cluster"
         },
         "tags": [
           "dashboard"
         ]
       },
       {
+        "id": "cockpit-zoom",
+        "aliases": [
+          "steering-wheel-panel-zoomed"
+        ],
+        "category": "details",
+        "file": "Steering-wheel-panel-zoomed.jpg",
+        "alt": {
+          "de": "Fahrerbereich mit Lenkrad, Touchscreen und Vordersitzen",
+          "en": "Driver area with the steering wheel, touchscreen and front seats"
+        },
+        "caption": {
+          "de": "Fahrerbereich",
+          "en": "Driver's area"
+        },
+        "tags": [
+          "interior",
+          "dashboard"
+        ],
+        "hotspots": [
+          {
+            "id": "assist",
+            "x": 0.27,
+            "y": 0.55,
+            "label": {
+              "de": "Assistenzsysteme",
+              "en": "Driver assistance"
+            },
+            "specKeys": [
+              "assistants"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "mileage",
+        "category": "details",
         "file": "mileage.jpg",
         "alt": {
           "de": "Anzeige des Gesamtkilometerstands",
           "en": "Display showing the total distance driven"
         },
+        "caption": {
+          "de": "Kilometerstand",
+          "en": "Odometer"
+        },
         "tags": [
           "dashboard",
           "mileage"
+        ],
+        "hotspots": [
+          {
+            "id": "mileage-reading",
+            "x": 0.72,
+            "y": 0.42,
+            "label": {
+              "de": "Kilometerstand",
+              "en": "Mileage"
+            },
+            "specKeys": [
+              "mileage"
+            ]
+          }
         ]
       },
       {
+        "id": "controls",
+        "aliases": [
+          "handbrake-charging-ports"
+        ],
+        "category": "details",
         "file": "Handbrake-charging-ports.jpg",
         "alt": {
           "de": "Schalter für Parkbremse und Auto-Hold, zwei USB-C-Anschlüsse und ein Ablagefach",
           "en": "Parking brake and auto-hold switches, two USB-C ports and a storage compartment"
         },
+        "caption": {
+          "de": "Parkbremse, Auto-Hold und USB-C",
+          "en": "Parking brake, Auto Hold and USB-C"
+        },
         "tags": [
           "interior",
           "controls",
           "details"
+        ],
+        "hotspots": [
+          {
+            "id": "usb",
+            "x": 0.48,
+            "y": 0.37,
+            "label": {
+              "de": "USB-C",
+              "en": "USB-C"
+            },
+            "text": {
+              "de": "Zwei USB-C-Anschlüsse",
+              "en": "Two USB-C ports"
+            }
+          }
         ]
-      },
-      {
-        "file": "Wheel-rim.jpg",
-        "alt": {
-          "de": "Nahaufnahme eines silbernen Leichtmetallrads mit Reifen",
-          "en": "Close-up of a silver alloy wheel with its tyre"
-        },
-        "tags": [
-          "exterior",
-          "wheels"
-        ],
-        "focus": {
-          "x": 0.5,
-          "y": 0.52
-        }
-      },
-      {
-        "file": "Side-door.jpg",
-        "alt": {
-          "de": "Geöffnete Fahrertür mit Türverkleidung, Fensterhebern und Außenspiegel",
-          "en": "Open driver door with the door panel, window switches and the mirror"
-        },
-        "tags": [
-          "interior",
-          "door"
-        ],
-        "focus": {
-          "x": 0.5,
-          "y": 0.7
-        }
       }
     ],
     "background": null,

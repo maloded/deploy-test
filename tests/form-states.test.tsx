@@ -174,15 +174,6 @@ describe("the scenarios", () => {
     expect(field("name").value).toBe(NAME);
   });
 
-  it("10. the lightbox is open: it is closed first, then the dialog opens with focus on the first empty required field", async () => {
-    await mount("en", true); // the fixture car has a gallery; the house example has none
-    act(() => (box!.querySelector("#gallery") as any).openLightbox(0));
-    expect(box!.querySelector("dialog.lightbox[open]")).not.toBeNull();
-    expect(navigateContact().handled).toBe(true);
-    expect(box!.querySelector("dialog.lightbox")).toBeNull();
-    expect(document.activeElement).toBe(field("name"));
-  });
-
   it("11. browser autofill followed by Send within the too-fast limit: the real handler refuses (422), the form says check-and-send-again, submit is failed with the values kept; a second Send after the limit goes through", async () => {
     await mount();
     const env = { CONTENT_DIR: EXAMPLES_DIR, CONTENT_PRODUCT: HOUSE, LEADS_STORE: "file", LEADS_DIR: path.join(tmp, "leads") };

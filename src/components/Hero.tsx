@@ -1,7 +1,7 @@
 import Image from "next/image";
 import type { CSSProperties } from "react";
 import { objectPosition } from "@/lib/focus";
-import { frameRangeForTheme, heroDescription, heroEyebrow, heroFacts, factPairs, heroFit, heroHeadline, heroTrust, splitLead } from "@/lib/hero";
+import { frameRangeForTheme, heroDescription, heroEyebrow, heroFacts, factPairs, heroFit, heroHeadline, heroMobile, splitLead } from "@/lib/hero";
 import { heroThumbs } from "@/lib/hero-thumbs";
 import { formatPrice, pick } from "@/lib/i18n";
 import { ui } from "@/lib/ui-strings";
@@ -12,6 +12,7 @@ import { galleryProps } from "./gallery-props";
 import { HeroFacts } from "./HeroFacts";
 import { HeroThumbs } from "./HeroThumbs";
 import { presetFor } from "./request-presets";
+import { SofiaIntro } from "./SofiaIntro";
 
 /**
  * Hero, one section. On wide, tall windows it is exactly one screen with three zones: the TITLE ZONE (eyebrow and
@@ -28,8 +29,8 @@ export function Hero({ site }: { site: Site }) {
   const image = images[product.media.hero];
   const background = product.media.background ? images[product.media.background] : undefined;
   const facts = heroFacts(product, typeFields, lang);
-  const trust = heroTrust(product, lang);
   const lead = splitLead(heroDescription(product, lang));
+  const mobile = heroMobile(product, typeFields, lang);
   const hasCard = Boolean(site.seller.agent && site.avatar);
   const fit = image ? heroFit(image.width, image.height, frameRangeForTheme(site.theme)) : "cover";
 
@@ -94,7 +95,11 @@ export function Hero({ site }: { site: Site }) {
           <div className="hero__lead-in hero__container">{eyebrow}</div>
           <div className="hero__top hero__container">
             <div className="hero__stage">{stage}</div>
-            <div className="hero__slot" data-agent-slot aria-hidden="true" />
+            {/* the invitation and the slot form the right column (boxless on a phone, where each takes its place in the column of the section) */}
+            <div className="hero__aside">
+              <SofiaIntro site={site} />
+              <div className="hero__slot" data-agent-slot aria-hidden="true" />
+            </div>
           </div>
         </>
       ) : (
@@ -132,27 +137,25 @@ export function Hero({ site }: { site: Site }) {
             </div>
 
             <div className="hero__intro-aside">
-              <p className="hero__figure">
-                <span className="hero__amount">{formatPrice(amount, currency, per, lang)}</span>
-                {note && <span className="hero__note">{pick(note, lang)}</span>}
-              </p>
-              <div className="hero__actions">
-                <a className="button" href="#contact" data-request-type={presetFor("hero", site)}>
-                  {ui("hero.cta", lang)}
-                </a>
-                <a className="button button--outline" href="#specs">
-                  {ui("hero.specs", lang)}
-                </a>
+              <div className="hero__pricebox">
+                <p className="hero__figure">
+                  {mobile.priceLabel && <span className="hero__price-label">{mobile.priceLabel}</span>}
+                  <span className="hero__amount">{formatPrice(amount, currency, per, lang)}</span>
+                  {note && <span className="hero__note">{pick(note, lang)}</span>}
+                </p>
+                <div className="hero__actions">
+                  <a className="button" href="#contact" data-request-type={presetFor("hero", site)}>
+                    {/* one button: the full text wide, the compact one on a phone (the other is display: none, so a reader hears one) */}
+                    <span className="hero__cta-full">{ui("hero.cta", lang)}</span>
+                    <span className="hero__cta-short">{mobile.shortCta}</span>
+                  </a>
+                  <a className="button button--outline" href="#specs">
+                    {ui("hero.specs", lang)}
+                  </a>
+                </div>
               </div>
             </div>
           </div>
-          {trust.length > 0 && (
-            <ul className="hero__trust">
-              {trust.map((t) => (
-                <li key={t}>{t}</li>
-              ))}
-            </ul>
-          )}
         </div>
       </div>
     </section>

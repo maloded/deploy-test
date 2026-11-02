@@ -8,20 +8,21 @@
 import path from "node:path";
 import { claimFiles, matchingLines, readFiles } from "./content-scan.mjs";
 
-/** B. VAT statements. */
+/**
+ * B. VAT statements. "inkl. MwSt." / "incl. VAT" were confirmed by the seller (the owner of this page) in writing in the project chat on 2026-11-02 and
+ * removed from this list for the price note; every other VAT wording stays forbidden.
+ */
 export const VAT_PHRASES = [
   "nicht ausweisbar",
   "ohne MwSt",
   "ohne Mehrwertsteuer",
   "ohne USt",
   "zzgl. MwSt",
-  "inkl. MwSt",
   "inklusive MwSt",
   "inkl. USt",
   "steuerfrei",
   "without VAT",
   "excl. VAT",
-  "incl. VAT",
   "including VAT",
   "VAT-free",
   "tax-free",

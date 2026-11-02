@@ -86,6 +86,18 @@ export const sellerAgentSchema = z
          * {name}." / "Sie sind live mit {name} verbunden." from ui-strings; the connecting sentence is not replaceable.
          */
         liveText: localizedSchema.optional(),
+        /**
+         * The invitation above the card ("Rather talk than read?") and, under it, a slow running line of what the agent can do: `heading`
+         * (default: the page language's standard question) and `items`, short texts per language shown as plain text with separators.
+         * Without `items` there is only the heading. Each item is something the agent really does: these are promises to the visitor.
+         */
+        intro: z
+          .object({
+            heading: localizedSchema.optional(),
+            items: z.array(localizedSchema).min(1).max(10).optional(),
+          })
+          .strict()
+          .optional(),
       })
       .strict()
       .optional(),

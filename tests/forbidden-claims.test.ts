@@ -27,16 +27,19 @@ function project(texts: { product?: Record<string, unknown>; seller?: Record<str
 
 describe("VAT and claim lists", () => {
   it("hold the listed phrases", () => {
-    expect(VAT_PHRASES).toHaveLength(17);
+    expect(VAT_PHRASES).toHaveLength(15);
     expect(CLAIM_PHRASES).toHaveLength(18);
-    expect(VAT_PHRASES).toContain("inkl. MwSt");
+    expect(VAT_PHRASES).toContain("zzgl. MwSt");
+    // the seller confirmed the price note in writing (2026-11-02): these two are on purpose NOT in the list
+    expect(VAT_PHRASES).not.toContain("inkl. MwSt");
+    expect(VAT_PHRASES).not.toContain("incl. VAT");
     expect(CLAIM_PHRASES).toContain("Garantie");
   });
 });
 
 describe("the claims scan", () => {
   it("fails for a product with a VAT phrase, and the message has the path and line but not the phrase", () => {
-    const p = project({ product: { tagline: { en: "Fair price", de: "Preis 50.000 EUR inkl. MwSt" } } });
+    const p = project({ product: { tagline: { en: "Fair price", de: "Preis 50.000 EUR zzgl. MwSt" } } });
     const hits = claimHits(p, VAT_PHRASES);
     expect(hits).toEqual(["content/dummy-seller/dummy-product/product.json:7"]);
     expect(JSON.stringify(hits).toLowerCase()).not.toContain("mwst");
@@ -51,12 +54,12 @@ describe("the claims scan", () => {
   });
 
   it("also reads seller.json (a legal note is a seller text)", () => {
-    const p = project({ seller: { legalNote: { en: "All prices incl. VAT" } } });
+    const p = project({ seller: { legalNote: { en: "All prices excl. VAT" } } });
     expect(claimHits(p, VAT_PHRASES)).toEqual(["content/dummy-seller/seller.json:4"]);
   });
 
   it("does not read docs, PROJECT.md or the UI strings: the same texts there do not fail", () => {
-    const p = project({}, "inkl. MwSt, Garantie, unfallfrei, warranty, VAT included\n");
+    const p = project({}, "zzgl. MwSt, Garantie, unfallfrei, warranty, VAT included\n");
     expect(claimHits(p, VAT_PHRASES)).toEqual([]);
     expect(claimHits(p, CLAIM_PHRASES)).toEqual([]);
   });
@@ -68,13 +71,13 @@ describe("the claims scan", () => {
   });
 
   it("matches a phrase whatever its case", () => {
-    const p = project({ product: { tagline: { en: "INKL. MWST", de: "x" } } });
+    const p = project({ product: { tagline: { en: "ZZGL. MWST", de: "x" } } });
     expect(claimHits(p, VAT_PHRASES).length).toBe(1);
   });
 
   it("matches across a no-break space, a narrow no-break space and a doubled space", () => {
     for (const gap of [" ", " ", " ", "  ", "\t"]) {
-      const p = project({ product: { tagline: { en: `price inkl.${gap}MwSt`, de: "x" } } });
+      const p = project({ product: { tagline: { en: `price zzgl.${gap}MwSt`, de: "x" } } });
       expect(claimHits(p, VAT_PHRASES).length, JSON.stringify(gap)).toBe(1);
     }
   });

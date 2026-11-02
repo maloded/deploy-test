@@ -97,16 +97,16 @@ describe("car layout", () => {
     levels.forEach((l, i) => i > 0 && expect(l - levels[i - 1]).toBeLessThanOrEqual(1));
   });
 
-  it("gives the gallery its own heading: a visually hidden h2 in the page language, after the h1 and before the specs' h2, inside the section", async () => {
+  it("gives the gallery its own visible heading (\"Galerie\" / \"Gallery\", the style of the other section titles): an h2 after the h1 and before the specs' h2, inside the section", async () => {
     for (const lang of ["de", "en"] as const) {
       const out = await page(buildSite(null, `${fixtures.seller}/fixture-car`, FIXTURE_DIR, lang));
       const gallery = /<section[^>]*id="gallery"[\s\S]*?<\/section>/.exec(out)![0];
-      expect(gallery).toContain(`<h2 class="sr-only">${ui("section.gallery", lang)}</h2>`);
+      expect(gallery).toContain(`<h2 class="section-title">${ui("gallery.title", lang)}</h2>`);
       expect(gallery.match(/<h[1-6][ >]/g)).toEqual(["<h2 "]); // the one heading of the block, no h1, no skipped level
       const at = (s: string) => out.indexOf(s);
       expect(at("<h1")).toBeGreaterThan(-1);
-      expect(at('<h2 class="sr-only">')).toBeGreaterThan(at("<h1"));
-      expect(at('<h2 class="sr-only">')).toBeLessThan(at(`<h2 class="section-title">${ui("section.specs", lang)}`));
+      expect(at(`<h2 class="section-title">${ui("gallery.title", lang)}`)).toBeGreaterThan(at("<h1"));
+      expect(at(`<h2 class="section-title">${ui("gallery.title", lang)}`)).toBeLessThan(at(`<h2 class="section-title">${ui("section.specs", lang)}`));
       expect(out.match(/<h1[ >]/g)).toHaveLength(1);
     }
   });
@@ -227,9 +227,10 @@ describe("hero layout", () => {
     const aside = /<div class="hero__intro-aside">([\s\S]*?)<\/div><\/div><\/div>/.exec(intro)?.[1] ?? "";
     expect(aside).toContain('<span class="hero__amount">€589 / month</span>');
     expect(aside).toContain('<span class="hero__note">Example price. All numbers');
-    const buttons = [...aside.matchAll(/<a class="(button[^"]*)" href="([^"]+)"(?: data-request-type="[a-z_]+")?>([^<]+)<\/a>/g)].map((m) => ({ cls: m[1], href: m[2], text: m[3] }));
+    // the primary button is ONE link with two texts: the full one (wide) and the compact one (phone layout, the other is display: none)
+    const buttons = [...aside.matchAll(/<a class="(button[^"]*)" href="([^"]+)"(?: data-request-type="[a-z_]+")?>(.*?)<\/a>/g)].map((m) => ({ cls: m[1], href: m[2], text: m[3] }));
     expect(buttons).toEqual([
-      { cls: "button", href: "#contact", text: "Request details" },
+      { cls: "button", href: "#contact", text: '<span class="hero__cta-full">Request details</span><span class="hero__cta-short">Book a visit</span>' },
       { cls: "button button--outline", href: "#specs", text: "View specifications" },
     ]);
     expect(aside.match(/<a /g)).toHaveLength(2);
@@ -302,18 +303,15 @@ describe("hero layout", () => {
     expect(html(<Hero site={many} />).match(/<li class="hero__fact"/g)).toHaveLength(4);
   });
 
-  it("renders the trust items as one thin line under the intro row, or nothing", () => {
-    expect(intro).toContain('<ul class="hero__trust"><li>Fixture: documented service history</li><li>Fixture: documented ownership</li><li>Fixture: transfer support</li></ul>');
-    expect(intro.indexOf("hero__intro-grid")).toBeLessThan(intro.indexOf("hero__trust"));
-    expect(stage).not.toContain("hero__trust");
-    const none = withProduct(site, (p) => delete p.hero.trust);
-    expect(html(<Hero site={none} />)).not.toContain("hero__trust");
-    const de = { ...site, lang: "de" as const };
-    expect(html(<Hero site={de} />)).toContain("<li>Fixture: Servicehistorie</li>");
+  it("does not render the trust items anywhere (the data stays in the product's hero.trust for the agent and other readers)", () => {
+    expect(out).not.toContain("hero__trust");
+    expect(out).not.toContain("Fixture: documented service history");
+    expect(site.product.hero?.trust?.length).toBeGreaterThan(0); // still in the content
+    expect(html(<Hero site={{ ...site, lang: "de" as const }} />)).not.toContain("Fixture: Servicehistorie");
   });
 
-  it("keeps the mobile order: eyebrow, headline, photo, description, facts, figure, note, button a, button b, trust", () => {
-    const order = ["hero__eyebrow", "hero__headline", "hero__photo", "hero__description", "hero__facts", "hero__figure", "hero__note", 'class="button"', "button button--outline", "hero__trust"];
+  it("keeps the mobile order: eyebrow, headline, photo, description, facts, figure, note, button a, button b", () => {
+    const order = ["hero__eyebrow", "hero__headline", "hero__photo", "hero__description", "hero__facts", "hero__figure", "hero__note", 'class="button"', "button button--outline"];
     const at = order.map((k) => out.indexOf(k));
     expect(at.every((i) => i >= 0)).toBe(true);
     expect([...at].sort((a, b) => a - b)).toEqual(at);

@@ -108,10 +108,6 @@ describe("the hero's CSS with the card", () => {
     expect(block(".hero__top", "(min-width: 56em) and (min-height: 37.5em)")).toMatch(/margin-bottom: var\(--space-5\)/);
   });
 
-  it("with the card the compact bottom row keeps the trust line, which the first screen shows", () => {
-    expect(block(".hero[data-card] .hero__trust", "(min-width: 56em) and (min-height: 37.5em) and (max-height: 50em)")).toMatch(/display: flex/);
-  });
-
   it("keeps the bottom row below, full width: nothing of it is in the grid", () => {
     expect(css).not.toMatch(/\.hero__intro[^{]*\{[^}]*grid-column/);
   });

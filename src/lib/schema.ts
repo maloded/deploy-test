@@ -3,6 +3,7 @@ import type { SellerContact } from "./seller";
 import { AUDIO_FILE, AUDIO_FILE_MESSAGE, DEFAULT_VOLUME, MAX_CREDIT_CHARS, MAX_TITLE_CHARS, MAX_TRACKS } from "./music";
 import { isLanguage, unsupportedLanguageMessage, type Language } from "./languages";
 import { parseVideo } from "./video";
+import { GALLERY_CATEGORIES, SLUG_PATTERN } from "./gallery-model";
 import { checkContactWindows } from "./contact-windows";
 import { checkViewing, DAYS, MAX_DURATION, MIN_DURATION, isTime, isTimeZone, type ViewingSettings } from "./viewing";
 
@@ -74,6 +75,22 @@ export const focusSchema = z.object({ x: z.number().min(0).max(1), y: z.number()
 export type Focus = z.infer<typeof focusSchema>;
 
 const fileName = z.string().min(1).regex(/^[^/\\]+$/, "must be a plain file name inside media/, without folders");
+
+/** A slug: lower-case words joined by single hyphens. Used for photo and spot ids. */
+const slugSchema = z.string().min(1).max(40).regex(SLUG_PATTERN, "must be a slug: lower-case letters and digits, words joined by single hyphens");
+
+/** A spot on a gallery photo: a position (0..1 of the photo), a label, and facts - spec keys (the figure lives in specs) and/or a short text. */
+const hotspotSchema = z
+  .object({
+    id: slugSchema,
+    x: z.number().min(0).max(1),
+    y: z.number().min(0).max(1),
+    label: localizedSchema,
+    specKeys: z.array(z.string().min(1)).min(1).max(6).optional(),
+    text: localizedSchema.optional(),
+  })
+  .strict()
+  .refine((h) => h.specKeys !== undefined || h.text !== undefined, { message: "needs specKeys or text (the facts of the spot)" });
 
 /**
  * Optional background music. Not shown on the page: `license` is a note for whoever keeps the content (where the track is
@@ -160,11 +177,20 @@ export const baseShape = {
     heroFocus: focusSchema.optional(),
     gallery: z.array(
       z.object({
+        /** Stable id (a slug): the address of the photo (#photo-<id>) and its name for the voice agent. Unique in the gallery. */
+        id: slugSchema,
+        /** Other names that resolve to this photo (older or alternative ids). Unique, and never equal to any id. */
+        aliases: z.array(slugSchema).min(1).max(8).optional(),
+        category: z.enum(GALLERY_CATEGORIES),
         file: fileName,
         alt: localizedSchema,
+        /** Short text shown under the photo (alt is for screen readers and stays the longer description). */
+        caption: localizedSchema.optional(),
         focus: focusSchema.optional(),
         /** Optional tags from the product type's closed list (checked in validate.ts). */
         tags: z.array(z.string().min(1)).min(1).optional(),
+        /** Spots on the photo that open a small card. Spot ids are unique across the whole gallery. */
+        hotspots: z.array(hotspotSchema).min(1).max(8).optional(),
       }),
     ),
     background: fileName.nullable(),
@@ -185,7 +211,7 @@ export const baseShape = {
    * Hero options, all optional. eyebrow: short texts shown before the offer type label, joined with " · " (for
    * example the place); headline: the big line (default: the short form of the title); description (default: the
    * tagline); highlights: up to 4 spec KEYS whose value, label and unit are taken from specs (a figure lives in
-   * one place only); trust: short items shown as one thin line under the intro row.
+   * one place only); trust: short items shown as one thin line under the intro row (a checklist on a phone); priceLabel and shortCta are only used by the phone layout.
    */
   hero: z
     .object({
@@ -194,11 +220,22 @@ export const baseShape = {
       description: localizedSchema.optional(),
       highlights: z.array(z.string().min(1)).min(1).max(4).optional(),
       trust: z.array(localizedSchema).min(1).max(6).optional(),
+      /** The small label over the price in the phone layout ("Kaufpreis"); default: from the page language, by offer type. */
+      priceLabel: localizedSchema.optional(),
+      /** The compact button beside the price in the phone layout ("Termin"); it opens the contact form like the big button. */
+      shortCta: localizedSchema.optional(),
     })
     .strict()
     .optional(),
   /** Gallery options (the photos themselves are media.gallery). */
-  gallery: z.object({ autoplaySeconds: z.number().min(2).max(60).nullable() }).strict().optional(),
+  gallery: z
+    .object({
+      autoplaySeconds: z.number().min(2).max(60).nullable(),
+      /** Optional names of the three categories, instead of the page language's defaults. */
+      categoryLabels: z.object({ exterior: localizedSchema.optional(), interior: localizedSchema.optional(), details: localizedSchema.optional() }).strict().optional(),
+    })
+    .strict()
+    .optional(),
   faq: z.array(z.object({ q: localizedSchema, a: localizedSchema })),
   /** Optional background music (see musicSchema). Without it nothing is rendered or loaded. */
   music: musicSchema.optional(),

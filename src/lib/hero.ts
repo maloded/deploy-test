@@ -5,6 +5,7 @@ import type { ProductTypeFields } from "./fields";
 import { pick } from "./i18n";
 import type { Language, Localized, Product } from "./schema";
 import { THEMES_DIR } from "./themes";
+import { ui, type UiKey } from "./ui-strings";
 
 export type HeroFact = { /** the spec's key: it picks the fact's icon */ key: string; value: string; label: string };
 
@@ -122,4 +123,17 @@ export const FIT_TOLERANCE = 0.15;
 export function heroFit(width: number, height: number, range: FrameRange): HeroFit {
   const ratio = width / height;
   return ratio < range.min * (1 - FIT_TOLERANCE) || ratio > range.max * (1 + FIT_TOLERANCE) ? "contain" : "cover";
+}
+
+/** What the phone layout adds around the price. All text comes from the content (hero.*), with ui-string defaults. */
+export type HeroMobile = { priceLabel: string; shortCta: string };
+
+const PRICE_LABEL_KEYS = { sale: "hero.priceLabel.sale", lease_takeover: "hero.priceLabel.lease", rent: "hero.priceLabel.rent" } as const;
+
+export function heroMobile(product: Product, type: ProductTypeFields, lang: Language): HeroMobile {
+  const key = (PRICE_LABEL_KEYS as Record<string, UiKey | undefined>)[product.offerType];
+  return {
+    priceLabel: product.hero?.priceLabel ? pick(product.hero.priceLabel, lang) : key ? ui(key, lang) : "",
+    shortCta: product.hero?.shortCta ? pick(product.hero.shortCta, lang) : ui("hero.shortCta", lang),
+  };
 }

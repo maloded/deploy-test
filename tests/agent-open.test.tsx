@@ -82,16 +82,4 @@ describe("navigate #contact", () => {
     goContact();
     expect(document.activeElement).toBe(field("consent"));
   });
-
-  it("with the lightbox open: closes the lightbox first, then opens the dialog with focus on the first empty required field", async () => {
-    await mount();
-    act(() => gallery().openLightbox(0));
-    expect(box!.querySelector("dialog.lightbox[open]")).not.toBeNull();
-    const call = goContact();
-    expect(call.handled).toBe(true);
-    expect(box!.querySelector("dialog.lightbox")).toBeNull();
-    expect(box!.querySelectorAll("dialog[open]")).toHaveLength(1);
-    expect(box!.querySelector("dialog.contact-dialog[open]")).not.toBeNull();
-    expect(document.activeElement).toBe(field("name")); // the lightbox's focus return did not take it back
-  });
 });

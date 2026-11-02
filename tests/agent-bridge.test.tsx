@@ -43,12 +43,15 @@ describe("navigateTarget: the allow-list", () => {
     expect(t("/#contact")).toEqual({ kind: "contact" });
     expect(t("/en#contact")).toEqual({ kind: "contact" });
     expect(t("/en#offer")).toEqual({ kind: "hash", id: "offer" });
-    expect(t("/#gallery-3")).toEqual({ kind: "hash", id: "gallery-3" });
+    expect(t("/#gallery-3")).toEqual({ kind: "gallery", hash: "#gallery-3" });
+    for (const hash of ["#gallery-interior", "#photo-cockpit", "#photo-steering-wheel-panel", "#spot-mileage-reading", "#gallery-0", "#gallery-1000", "#gallery-nope"]) {
+      expect(t(`/${hash}`), hash).toEqual({ kind: "gallery", hash }); // which names exist is the gallery's to say
+    }
     expect(t("/de#hero", "de")).toEqual({ kind: "hash", id: "hero" });
   });
 
   it("ignores everything else", () => {
-    for (const path of ["/de", "/de#contact", "/fr", "/en/", "/en/x", "/en?a=1", "/?a=1#contact", "/api/lead", "//evil.example", "//evil.example/en", "https://page.example/en", "https://evil.example/en", "\\evil", "/\\evil", "/en#faq", "/en#nope", "/en#gallery-0", "/en#gallery-x", "/en#gallery-1000", "en", "", "#contact", "/%2Fen", "/en#contact2"]) {
+    for (const path of ["/de", "/de#contact", "/fr", "/en/", "/en/x", "/en?a=1", "/?a=1#contact", "/api/lead", "//evil.example", "//evil.example/en", "https://page.example/en", "https://evil.example/en", "\\evil", "/\\evil", "/en#faq", "/en#nope", "/en#gallery-", "/en#photo-", "/en#spot-", "/en#photo-Cockpit", "/en#photo-a_b", "/en#photo--a", "/en#photo-a--b", "/en#gallery--1", "/en#spot-a%20b", "en", "", "#contact", "/%2Fen", "/en#contact2"]) {
       expect(t(path), path).toBeNull();
     }
     for (const bad of [undefined, null, 5, {}, ["/en"]]) expect(t(bad)).toBeNull();

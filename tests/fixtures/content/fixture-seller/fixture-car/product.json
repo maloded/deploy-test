@@ -106,6 +106,8 @@
     },
     "gallery": [
       {
+        "id": "front",
+        "category": "exterior",
         "file": "photo-1.jpg",
         "alt": {
           "en": "Fixture photo one",
@@ -113,6 +115,8 @@
         }
       },
       {
+        "id": "rear",
+        "category": "exterior",
         "file": "photo-2.jpg",
         "alt": {
           "en": "Fixture photo two"
@@ -123,18 +127,24 @@
         }
       },
       {
+        "id": "cabin",
+        "category": "interior",
         "file": "photo-3.jpg",
         "alt": {
           "en": "Fixture photo three"
         }
       },
       {
+        "id": "boot",
+        "category": "interior",
         "file": "photo-4.jpg",
         "alt": {
           "en": "Fixture photo four"
         }
       },
       {
+        "id": "detail",
+        "category": "details",
         "file": "sideways.jpg",
         "alt": {
           "en": "Fixture photo five, stored sideways"

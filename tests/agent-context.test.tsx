@@ -71,7 +71,17 @@ describe("page_context answer: the phases", () => {
   it("not_opened: the dialog was never opened", async () => {
     await mount("de");
     const a = ask();
-    expect(a).toEqual({ language: "de", product: PRODUCT, path: window.location.pathname, title: document.title, dialogOpen: false, phase: "not_opened", submit: "none", missing: ["name", "email", "consent"] });
+    expect(a).toEqual({ language: "de", product: PRODUCT, path: window.location.pathname, title: document.title, dialogOpen: false, phase: "not_opened", submit: "none", missing: ["name", "email", "consent"], view: { section: null, category: "exterior", photo: "front", index: 1, total: 5, spot: null, fullscreen: false } });
+  });
+
+  it("view: what is on screen, read when asked, so a swipe or a tap by the visitor shows at once", async () => {
+    await mount();
+    expect(ask().view).toMatchObject({ category: "exterior", photo: "front", index: 1, total: 5, spot: null, fullscreen: false });
+    act(() => void (box!.querySelector(".gallery__nav--next") as HTMLElement).click());
+    act(() => void (box!.querySelector(".gallery__nav--next") as HTMLElement).click());
+    expect(ask().view).toMatchObject({ category: "interior", photo: "cabin", index: 3 });
+    expect(ask().view).toMatchObject({ fullscreen: false }); // there is no full-screen viewer: the key stays, always false
+    expect(Object.keys(ask().view).sort()).toEqual(["category", "fullscreen", "index", "photo", "section", "spot", "total"]);
   });
 
   it("open_filling: the dialog is open and the form is not complete, with or without typing", async () => {
@@ -168,7 +178,7 @@ describe("page_context answer: the phases", () => {
     check(field("consent"));
     const a = ask();
     // "submit" and "missing" are documented keys since the form-states step (states and field names, no value)
-    expect(Object.keys(a).sort()).toEqual(["dialogOpen", "form", "language", "missing", "path", "phase", "product", "submit", "title"]);
+    expect(Object.keys(a).sort()).toEqual(["dialogOpen", "form", "language", "missing", "path", "phase", "product", "submit", "title", "view"]);
     expect(Object.keys(a.form).sort()).toEqual(["contactWindow", "email", "message", "name", "phone", "preferredChannel", "preferredSlots", "requestType"]);
     const text = JSON.stringify(a);
     expect(consentText.length).toBeGreaterThan(10);
@@ -187,13 +197,13 @@ describe("phaseOf and buildPageContext", () => {
     expect(phaseOf({ ...base, everOpened: true, consentGiven: true, valid: true, name: "x" })).toBe("complete");
   });
 
-  it("switching 'form' off cuts only the form key: language, dialogOpen, phase, submit and missing stay", () => {
+  it("switching 'form' off cuts only the form key: language, dialogOpen, phase, submit, missing and view stay", () => {
     expect(AGENT_INCLUDE_FORM).toBe(true);
     const done = { ...base, everOpened: true, consentGiven: true, valid: true, name: NAME, email: EMAIL };
     const input = { language: "en", product: PRODUCT, path: "/en", title: "T", snapshot: done };
-    expect(buildPageContext(input, false)).toEqual({ language: "en", product: PRODUCT, path: "/en", title: "T", dialogOpen: false, phase: "complete", submit: "none", missing: [] });
-    expect(buildPageContext({ ...input, snapshot: { ...done, dialogOpen: true } }, false)).toEqual({ language: "en", product: PRODUCT, path: "/en", title: "T", dialogOpen: true, phase: "complete", submit: "none", missing: [] });
-    expect(buildPageContext({ ...input, snapshot: base }, false)).toEqual({ language: "en", product: PRODUCT, path: "/en", title: "T", dialogOpen: false, phase: "not_opened", submit: "none", missing: ["name", "email", "consent"] });
+    expect(buildPageContext(input, false)).toEqual({ language: "en", product: PRODUCT, path: "/en", title: "T", dialogOpen: false, phase: "complete", submit: "none", missing: [], view: { section: null, category: null, photo: null, index: null, total: null, spot: null, fullscreen: false } });
+    expect(buildPageContext({ ...input, snapshot: { ...done, dialogOpen: true } }, false)).toEqual({ language: "en", product: PRODUCT, path: "/en", title: "T", dialogOpen: true, phase: "complete", submit: "none", missing: [], view: { section: null, category: null, photo: null, index: null, total: null, spot: null, fullscreen: false } });
+    expect(buildPageContext({ ...input, snapshot: base }, false)).toEqual({ language: "en", product: PRODUCT, path: "/en", title: "T", dialogOpen: false, phase: "not_opened", submit: "none", missing: ["name", "email", "consent"], view: { section: null, category: null, photo: null, index: null, total: null, spot: null, fullscreen: false } });
     expect(buildPageContext(input)).toHaveProperty("form");
   });
 

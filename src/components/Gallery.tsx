@@ -1,124 +1,175 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { flushSync } from "react-dom";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { resolveGalleryHash, usedCategories, categoryHash, photoHash, spotHash, type GalleryCategory } from "@/lib/gallery-model";
+import { createGalleryStore, type GalleryEvent } from "@/lib/gallery-store";
 import type { Language } from "@/lib/schema";
+import { parseFocus, spotPlacement } from "@/lib/spot-position";
 import { ui, uiFmt } from "@/lib/ui-strings";
-import type { GallerySlide } from "./gallery-props";
-import { Lightbox } from "./Lightbox";
+import type { GallerySlide, GallerySpot } from "./gallery-props";
+
+/** What an address or the agent got back: shown (now or queued behind the visitor's own swipe), or not a thing of this gallery. */
+export type GalleryOutcome = "handled" | "queued" | "unhandled";
+
+/** What is on screen, for the page context of the voice agent. */
+export type GalleryView = { category: GalleryCategory; photo: string; index: number; total: number; spot: string | null };
 
 /** Methods placed on the gallery element (section#gallery) for the voice agent and other outside callers. */
 export type GalleryApi = {
   goToPhoto(index: number): void;
   next(): void;
   previous(): void;
-  openLightbox(index?: number): void;
-  closeLightbox(): void;
+  /** Shows what a gallery address names: "#gallery", "#gallery-interior", "#gallery-7", "#photo-<id>", "#spot-<id>". "unhandled" for anything else, unknown names included. */
+  showAddress(hash: string): GalleryOutcome;
+  /** The photo, category and open spot on screen (index is 1-based, as in the counter). */
+  getView(): GalleryView;
 };
 export type GalleryElement = HTMLElement & GalleryApi;
-export type GalleryChangeDetail = { index: number; count: number };
+export type GalleryChangeDetail = { index: number; count: number; photo: string; category: GalleryCategory; spot: string | null };
 
-type Source = "user" | "auto";
+type Props = { slides: GallerySlide[]; lang: Language; autoplaySeconds: number | null; categoryLabels?: Record<GalleryCategory, string> };
+
+/** How long after the last touch of the track a scroll still counts as the visitor's (a finger lifted, the momentum going on). */
+const HANDS_MS = 400;
+/** How long the scroll events of our own re-alignment (after a resize) are ignored. */
+const QUIET_SCROLL_MS = 150;
+
+const DEFAULT_LABELS: Record<GalleryCategory, string> = { exterior: "Exterior", interior: "Interior", details: "Details" };
 
 /**
- * Showcase carousel: CSS scroll-snap track (native swipe), previous/next buttons, thumbnails, counter,
- * keyboard arrows, optional autoplay, and a lightbox. No dependency.
- * A live region announces slide changes only after a user action, never during autoplay.
+ * Showcase gallery. ONE sequence of photos (exterior, interior, details), a CSS scroll-snap track (native swipe), a counter, dots and a
+ * passive category indicator (aria-hidden: it shows where in the sequence the current photo is, it is not a control), the caption,
+ * previous/next buttons on wide screens, a thumbnail strip and hotspots that open a small card. There is no full-screen viewer.
+ *
+ * The state (photo, open spot) lives in one store (lib/gallery-store.ts): the track, the buttons, the address and the
+ * agent all read and change it. A change from the agent waits while the visitor is swiping or tapping (the store queues it).
+ * A live region announces changes after a visitor or agent action, never during the slideshow.
  */
-export function Gallery({ slides, lang, autoplaySeconds }: { slides: GallerySlide[]; lang: Language; autoplaySeconds: number | null }) {
+export function Gallery({ slides, lang, autoplaySeconds, categoryLabels = DEFAULT_LABELS }: Props) {
   const count = slides.length;
+  const [store] = useState(() => createGalleryStore(count));
+  const st = useSyncExternalStore(store.subscribe, store.get, store.get);
+  const current = st.index;
+  const slide = slides[current];
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLUListElement>(null);
-  const [current, setCurrent] = useState(0);
-  const [lightbox, setLightbox] = useState<number | null>(null);
-  const [announcement, setAnnouncement] = useState("");
+  const cardCloseRef = useRef<HTMLButtonElement>(null);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
-  const pending = useRef<{ index: number; user: boolean } | null>(null);
-  const trigger = useRef<HTMLElement | null>(null);
-  const lastIndex = useRef(0);
+  const [box, setBox] = useState<{ width: number; height: number } | null>(null);
+  const pending = useRef<number | null>(null);
+  const lastHands = useRef(Number.NEGATIVE_INFINITY);
+  const quiet = useRef(0);
+  const lastEvent = useRef({ index: 0, spot: null as string | null });
 
+  const refs = useMemo(() => slides.map((s) => ({ id: s.id, aliases: s.aliases, category: s.category, hotspots: s.spots })), [slides]);
   const clamp = useCallback((i: number) => Math.min(Math.max(Math.round(i), 0), count - 1), [count]);
+  const labelOf = useCallback((c: GalleryCategory) => categoryLabels[c] ?? DEFAULT_LABELS[c], [categoryLabels]);
+  const photoText = useCallback((i: number) => uiFmt("gallery.photo", lang, { category: labelOf(slides[i].category), n: i + 1, total: count, caption: slides[i].caption }), [count, labelOf, lang, slides]);
 
-  const goTo = useCallback(
-    (i: number, source: Source = "user") => {
-      if (count === 0) return;
-      const index = clamp(i);
-      setCurrent(index);
-      setLightbox((open) => (open === null ? open : index));
-      if (source === "user") setAnnouncement(uiFmt("gallery.slide", lang, { n: index + 1, total: count }));
-      const track = trackRef.current;
-      if (track && typeof track.scrollTo === "function") {
-        pending.current = { index, user: source === "user" };
-        track.scrollTo({ left: index * track.clientWidth, behavior: reducedMotion ? "auto" : "smooth" });
-      }
-    },
-    [clamp, count, lang, reducedMotion],
-  );
-
-  // keep the API pointing at the latest state without re-attaching it on every render
-  const state = useRef({ current, lightbox, goTo });
+  // the store's state is the truth; these small wrappers are what the buttons and the API call
+  const visitor = useCallback((event: GalleryEvent) => store.user(event), [store]);
+  const stateRef = useRef({ current, spot: st.spotId });
   useEffect(() => {
-    state.current = { current, lightbox, goTo };
+    stateRef.current = { current, spot: st.spotId };
   });
 
-  const openLightbox = useCallback(
-    (index?: number) => {
-      if (count === 0) return;
-      if (state.current.lightbox === null) trigger.current = document.activeElement as HTMLElement | null;
-      const i = clamp(index ?? state.current.current);
-      state.current.goTo(i);
-      setLightbox(i);
+  /** Smooth unless the visitor asked for less motion. */
+  const scrollSectionIntoView = useCallback(() => {
+    sectionRef.current?.scrollIntoView?.({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+  }, [reducedMotion]);
+
+  /** An address or the agent. `via` "visitor": a link the visitor followed (applied at once, the address is already in the bar); "api": the agent (queued behind the visitor's own action, the address is written). */
+  const show = useCallback(
+    (hash: string, via: "visitor" | "api"): GalleryOutcome => {
+      const target = resolveGalleryHash(refs, hash);
+      if (!target || target.kind === "unknown") {
+        if (target && process.env.NODE_ENV !== "production") console.warn(`gallery: ${hash}: ${target.reason}`);
+        return "unhandled";
+      }
+      const write = (h: string) => {
+        if (via === "api") window.history.replaceState(window.history.state, "", h);
+      };
+      if (target.kind === "section") {
+        scrollSectionIntoView();
+        write("#gallery");
+        return "handled";
+      }
+      const event: GalleryEvent = target.kind === "spot" ? { type: "spot", index: target.index, spotId: target.spotId } : { type: "go", index: target.index };
+      const result = via === "visitor" ? (store.user(event), "applied") : store.request(event);
+      scrollSectionIntoView();
+      write(target.kind === "spot" ? spotHash(target.spotId) : target.kind === "category" ? categoryHash(target.category) : photoHash(slides[target.index].id));
+      return result === "queued" ? "queued" : "handled";
     },
-    [clamp, count],
+    [refs, scrollSectionIntoView, slides, store],
   );
-  const closeLightbox = useCallback(() => setLightbox(null), []);
-  // The page API closes it synchronously: a caller that opens another dialog right after (the agent's #contact) must come after the focus return.
-  const closeLightboxNow = useCallback(() => flushSync(() => setLightbox(null)), []);
 
   useEffect(() => {
     const el = sectionRef.current as GalleryElement | null;
     if (!el) return;
     const api: GalleryApi = {
-      goToPhoto: (i) => state.current.goTo(i),
-      next: () => state.current.goTo(state.current.current + 1),
-      previous: () => state.current.goTo(state.current.current - 1),
-      openLightbox,
-      closeLightbox: closeLightboxNow,
+      goToPhoto: (i) => void store.request({ type: "go", index: clamp(i) }),
+      next: () => void store.request({ type: "go", index: clamp(store.get().index + 1) }),
+      previous: () => void store.request({ type: "go", index: clamp(store.get().index - 1) }),
+      showAddress: (hash) => show(hash, "api"),
+      getView: () => {
+        const now = store.get(); // the store, not the last render: the agent may ask right after it changed something
+        return { category: slides[now.index].category, photo: slides[now.index].id, index: now.index + 1, total: count, spot: now.spotId };
+      },
     };
     Object.assign(el, api);
     return () => {
       for (const k of Object.keys(api)) delete (el as unknown as Record<string, unknown>)[k];
     };
-  }, [openLightbox, closeLightboxNow]);
+  }, [clamp, count, show, slides, store]);
+  useEffect(() => () => store.dispose(), [store]);
 
-  // "gallery-change" event on every change of the current photo
+  // "gallery-change" on every change of the photo or the open spot
   useEffect(() => {
-    if (lastIndex.current === current) return;
-    lastIndex.current = current;
+    const last = lastEvent.current;
+    if (last.index === current && last.spot === st.spotId) return;
+    lastEvent.current = { index: current, spot: st.spotId };
     sectionRef.current?.dispatchEvent(
-      new CustomEvent<GalleryChangeDetail>("gallery-change", { bubbles: true, detail: { index: current, count } }),
+      new CustomEvent<GalleryChangeDetail>("gallery-change", { bubbles: true, detail: { index: current, count, photo: slides[current].id, category: slides[current].category, spot: st.spotId } }),
     );
-  }, [current, count]);
+  }, [current, st.spotId, count, slides]);
 
-  // follow swipes and programmatic scrolls
+  // the store drives the track: a change that did not come from the track itself scrolls it
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track || track.clientWidth === 0) return;
+    if (clamp(track.scrollLeft / track.clientWidth) === current) return;
+    pending.current = current;
+    if (typeof track.scrollTo === "function") track.scrollTo({ left: current * track.clientWidth, behavior: reducedMotion ? "auto" : "smooth" });
+  }, [current, st.revision, clamp, reducedMotion]);
+
+  // the track drives the store: follow swipes (the category indicator changes while the visitor swipes), ignore our own scrolls
   const onScroll = useCallback(() => {
     const track = trackRef.current;
     if (!track || track.clientWidth === 0) return;
+    if (Date.now() < quiet.current) return; // our own re-alignment
     const index = clamp(track.scrollLeft / track.clientWidth);
-    const wanted = pending.current;
-    if (wanted) {
-      if (index === wanted.index) pending.current = null;
+    if (pending.current !== null) {
+      if (index === pending.current) pending.current = null;
       return;
     }
-    if (index !== state.current.current) {
-      setCurrent(index);
-      setAnnouncement(uiFmt("gallery.slide", lang, { n: index + 1, total: count })); // a swipe is a user action
+    // only a scroll the visitor drives (hands on the track a moment ago, kept alive while the momentum goes on) counts as activity: the settling of
+    // the agent's own slide must not make the next agent request wait
+    if (Date.now() - lastHands.current < HANDS_MS) {
+      lastHands.current = Date.now();
+      store.touch();
     }
-  }, [clamp, count, lang]);
+    store.follow(index);
+  }, [clamp, store]);
+  // the visitor's hands on the track: a scroll of ours is over, and a queued agent request waits
+  const onHands = useCallback(() => {
+    pending.current = null;
+    lastHands.current = Date.now();
+    store.touch();
+  }, [store]);
 
   // Warm up the current photo and its neighbours. This is done on the DOM after hydration instead of with
   // loading="eager" in the markup, because Next adds a <link rel=preload> for every eager image, and a preload
@@ -153,46 +204,33 @@ export function Gallery({ slides, lang, autoplaySeconds }: { slides: GallerySlid
     strip.scrollTo?.({ left: Math.max(0, left), behavior: reducedMotion ? "auto" : "smooth" });
   }, [current, reducedMotion]);
 
-  // keep the track aligned to the current photo when the width changes (resize, rotation, scrollbar)
+  // keep the track aligned to the current photo when the width changes (resize, rotation, scrollbar); measure the stage for the spots
   const align = useCallback(() => {
     const track = trackRef.current;
-    if (track && track.clientWidth > 0) track.scrollLeft = state.current.current * track.clientWidth;
+    if (track && track.clientWidth > 0) {
+      // the store is the truth: put the track back on its photo at once (not smoothly) and ignore the scroll events of doing so, so a resize
+      // (rotation, the address bar of a phone, a screenshot tool) can never be read as a swipe to another photo
+      quiet.current = Date.now() + QUIET_SCROLL_MS;
+      track.scrollTo?.({ left: stateRef.current.current * track.clientWidth, behavior: "instant" });
+    }
+    const first = track?.firstElementChild as HTMLElement | null | undefined;
+    if (first && first.clientWidth > 0 && first.clientHeight > 0) {
+      setBox((prev) => (prev && prev.width === first.clientWidth && prev.height === first.clientHeight ? prev : { width: first.clientWidth, height: first.clientHeight }));
+    }
   }, []);
   useEffect(() => {
+    align();
     window.addEventListener("resize", align);
     return () => window.removeEventListener("resize", align);
   }, [align]);
 
-  // return focus to what opened the lightbox. A photo button is replaced by the button of the photo that is
-  // current now (the viewer may have moved on), and focus never scrolls the track back to the old photo.
-  const wasOpen = useRef(false);
+  // addresses: on load and when the visitor follows a link (an address that names nothing here is left alone)
   useEffect(() => {
-    if (lightbox === null && wasOpen.current) {
-      const opener = trigger.current;
-      const buttons = sectionRef.current?.querySelectorAll<HTMLElement>(".gallery__open");
-      const target = opener?.classList.contains("gallery__open") ? (buttons?.[state.current.current] ?? opener) : opener;
-      target?.focus({ preventScroll: true });
-      align();
-    }
-    wasOpen.current = lightbox !== null;
-    document.body.style.overflow = lightbox !== null ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [lightbox, align]);
-
-  // deep links: #gallery (native) and #gallery-3 (1-based; a number outside 1..count is ignored)
-  useEffect(() => {
-    const apply = () => {
-      const m = /^#gallery-(\d+)$/.exec(window.location.hash);
-      if (!m || Number(m[1]) < 1 || Number(m[1]) > count) return;
-      state.current.goTo(Number(m[1]) - 1, "auto");
-      sectionRef.current?.scrollIntoView?.();
-    };
+    const apply = () => void show(window.location.hash, "visitor");
     apply();
     window.addEventListener("hashchange", apply);
     return () => window.removeEventListener("hashchange", apply);
-  }, [count]);
+  }, [show]);
 
   // reduced motion and tab visibility
   useEffect(() => {
@@ -210,22 +248,49 @@ export function Gallery({ slides, lang, autoplaySeconds }: { slides: GallerySlid
   }, []);
 
   const autoplay = autoplaySeconds !== null && count > 1 && !reducedMotion;
-  const paused = hovered || focused || hidden || lightbox !== null;
+  const paused = hovered || focused || hidden || st.spotId !== null;
   useEffect(() => {
     if (!autoplay || paused) return;
-    const timer = setInterval(() => state.current.goTo((state.current.current + 1) % count, "auto"), autoplaySeconds * 1000);
+    const timer = setInterval(() => store.auto((stateRef.current.current + 1) % count), autoplaySeconds * 1000);
     return () => clearInterval(timer);
-  }, [autoplay, paused, autoplaySeconds, count]);
+  }, [autoplay, paused, autoplaySeconds, count, store]);
+
+  // the spot card: a visitor's tap moves focus into it, closing it returns focus to its marker
+  const spotFocus = useRef<string | null>(null);
+  useEffect(() => {
+    if (st.source !== "user") {
+      spotFocus.current = st.spotId;
+      return;
+    }
+    if (st.spotId && spotFocus.current !== st.spotId) cardCloseRef.current?.focus({ preventScroll: true });
+    else if (!st.spotId && spotFocus.current) sectionRef.current?.querySelector<HTMLElement>(`[data-spot="${CSS.escape(spotFocus.current)}"]`)?.focus({ preventScroll: true });
+    spotFocus.current = st.spotId;
+  }, [st.spotId, st.source]);
+
+  const openSpot: GallerySpot | null = useMemo(() => slides[current]?.spots.find((s) => s.id === st.spotId) ?? null, [slides, current, st.spotId]);
+
+  // what the live region says: the photo (with its category) or the spot, only after a visitor or agent action
+  const announcement = st.source === "user" || st.source === "api" ? (openSpot ? [openSpot.label, ...openSpot.facts.map((f) => f.value), ...(openSpot.text ? [openSpot.text] : [])].join(". ") : photoText(current)) : "";
 
   if (count === 0) return null;
 
   const onKeyDown = (e: React.KeyboardEvent) => {
+    store.touch();
+    if (e.key === "Escape" && st.spotId) {
+      e.preventDefault();
+      visitor({ type: "closeSpot" });
+      return;
+    }
+    if (e.target !== e.currentTarget && !(e.target as HTMLElement).classList.contains("gallery__viewport")) return;
     const keys: Record<string, number> = { ArrowRight: current + 1, ArrowLeft: current - 1, Home: 0, End: count - 1 };
     if (e.key in keys) {
       e.preventDefault();
-      goTo(keys[e.key]);
+      visitor({ type: "go", index: clamp(keys[e.key]) });
     }
   };
+
+  const category = slide.category;
+  const categories = usedCategories(slides);
 
   return (
     <section
@@ -234,6 +299,7 @@ export function Gallery({ slides, lang, autoplaySeconds }: { slides: GallerySlid
       id="gallery"
       data-block="gallery"
       data-count={count}
+      data-category={category}
       data-autoplay={!autoplay ? "off" : paused ? "paused" : "on"}
       role="region"
       aria-roledescription="carousel"
@@ -246,71 +312,124 @@ export function Gallery({ slides, lang, autoplaySeconds }: { slides: GallerySlid
       }}
     >
       <div className="container">
-        <h2 className="sr-only">{ui("section.gallery", lang)}</h2>
-        <div className="gallery__viewport" tabIndex={0} onKeyDown={onKeyDown}>
+        <h2 className="section-title">{ui("gallery.title", lang)}</h2>
+        <div className="gallery__viewport" tabIndex={0} onKeyDown={onKeyDown} onPointerDown={onHands} onWheel={onHands} onTouchStart={onHands}>
           <ul className="gallery__track" ref={trackRef} onScroll={onScroll}>
             {slides.map((s, i) => (
               <li
-                key={s.src}
+                key={s.id}
                 className="gallery__slide"
                 role="group"
                 aria-roledescription="slide"
-                aria-label={uiFmt("gallery.slide", lang, { n: i + 1, total: count })}
+                aria-label={photoText(i)}
                 data-index={i}
+                data-id={s.id}
+                data-category={s.category}
               >
-                <button type="button" className="gallery__open" aria-label={uiFmt("gallery.open", lang, { n: i + 1 })} onClick={() => openLightbox(i)}>
-                  <Image
-                    className="gallery__img"
-                    src={s.src}
-                    width={s.width}
-                    height={s.height}
-                    alt={s.alt}
-                    sizes="(min-width: 56em) 1100px, 100vw"
-                    loading="lazy"
-                    style={{ objectPosition: s.position }}
-                  />
-                </button>
+                <Image
+                  className="gallery__img"
+                  src={s.src}
+                  width={s.width}
+                  height={s.height}
+                  alt={s.alt}
+                  sizes="(min-width: 56em) 1100px, 100vw"
+                  loading="lazy"
+                  style={{ objectPosition: s.position }}
+                />
+                {s.spots.map((spot) => {
+                  const at = spotPlacement(spot, s, box, parseFocus(s.position));
+                  const isOpen = i === current && st.spotId === spot.id;
+                  return (
+                    <button
+                      key={spot.id}
+                      type="button"
+                      className="gallery__spot"
+                      data-spot={spot.id}
+                      style={{ left: `${at.left}%`, top: `${at.top}%` }}
+                      aria-label={uiFmt("gallery.spot.open", lang, { label: spot.label })}
+                      aria-expanded={isOpen}
+                      aria-controls={isOpen ? "gallery-spot-card" : undefined}
+                      tabIndex={i === current ? 0 : -1}
+                      onClick={() => visitor(isOpen ? { type: "closeSpot" } : { type: "spot", index: i, spotId: spot.id })}
+                    />
+                  );
+                })}
               </li>
             ))}
           </ul>
           {count > 1 && (
             <>
-              <button type="button" className="gallery__nav gallery__nav--prev" aria-label={ui("gallery.previous", lang)} disabled={current === 0} onClick={() => goTo(current - 1)} />
-              <button type="button" className="gallery__nav gallery__nav--next" aria-label={ui("gallery.next", lang)} disabled={current === count - 1} onClick={() => goTo(current + 1)} />
+              <button type="button" className="gallery__nav gallery__nav--prev" aria-label={ui("gallery.previous", lang)} disabled={current === 0} onClick={() => visitor({ type: "go", index: current - 1 })} />
+              <button type="button" className="gallery__nav gallery__nav--next" aria-label={ui("gallery.next", lang)} disabled={current === count - 1} onClick={() => visitor({ type: "go", index: current + 1 })} />
             </>
+          )}
+          <p className="gallery__counter" aria-hidden="true">
+            {current + 1} / {count}
+          </p>
+          {openSpot && (
+            <div className="gallery__spot-card" id="gallery-spot-card" role="group" aria-label={openSpot.label} data-spot-card={openSpot.id}>
+              <p className="gallery__spot-title">{openSpot.label}</p>
+              {openSpot.facts.length > 0 && (
+                <dl className="gallery__spot-facts">
+                  {openSpot.facts.map((f) => (
+                    <div key={f.label}>
+                      {f.label.toLocaleLowerCase() !== openSpot.label.toLocaleLowerCase() && <dt>{f.label}</dt>}
+                      <dd>{f.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+              {openSpot.text && <p className="gallery__spot-text">{openSpot.text}</p>}
+              <button ref={cardCloseRef} type="button" className="gallery__spot-close" aria-label={ui("gallery.spot.close", lang)} onClick={() => visitor({ type: "closeSpot" })}>
+                <span aria-hidden="true">×</span>
+              </button>
+            </div>
           )}
         </div>
 
-        <div className="gallery__bar">
-          <p className="gallery__counter">
-            {current + 1} / {count}
-          </p>
+        <div className="gallery__info">
           {count > 1 && (
-            <div className={`gallery__thumbs-wrap${edges.start ? " gallery__thumbs-wrap--more-start" : ""}${edges.end ? " gallery__thumbs-wrap--more-end" : ""}`}>
+            <div className="gallery__dots" aria-hidden="true">
+              {slides.map((s, i) => (
+                <span key={s.id} className="gallery__dot" data-active={i === current ? "true" : undefined} data-category={s.category} />
+              ))}
+            </div>
+          )}
+          {categories.length > 1 && (
+            <ol className="gallery__cats" aria-hidden="true">
+              {categories.map((c) => (
+                <li key={c} className="gallery__cat" data-category={c} data-active={c === category ? "true" : undefined}>
+                  {labelOf(c)}
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+
+        {count > 1 && (
+          <div className={`gallery__thumbs-wrap${edges.start ? " gallery__thumbs-wrap--more-start" : ""}${edges.end ? " gallery__thumbs-wrap--more-end" : ""}`}>
             <ul className="gallery__thumbs" ref={thumbsRef} onScroll={updateEdges}>
               {slides.map((s, i) => (
-                <li key={s.src}>
+                <li key={s.id} data-group-start={i === 0 || slides[i - 1].category !== s.category ? "true" : undefined} data-category={s.category}>
                   <button
                     type="button"
                     className="gallery__thumb"
                     aria-label={uiFmt("gallery.thumb", lang, { n: i + 1 })}
                     aria-current={i === current ? "true" : undefined}
-                    onClick={() => goTo(i)}
+                    onClick={() => visitor({ type: "go", index: i })}
                   >
                     <Image className="gallery__thumb-img" src={s.src} width={s.width} height={s.height} alt="" sizes="96px" loading="lazy" style={{ objectPosition: s.position }} />
                   </button>
                 </li>
               ))}
             </ul>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
         <p className="sr-only" aria-live="polite" data-gallery-live>
           {announcement}
         </p>
       </div>
 
-      {lightbox !== null && <Lightbox slides={slides} index={lightbox} lang={lang} onIndex={(i) => goTo(i)} onClose={closeLightbox} />}
     </section>
   );
 }

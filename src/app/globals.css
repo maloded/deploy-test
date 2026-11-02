@@ -12,7 +12,7 @@
 html {
   font-size: var(--base-size);
   -webkit-text-size-adjust: 100%;
-  scrollbar-gutter: stable; /* opening the lightbox must not change the page width */
+  scrollbar-gutter: stable; /* a dialog must not change the page width */
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -58,7 +58,6 @@ h3,
 .offer__note,
 .offer__disclaimer,
 .site-header__name,
-.hero__trust li,
 .site-footer {
   hyphens: auto;
   overflow-wrap: anywhere;
@@ -668,36 +667,11 @@ main:focus-visible {
   width: 100%;
 }
 
-/* trust: short items, centered; stacked on mobile, one thin line with separators on wide screens */
-.hero__trust {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-1);
-  margin: 0;
-  padding: 0;
-  color: var(--muted);
-  font-size: 0.85rem;
-  text-align: center;
-  list-style: none;
-}
-
 @media (min-width: 56em) {
   .hero__headline {
     max-width: 80%;
   }
 
-  .hero__trust {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0;
-  }
-
-  .hero__trust li + li::before {
-    content: "·";
-    margin-inline: var(--space-3);
-  }
 
   /* wide but short windows: normal flow, the frame is a centered box with the ratio of the product type */
   .hero__photo {
@@ -882,10 +856,6 @@ main:focus-visible {
     letter-spacing: 0.1em;
     white-space: nowrap;
   }
-
-  .hero__trust {
-    display: none;
-  }
 }
 
 /*
@@ -894,7 +864,7 @@ main:focus-visible {
  * laid over the slot by script (AgentAvatarCard, use-card-placement). Below 56em (phones, tablets, narrow windows) the slot is a block under
  * the photo, centred, in the flow: --avatar-hero-card-w wide on a phone (default 15.5rem, 4:5; 280px at 18px per rem) and 27rem from 40em
  * (about the 480px of Hanc). From 56em the title zone is the left column, left-aligned, and the slot the right one; the bottom row
- * (description, facts, price, buttons, trust line) stays below, full width.
+ * (description, facts, price, buttons) stays below, full width.
  *
  * In the one-screen hero the row takes the height that is left above the bottom row, and the slot is stretched to the left column's height:
  * its top is the headline's top, its bottom the photo's bottom. Its width is 4:5 of that height (use-card-placement hands the row's height over
@@ -993,15 +963,327 @@ main:focus-visible {
   }
 }
 
-/* laptop-height windows: the compact bottom row; with the card the trust line stays (the first screen shows it) */
+/* laptop-height windows: the compact lead-in */
 @media (min-width: 56em) and (min-height: 37.5em) and (max-height: 50em) {
   .hero__lead-in {
     padding-top: var(--space-3);
     padding-bottom: var(--space-2);
   }
+}
 
-  .hero[data-card] .hero__trust {
+/*
+ * The hero on a phone (below 56em, "layout A"): eyebrow, title, photo, a price box (label, price, note, the compact button: the one call-to-action link, its short text shown), the key facts as a 2x2 grid of
+ * tiles, and the card (the description and the trust items are left out). It is the same markup as the wide hero,
+ * re-ordered: the wrappers of the bottom row and the card's row become boxless (display: contents) so every part is an item of the section's column and
+ * takes its place by `order`. The wide hero is not touched: everything here is inside the query, and the three phone-only parts are hidden outside it.
+ */
+.hero__price-label,
+.hero__cta-short {
+  display: none;
+}
+
+.hero__pricebox {
+  display: contents;
+}
+
+@media (width < 56em) {
+  .hero {
     display: flex;
+    flex-direction: column;
+    padding-bottom: var(--space-5);
+  }
+
+  .hero__top,
+  .hero__intro,
+  .hero__intro > .hero__container,
+  .hero__intro-grid,
+  .hero__intro-main,
+  .hero__intro-aside {
+    display: contents;
+  }
+
+  /* the parts that lost their wrapper keep its width and side padding */
+  .hero__top > .hero__stage,
+  .hero__facts {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: var(--container-wide, var(--container));
+    margin-inline: auto;
+    padding-inline: var(--space-4);
+  }
+
+  .hero__lead-in {
+    order: 1;
+  }
+
+  .hero__top > .hero__stage {
+    order: 2;
+  }
+
+  .hero__pricebox {
+    order: 3;
+  }
+
+  .hero__facts {
+    order: 4;
+  }
+
+  .hero__slot {
+    order: 6;
+    margin-bottom: 0; /* the section's own padding follows: the gallery's heading comes after the card with the usual gap between sections */
+  }
+
+  /* the call to action is the compact button in the price box; the outline button (the specifications) is left out on a phone */
+  .hero__actions {
+    display: block;
+    flex: none;
+    margin: 0;
+  }
+
+  .hero__actions .button--outline,
+  .hero__cta-full {
+    display: none;
+  }
+
+  /* the price box: label, price and note on the left, the compact button on the right */
+  .hero__pricebox {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    box-sizing: border-box;
+    width: calc(100% - 2 * var(--space-4));
+    max-width: calc(var(--container-wide, var(--container)) - 2 * var(--space-4));
+    margin: var(--space-4) auto 0;
+    padding: var(--space-3) var(--space-4);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .hero__figure {
+    gap: 0;
+    min-width: 0;
+  }
+
+  .hero__price-label {
+    display: block;
+    color: var(--muted);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .hero__amount {
+    font-size: clamp(1.6rem, 8vw, 2.1rem);
+  }
+
+  .hero__actions .button:not(.button--outline) {
+    display: inline-flex;
+    align-items: center;
+    width: auto;
+    min-height: 2.75rem;
+    padding: 0 var(--space-4);
+    white-space: nowrap;
+  }
+
+  .hero__cta-short {
+    display: inline;
+  }
+
+  /* the facts: tiles, two by two (a lone last fact takes the whole row) */
+  .hero__facts {
+    display: grid;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+    overflow: visible;
+  }
+
+  .hero__facts-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+
+  .hero__facts-pair[data-count="1"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hero__fact {
+    min-width: 0;
+    padding: var(--space-3);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .hero__fact::before {
+    display: none;
+  }
+
+  .hero__fact-value {
+    font-size: clamp(1.1rem, 5.2vw, 1.5rem);
+  }
+
+  /* the description is left out on a phone (it stays in the page for readers and search, hidden here) */
+  .hero__description {
+    display: none;
+  }
+}
+
+/*
+ * The invitation above the card (SofiaIntro.tsx): a question and a slow running line of what the agent can do. Plain text with separators, no chips.
+ * The rail is two identical tracks back to back, each wider than the column (the items are repeated to make it so), and moves left by exactly one
+ * track (-50%), linear, forever: the start of the second track follows the end of the first like a chain, with no gap and no stop (it never pauses).
+ * The duration is 40s per cycle of the list, so the speed does not depend on how often it is repeated (--sofia-loop is set by the component).
+ * With reduced motion there is no movement: one list, wrapped, centred; the copy and the repeats are hidden.
+ * On a phone it is an item of the hero's column; from 56em it is the top of the right column, above the card's slot. The whole invitation is as wide as
+ * the column and contributes nothing to its width (width 0, then min-width 100%), so the card alone decides the column's width, as before it existed.
+ */
+.sofia-intro {
+  position: relative;
+  z-index: 1;
+  width: 0;
+  min-width: 100%;
+  overflow: hidden; /* it lives inside the card's width: nothing of it can widen the column */
+  text-align: center;
+}
+
+/* the right column: the invitation above the slot. On a phone the wrapper is boxless and both take their place in the section's column. */
+.hero__aside {
+  display: contents;
+}
+
+@media (width < 56em) {
+  .sofia-intro {
+    order: 5;
+    width: 100%;
+    min-width: 0;
+    max-width: var(--container-wide, var(--container));
+    margin: var(--space-5) auto 0;
+    padding-inline: var(--space-4);
+  }
+}
+
+@media (min-width: 56em) {
+  /*
+   * Wide: the invitation hangs over the top of the right column, into the band of the eyebrow (the lead-in), which is made just tall enough for it. It takes
+   * no height of the column, so the slot (and the card over it) keeps its whole height and its 4:5 shape, and no width: it is clipped to the column.
+   */
+  .hero__aside {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+    min-height: 0;
+  }
+
+  .sofia-intro {
+    position: absolute;
+    inset: auto 0 calc(100% + var(--space-2)); /* its bottom edge a little above the column's top */
+    width: auto;
+    min-width: 0;
+  }
+
+  .hero__aside .sofia-intro__heading {
+    font-size: 1.1rem;
+  }
+
+  .hero__aside .sofia-intro__marquee {
+    margin-top: var(--space-1);
+  }
+
+  .hero__aside .sofia-intro__items {
+    font-size: 0.85rem;
+  }
+
+  .hero[data-card] .hero__lead-in {
+    box-sizing: border-box;
+    min-height: 3.4rem; /* the invitation (about 2.9rem) and a little air under it */
+  }
+
+  .hero__aside .hero__slot {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
+
+.sofia-intro__heading {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.sofia-intro__marquee {
+  width: 0;
+  min-width: 100%;
+  margin-top: var(--space-2);
+  overflow: hidden;
+  /* the ends fade out (mask uses only the alpha of the colour) */
+  -webkit-mask-image: linear-gradient(to right, transparent, currentcolor 6%, currentcolor 94%, transparent);
+  mask-image: linear-gradient(to right, transparent, currentcolor 6%, currentcolor 94%, transparent);
+}
+
+.sofia-intro__rail {
+  display: flex;
+  width: max-content;
+  animation: sofia-intro-run var(--sofia-loop, 40s) linear infinite;
+}
+
+.sofia-intro__items {
+  display: flex;
+  flex: none;
+  min-width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* the separator follows every item, the last one too, so the gap between the two copies is the same as between items */
+.sofia-intro__items li::after {
+  content: "·";
+  margin-inline: 0.75em;
+}
+
+@keyframes sofia-intro-run {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sofia-intro__rail {
+    display: block;
+    width: auto;
+    animation: none;
+  }
+
+  .sofia-intro__marquee {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .sofia-intro__items {
+    flex-wrap: wrap;
+    justify-content: center;
+    white-space: normal;
+  }
+
+  .sofia-intro__items[aria-hidden="true"],
+  .sofia-intro__items li[aria-hidden="true"] {
+    display: none;
+  }
+
+  .sofia-intro__items li:last-child::after {
+    content: none;
   }
 }
 
@@ -1351,16 +1633,6 @@ main:focus-visible {
   scroll-snap-align: center;
 }
 
-.gallery__open {
-  display: block;
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: zoom-in;
-}
-
 .gallery__img {
   display: block;
   width: 100%;
@@ -1414,19 +1686,214 @@ main:focus-visible {
   cursor: default;
 }
 
-.gallery__bar {
+/* under the photo: the dots, centred, and right under them the passive category indicator; the counter is a small pill over the photo's top-right corner */
+.gallery__info {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-2);
   margin-top: var(--space-3);
 }
 
 .gallery__counter {
-  flex: none;
-  color: var(--muted);
-  font-size: 0.85rem;
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 1;
+  margin: 0;
+  padding: 0.15rem 0.6rem;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  border-radius: 99rem;
+  color: var(--text);
+  font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.08em;
+  pointer-events: none;
+}
+
+.gallery__dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: center;
+}
+
+.gallery__dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background-color 0.25s, width 0.25s;
+}
+
+.gallery__dot[data-active="true"] {
+  width: 1rem;
+  border-radius: 0.2rem;
+  background: var(--accent-line, var(--accent));
+}
+
+/* the category indicator is a place marker, not a control: no hover, no pointer, never focusable */
+.gallery__cats {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+  user-select: none;
+}
+
+.gallery__cat {
+  position: relative;
+  padding-bottom: 0.25rem;
+  color: var(--muted);
+  font-size: 0.65rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  transition: color 0.25s, opacity 0.25s;
+}
+
+.gallery__cat + .gallery__cat::before {
+  content: "·";
+  position: absolute;
+  inset-inline-start: calc(var(--space-3) / -2 - 0.1em);
+  color: var(--muted);
+}
+
+.gallery__cat::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+  background: var(--accent-line, var(--accent));
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.gallery__cat[data-active="true"] {
+  color: var(--accent-text, var(--accent));
+  opacity: 1;
+}
+
+.gallery__cat[data-active="true"]::after {
+  opacity: 1;
+}
+
+/* hotspots: a 44 px target around a small ring on the photo; the card opens over the photo's lower edge */
+.gallery__slide {
+  position: relative;
+}
+
+.gallery__spot {
+  position: absolute;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin: -1.375rem 0 0 -1.375rem;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.gallery__spot::before {
+  content: "";
+  position: absolute;
+  inset: 0.8rem;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.gallery__spot[aria-expanded="true"]::before {
+  background: var(--bg);
+  border-color: var(--accent);
+}
+
+.gallery__spot-card {
+  position: absolute;
+  inset: auto var(--space-3) var(--space-3);
+  max-width: 28rem;
+  padding: var(--space-3) 3.25rem var(--space-3) var(--space-4);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+}
+
+.gallery__spot-title {
+  margin: 0 0 var(--space-1);
+  font-weight: 600;
+}
+
+.gallery__spot-facts {
+  margin: 0;
+}
+
+.gallery__spot-facts dt {
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.gallery__spot-facts dd {
+  margin: 0 0 var(--space-1);
+}
+
+.gallery__spot-text {
+  margin: 0;
+}
+
+.gallery__spot-close {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--text);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+/* phones: swipe only (no arrows), dots instead of the thumbnail strip; the spot card opens under the photo (a long fact does not fit over a small one) */
+@media (width < 56.25em) {
+  .gallery__viewport > .gallery__nav,
+  .gallery__thumbs-wrap {
+    display: none;
+  }
+
+  .gallery__spot-card {
+    position: relative;
+    max-width: none;
+    margin-top: var(--space-2);
+  }
+}
+
+/* wide screens: the thumbnails (grouped by category) under the indicator */
+@media (width >= 56.25em) {
+  .gallery__thumbs-wrap {
+    margin-top: var(--space-3);
+  }
+
+  .gallery__thumbs > li[data-group-start="true"]:not(:first-child) {
+    margin-inline-start: var(--space-3);
+    padding-inline-start: var(--space-3);
+    border-inline-start: 1px solid var(--border);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery__dot,
+  .gallery__cat,
+  .gallery__cat::after {
+    transition: none;
+  }
 }
 
 .gallery__thumbs-wrap {
@@ -1498,69 +1965,6 @@ main:focus-visible {
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-/* lightbox: native modal dialog, full screen */
-.lightbox {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  max-width: none;
-  height: 100dvh;
-  max-height: none;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: var(--bg);
-  color: var(--text);
-}
-
-.lightbox[open] {
-  display: flex;
-  flex-direction: column;
-}
-
-.lightbox__bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-3) var(--space-4);
-}
-
-.lightbox__counter {
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.08em;
-}
-
-.lightbox__close {
-  width: 2.75rem;
-  height: 2.75rem;
-  padding: 0;
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text);
-  font-size: 1.6rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.lightbox__stage {
-  position: relative;
-  display: grid;
-  flex: 1;
-  min-height: 0;
-  place-items: center;
-  padding: 0 var(--space-4) var(--space-4);
-}
-
-.lightbox__img {
-  width: auto;
-  max-width: 100%;
-  height: auto;
-  max-height: 100%;
-  object-fit: contain;
 }
 
 /* video */
@@ -2592,7 +2996,7 @@ main:focus-visible {
  *
  * Stacking: the card is a fixed element, so it is a stacking context and the widget's form overlay (z-index 2147483000 inside it)
  * counts as the card's z-index on the page. 1100 is above the review theme switcher (1000) and below the widget's privacy modal
- * (z-index 10000, appended to <body>). The native dialogs (contact form, lightbox) are in the top layer and cover the card.
+ * (z-index 10000, appended to <body>). The native dialogs (the contact form) are in the top layer and cover the card.
  */
 :root {
   --avatar-card-w: 12.5rem;
@@ -2648,6 +3052,7 @@ main:focus-visible {
   right: auto;
   bottom: auto;
   width: var(--avatar-slot-w, 12.5rem);
+  height: var(--avatar-slot-h, auto); /* the slot's own height: with the invitation above it the slot is shorter than 4:5 of its width */
 }
 
 .avatar-card[data-ready="false"] {
@@ -4188,66 +4593,5 @@ body:has(.avatar-card) .theme-switcher {
 
   .site-footer--agent-card .site-footer__inner {
     padding-right: 0;
-  }
-}
-
-/*
- * The morph of the card into the call bar and back (phones; components/bar-morph.ts, lib/bar-morph.ts). A ghost in <body>, never an ancestor of the widget: a back layer under
- * the card (the shadow, a shell in the stage colour cut to the shape, the card's picture and name) and a front layer over it (the call button's copy). Everything that moves is set
- * inline by the script as a transform, a clip-path or an opacity; these rules only say what the layers are, and none of them carries a transform.
- * While it runs the real bar is moved by the script alone (opacity, visibility, clip-path and transition: none, inline), so the stylesheet's own fade is off.
- */
-.card-morph,
-.card-morph__top {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-}
-
-.card-morph {
-  z-index: 1099;
-}
-
-.card-morph__top {
-  z-index: 1101;
-}
-
-.card-morph__shell,
-.card-morph__layers,
-.card-morph__clip {
-  position: absolute;
-  inset: 0;
-}
-
-.card-morph__shell {
-  background: var(--avatar-stage, black);
-}
-
-.card-morph__shadow,
-.card-morph__pic,
-.card-morph__card,
-.card-morph__orb {
-  position: absolute;
-  left: 0;
-  top: 0;
-  transform-origin: 0 0;
-}
-
-.card-morph__shadow {
-  box-shadow: var(--avatar-edge, 0 0 0 0 transparent), var(--avatar-card-shadow, 0 1.875rem 5rem -1.875rem color-mix(in srgb, var(--text) 45%, transparent), 0 0.75rem 1.5rem -0.75rem color-mix(in srgb, var(--text) 25%, transparent));
-}
-
-.card-morph__pic {
-  overflow: hidden;
-}
-
-.card-morph__orb .call-orb {
-  display: block;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .card-morph,
-  .card-morph__top {
-    display: none;
   }
 }

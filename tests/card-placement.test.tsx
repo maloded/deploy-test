@@ -246,6 +246,15 @@ describe("the card's placement: hero or dock, one element for the whole page", (
     expect(ros.flatMap((r) => r.targets)).toContain(hero);
   });
 
+  it("hands the card its slot's own height too (--avatar-slot-h): the slot can be shorter than 4:5 of its width when the invitation stands above it", async () => {
+    const card = await page();
+    const slot = document.querySelector("[data-agent-slot]") as HTMLElement;
+    slot.getBoundingClientRect = () => ({ left: 500, top: 200, width: 346, height: 355, right: 846, bottom: 555, x: 500, y: 200, toJSON() {} }) as DOMRect;
+    await visible(true);
+    expect(card.style.getPropertyValue("--avatar-slot-w")).toBe("346px");
+    expect(card.style.getPropertyValue("--avatar-slot-h")).toBe("355px");
+  });
+
   it("without a slot in the page the card stays docked and shows", async () => {
     const card = await page({ withSlot: false });
     await settle();

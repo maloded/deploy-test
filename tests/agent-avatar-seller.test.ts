@@ -80,7 +80,7 @@ describe("loading a product whose seller has an avatar", () => {
       role: null,
       languages: ["en", "de"],
       example: null,
-      liveText: null, dark: null,
+      liveText: null, intro: null, dark: null,
     });
   });
 

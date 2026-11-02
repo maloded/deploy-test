@@ -48,11 +48,13 @@ afterEach(() => {
   (document.activeElement as HTMLElement | null)?.blur?.();
 });
 
-describe("navigate #gallery-<n> (1-based)", () => {
-  it("centres photo n through goToPhoto(n - 1), scrolls the gallery into view, opens no lightbox and loads no page", async () => {
+describe("navigate to a gallery address", () => {
+  const view = () => gallery().getView();
+
+  it("#gallery-<n> (1-based, the older alias) shows photo n through the gallery's showAddress, scrolls it into view, opens no lightbox and loads no page", async () => {
     await mount();
     expect(count()).toBeGreaterThan(2);
-    const goToPhoto = vi.spyOn(gallery(), "goToPhoto");
+    const showAddress = vi.spyOn(gallery(), "showAddress");
     const w = fakeWidget();
     const before = window.location.pathname;
     for (const prefix of ["/", "/en"]) {
@@ -60,12 +62,12 @@ describe("navigate #gallery-<n> (1-based)", () => {
       act(() => void (call = w.command("navigate", { path: `${prefix}#gallery-3` })));
       expect(call, prefix).toMatchObject({ handled: true, answers: [] });
     }
-    expect(goToPhoto).toHaveBeenCalledWith(2); // photo 3 is index 2
+    expect(showAddress).toHaveBeenCalledWith("#gallery-3");
     expect(slideNow()).toContain(`3 / ${count()}`);
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
     expect(box!.querySelector("dialog.lightbox[open]")).toBeNull();
     expect(window.location.pathname).toBe(before);
-    expect(window.location.hash).toBe("#gallery-3");
+    expect(window.location.hash).toBe("#photo-cabin"); // the canonical address of that photo
     w.remove();
   });
 
@@ -81,18 +83,52 @@ describe("navigate #gallery-<n> (1-based)", () => {
     w.remove();
   });
 
-  it("a number outside 1..count is ignored: not prevented, not answered, nothing moves", async () => {
+  it("every address of the API table", async () => {
     await mount();
-    const goToPhoto = vi.spyOn(gallery(), "goToPhoto");
     const w = fakeWidget();
-    for (const n of [0, count() + 1, 99, 1000]) {
-      expect(w.command("navigate", { path: `/#gallery-${n}` }), String(n)).toMatchObject({ handled: false, answers: [] });
+    const go = (hash: string) => {
+      let call!: ReturnType<typeof w.command>;
+      act(() => void (call = w.command("navigate", { path: `/${hash}` })));
+      return call;
+    };
+    expect(go("#gallery-details")).toMatchObject({ handled: true });
+    expect(view()).toMatchObject({ category: "details", photo: "detail" });
+    expect(window.location.hash).toBe("#gallery-details");
+    expect(go("#photo-front")).toMatchObject({ handled: true });
+    expect(view()).toMatchObject({ category: "exterior", photo: "front", index: 1 });
+    expect(window.location.hash).toBe("#photo-front");
+    expect(go("#gallery-interior")).toMatchObject({ handled: true });
+    expect(view().photo).toBe("cabin");
+    w.remove();
+  });
+
+  it("an unknown name, or a number outside 1..count, is not handled: no preventDefault, no answer, nothing moves, nothing is written", async () => {
+    await mount();
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const w = fakeWidget();
+    const before = view();
+    for (const hash of [`#gallery-0`, `#gallery-${count() + 1}`, "#gallery-99", "#gallery-1000", "#gallery-garden", "#photo-nope", "#spot-nope"]) {
+      expect(w.command("navigate", { path: `/${hash}` }), hash).toMatchObject({ handled: false, answers: [] });
     }
-    expect(w.command("navigate", { path: "/#gallery-x" })).toMatchObject({ handled: false });
     expect(w.command("navigate", { path: "/#gallery--1" })).toMatchObject({ handled: false });
-    expect(goToPhoto).not.toHaveBeenCalled();
+    expect(view()).toEqual(before);
     expect(scrollIntoView).not.toHaveBeenCalled();
     expect(window.location.hash).toBe("");
+    w.remove();
+  });
+
+  it("while the visitor is tapping, the change is queued but still answered as handled", async () => {
+    vi.useFakeTimers();
+    await mount();
+    const w = fakeWidget();
+    act(() => void (box!.querySelector(".gallery__nav--next") as HTMLElement).click()); // the visitor goes to photo 2
+    let call!: ReturnType<typeof w.command>;
+    act(() => void (call = w.command("navigate", { path: "/#photo-detail" })));
+    expect(call).toMatchObject({ handled: true });
+    expect(slideNow()).toContain(`2 / ${count()}`);
+    act(() => void vi.advanceTimersByTime(2100));
+    expect(slideNow()).toContain(`${count()} / ${count()}`);
+    vi.useRealTimers();
     w.remove();
   });
 
@@ -109,6 +145,7 @@ describe("navigate #gallery-<n> (1-based)", () => {
     window.location.hash = "#gallery-4";
     await mount();
     expect(slideNow()).toContain(`4 / ${count()}`);
+    vi.spyOn(console, "warn").mockImplementation(() => {});
     window.location.hash = `#gallery-${count() + 5}`;
     act(() => void window.dispatchEvent(new Event("hashchange")));
     expect(slideNow()).toContain(`4 / ${count()}`); // ignored, not clamped

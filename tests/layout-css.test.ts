@@ -216,10 +216,9 @@ describe("the bottom row has bounded heights", () => {
     expect(css).not.toMatch(/hero__fact\s*\+\s*\.hero__fact|hero__fact:first-child|hero__fact:last-child|hero__fact:nth-child/);
   });
 
-  it("is more compact on short laptop windows: side-by-side buttons, 2 lines, no trust line, less padding", () => {
+  it("is more compact on short laptop windows: side-by-side buttons, 2 lines, less padding", () => {
     expect(rule(".hero__actions", COMPACT).body).toMatch(/grid-template-columns:\s*repeat\(2,/);
     expect(rule(".hero__description", COMPACT).body).toMatch(/line-clamp:\s*4/);
-    expect(rule(".hero__trust", COMPACT).body).toMatch(/display:\s*none/);
     expect(rule(".hero__intro-grid", COMPACT).body).toMatch(/padding-block:\s*var\(--space-3\)/);
     expect(rule(".hero__stage", COMPACT).body).toMatch(/padding-top:\s*var\(--space-3\)/);
   });
@@ -255,7 +254,7 @@ describe("the bottom row has bounded heights", () => {
 
 describe("long words never widen the page", () => {
   /** Elements that hold running text. Each needs hyphens: auto and overflow-wrap: anywhere as a safety net. */
-  const TEXT = [".details__label", ".details__value", ".faq__question", ".faq__answer", ".button", ".hero__description", ".offer__note", ".offer__disclaimer", ".site-header__name", ".hero__trust li", ".site-footer", "h1", "h2", "h3"];
+  const TEXT = [".details__label", ".details__value", ".faq__question", ".faq__answer", ".button", ".hero__description", ".offer__note", ".offer__disclaimer", ".site-header__name", ".site-footer", "h1", "h2", "h3"];
 
   it("gives every text element hyphens: auto and overflow-wrap: anywhere (spec values, FAQ, buttons, headings, footer)", () => {
     const net = rules().find((r) => /hyphens:\s*auto/.test(r.body) && /overflow-wrap:\s*anywhere/.test(r.body) && r.media === "")!;
@@ -280,7 +279,7 @@ describe("long words never widen the page", () => {
     for (const size of sizes) {
       expect(size, size).toMatch(/^(\d+(\.\d+)?rem|clamp\(\s*\d+(\.\d+)?rem,\s*[\d.]+vw,\s*\d+(\.\d+)?rem\s*\))$/); // rem only, theme-safe
       const rems = [...size.matchAll(/(\d+(?:\.\d+)?)rem/g)].map((m) => Number(m[1]));
-      for (const r of rems) expect(r, size).toBeGreaterThanOrEqual(1.25); // always above the base text size (1rem)
+      for (const r of rems) expect(r, size).toBeGreaterThanOrEqual(1.1); // always above the base text size (1rem); the phone tiles' floor is 1.1rem
       for (const r of rems) expect(r, size).toBeLessThanOrEqual(1.75);
     }
     expect(css).not.toMatch(/hero__fact-value[^{]*\{[^}]*font-size:\s*[\d.]+px/);
@@ -349,13 +348,8 @@ describe("intro row", () => {
     expect(rule(".hero__fact-label", "").body).toMatch(/text-transform:\s*uppercase/);
   });
 
-  it("centers the trust items: stacked on mobile, one line with separators on wide screens", () => {
-    expect(rule(".hero__trust", "").body).toMatch(/flex-direction:\s*column/);
-    expect(rule(".hero__trust", "").body).toMatch(/align-items:\s*center/);
-    expect(rules().some((r) => r.selector === ".hero__trust li + li::before" && r.media === "")).toBe(false); // no dangling dots on mobile
-    expect(rule(".hero__trust", WIDE).body).toMatch(/flex-direction:\s*row/);
-    expect(rule(".hero__trust", WIDE).body).toMatch(/justify-content:\s*center/);
-    expect(rule(".hero__trust li + li::before", WIDE).body).toMatch(/content:\s*"·"/);
+  it("has no rule for a trust line: it is not rendered in the hero any more", () => {
+    expect(css).not.toMatch(/hero__trust/);
   });
 });
 

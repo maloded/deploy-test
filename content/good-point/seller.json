@@ -79,6 +79,34 @@
             "text": "I'll pass your request to Good Point. You'll get a confirmation."
           }
         ]
+      },
+      "intro": {
+        "heading": {
+          "de": "Lieber reden als lesen?",
+          "en": "Rather talk than read?"
+        },
+        "items": [
+          {
+            "de": "Fragen zum Auto",
+            "en": "Questions about the car"
+          },
+          {
+            "de": "Probefahrt buchen",
+            "en": "Book a test drive"
+          },
+          {
+            "de": "Preisangebot",
+            "en": "Price offer"
+          },
+          {
+            "de": "Fotos zeigen",
+            "en": "Show photos"
+          },
+          {
+            "de": "Rückruf",
+            "en": "Callback"
+          }
+        ]
       }
     }
   },

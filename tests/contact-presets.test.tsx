@@ -67,12 +67,13 @@ describe("one button per place, with its preset in the markup", () => {
     for (const lang of ["en", "de"] as const) {
       const out = renderToStaticMarkup(<ProductLayout site={car(lang)} />);
       const part = (open: string, close: string) => out.slice(out.indexOf(open), out.indexOf(close, out.indexOf(open)));
-      const links = (html: string) => [...html.matchAll(/<a class="([^"]*)" href="#contact"( data-request-type="([a-z_]+)")?>([^<]*)<\/a>/g)].map((m) => ({ cls: m[1], type: m[3], text: m[4] }));
+      const links = (html: string) => [...html.matchAll(/<a class="([^"]*)" href="#contact"( data-request-type="([a-z_]+)")?>(.*?)<\/a>/g)].map((m) => ({ cls: m[1], type: m[3], text: m[4] }));
       // the header's button is a plain link that scrolls to the footer's contact row: no preset, data-contact="scroll"
       expect([...part("<header", "</header>").matchAll(/<a class="([^"]*)" href="#contact"( data-request-type="[a-z_]+")?( data-contact="(\w+)")?>([^<]*)<\/a>/g)].map((m) => ({ cls: m[1], preset: m[2], contact: m[4], text: m[5] }))).toEqual([
         { cls: "button button--small", preset: undefined, contact: "scroll", text: ui("header.cta", lang) },
       ]);
-      expect(links(part('<section class="hero"', "</section>"))).toEqual([{ cls: "button", type: "question", text: ui("hero.cta", lang) }]);
+      // the hero's one button carries two texts, the full one and the phone layout's compact one
+      expect(links(part('<section class="hero"', "</section>")).map((l) => ({ ...l, text: l.text.replace(/<[^>]+>/g, "") }))).toEqual([{ cls: "button", type: "question", text: ui("hero.cta", lang) + ui("hero.shortCta", lang) }]);
       expect(links(part('<section class="offer"', "</section>"))).toEqual([{ cls: "button", type: "offer", text: ui("offer.cta.offer", lang) }]);
     }
     expect(ui("offer.cta.offer", "en")).toBe("Make an offer");

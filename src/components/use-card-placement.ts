@@ -20,8 +20,8 @@ export type Placement = "hero" | "dock";
  * - In the hero the card is `position: absolute` in document coordinates over the slot (CSS: .avatar-card[data-placement="hero"]), so it
  *   scrolls with the page without any script (no scroll-linked jitter). The coordinates come from the slot's box and are measured again
  *   when the slot, the hero or the page change size, and on window resize and font load, never on scroll: --avatar-slot-x, --avatar-slot-y
- *   and --avatar-slot-w on the card. This needs .pt, body and html to stay `position: static` (a test checks it).
- * - The hero's row (title zone + slot) hands its height to the CSS as --hero-slot-h, so the slot's column is exactly as wide as a 4:5 card
+ *   --avatar-slot-w and --avatar-slot-h on the card. This needs .pt, body and html to stay `position: static` (a test checks it).
+ * - The hero's right column hands its height to the CSS as --hero-slot-h, so the slot's column is exactly as wide as a 4:5 card
  *   as tall as the left column (0.8 x the height, at most 36rem and 44vw) and the card ends at the right edge of the container.
  * - Until the first measurement the card is hidden (data-ready="false"), so it never flashes in the corner before it moves to the slot.
  * - `expectSlot` is what the server knows (the hero block is on the page). Without a slot in the DOM the card stays docked. `fixed` pins
@@ -52,7 +52,8 @@ export function useCardPlacement(card: RefObject<HTMLElement | null>, expectSlot
       return () => cancelAnimationFrame(raf);
     }
 
-    // the row's height is what a 4:5 card as tall as the left column needs its width from (0.8 x it): the CSS takes it from --hero-slot-h
+    // the row's height is what a 4:5 card as tall as the left column needs its width from (0.8 x it): the CSS takes it from --hero-slot-h. The slot may be
+    // shorter than that (the invitation stands above it in the same column): the card takes the slot's own height, --avatar-slot-h.
     const row = slot.parentElement;
     let rebuildGate = () => {};
     const measure = () => {
@@ -62,6 +63,7 @@ export function useCardPlacement(card: RefObject<HTMLElement | null>, expectSlot
       el.style.setProperty("--avatar-slot-x", `${r.left + window.scrollX}px`);
       el.style.setProperty("--avatar-slot-y", `${r.top + window.scrollY}px`);
       el.style.setProperty("--avatar-slot-w", `${r.width}px`);
+      el.style.setProperty("--avatar-slot-h", `${r.height}px`);
     };
     const later = () => {
       cancelAnimationFrame(raf);
@@ -74,16 +76,17 @@ export function useCardPlacement(card: RefObject<HTMLElement | null>, expectSlot
     const flight = createFlightController({ card: el, slot, setPlacement });
     flying.current = flight;
     const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)");
-    // a phone (below 900px) with the call bar: the docked card is the bar, so the dock's place is not kept clear (the bar covers what it covers), and the card morphs into
-    // the bar and back (bar-morph.ts, started by the flight controller) instead of flying to a corner
+    // a phone (below 900px) with the call bar: the card stays in its place in the page, with no flight and no ghost, until it is entirely out of view; then it is "docked" (the
+    // bar fades in, the card is not drawn) and it is "in the hero" again as soon as any of it is back (the bar fades out). The dock's place is not kept clear.
     const barMode = () => Boolean(window.matchMedia?.(BAR_QUERY).matches) && Boolean(el.querySelector(".avatar-card__bar"));
     let first = true;
     let current: Placement = "hero";
     let ratio = 1;
     const under = new Set<Element>(); // the blocks of the hero that are in the dock's place now
     const wanted = (): Placement => {
+      if (barMode()) return ratio === 0 ? "dock" : "hero";
       if (ratio >= CARD_FLIGHT.trigger) return "hero";
-      if (ratio === 0 || under.size === 0 || barMode()) return "dock";
+      if (ratio === 0 || under.size === 0) return "dock";
       return current; // under the trigger but something would be covered: stay as it is
     };
     const evaluate = () => {
@@ -98,7 +101,7 @@ export function useCardPlacement(card: RefObject<HTMLElement | null>, expectSlot
       }
       if (want === current) return;
       current = want;
-      if (reduced?.matches || formNow.current) {
+      if (reduced?.matches || formNow.current || barMode()) {
         flight.finish();
         setPlacement(want);
       } else flight.start(want);

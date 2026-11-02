@@ -3,6 +3,7 @@
 import { createElement, useEffect, useState } from "react";
 import { buildPageContext } from "@/lib/agent-context";
 import { registerAgentBridge } from "@/lib/agent-bridge";
+import { readPageView } from "@/lib/page-view";
 import { getFormSnapshot } from "@/lib/form-snapshot";
 import type { ResolvedAvatar } from "@/lib/avatar-manifest";
 import type { WidgetHost } from "@/lib/hanc-bridge";
@@ -42,7 +43,7 @@ export function AgentWidget({ agent, lang, product, avatar, requestType, heroSlo
   // the command handler exists only while the widget is mounted
   useEffect(() => {
     if (!ready) return;
-    return registerAgentBridge({ lang, answer: () => buildPageContext({ language: lang, product, path: window.location.pathname, title: document.title, snapshot: getFormSnapshot() }) });
+    return registerAgentBridge({ lang, answer: () => buildPageContext({ language: lang, product, path: window.location.pathname, title: document.title, snapshot: getFormSnapshot(), view: readPageView() }) });
   }, [ready, lang, product]);
 
   const common = {

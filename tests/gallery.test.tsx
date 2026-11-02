@@ -49,7 +49,13 @@ describe("gallery rendering", () => {
 
     const slides = [...el.querySelectorAll(".gallery__slide")];
     expect(slides).toHaveLength(5);
-    expect(slides.map((s) => s.getAttribute("aria-label"))).toEqual(["1 of 5", "2 of 5", "3 of 5", "4 of 5", "5 of 5"]);
+    expect(slides.map((s) => s.getAttribute("aria-label"))).toEqual([
+      "Exterior, photo 1 of 5: Fixture photo one",
+      "Exterior, photo 2 of 5: Fixture photo two",
+      "Interior, photo 3 of 5: Fixture photo three",
+      "Interior, photo 4 of 5: Fixture photo four",
+      "Details, photo 5 of 5: Fixture photo five, stored sideways",
+    ]);
     expect(slides.every((s) => s.getAttribute("role") === "group")).toBe(true);
     expect(counter()).toBe("1 / 5");
 
@@ -109,14 +115,15 @@ describe("programmatic API and events", () => {
     expect(counter()).toBe("5 / 5");
     act(() => section().goToPhoto(-4));
     expect(counter()).toBe("1 / 5");
-    expect(events).toEqual([
-      { index: 2, count: 5 },
-      { index: 3, count: 5 },
-      { index: 2, count: 5 },
-      { index: 1, count: 5 },
-      { index: 4, count: 5 },
-      { index: 0, count: 5 },
+    expect(events.map((e) => [e.index, e.count])).toEqual([
+      [2, 5],
+      [3, 5],
+      [2, 5],
+      [1, 5],
+      [4, 5],
+      [0, 5],
     ]);
+    expect(events[0]).toMatchObject({ photo: "cabin", category: "interior", spot: null });
   });
 
   it("follows the buttons, thumbnails and keyboard arrows", () => {
@@ -154,9 +161,9 @@ describe("live region", () => {
     mount(<Gallery {...props} />);
     expect(live()).toBe("");
     act(() => section().goToPhoto(2));
-    expect(live()).toBe("3 of 5");
+    expect(live()).toBe("Interior, photo 3 of 5: Fixture photo three");
     act(() => void (container.querySelector(".gallery__nav--next") as HTMLElement).click());
-    expect(live()).toBe("4 of 5");
+    expect(live()).toBe("Interior, photo 4 of 5: Fixture photo four");
   });
 
   it("stays silent while autoplay advances the slides", () => {
@@ -270,98 +277,5 @@ describe("thumbnail strip", () => {
     strip().scrollTo = scrollTo as any;
     act(() => section().goToPhoto(2));
     expect(scrollTo).toHaveBeenLastCalledWith(expect.objectContaining({ behavior: "auto" }));
-  });
-});
-
-describe("lightbox", () => {
-  const dialog = () => container.querySelector("dialog.lightbox") as HTMLDialogElement | null;
-  const lbCounter = () => dialog()?.querySelector(".lightbox__counter")?.textContent;
-
-  function openFromSlide(n: number) {
-    const opener = container.querySelectorAll(".gallery__open")[n] as HTMLElement;
-    opener.focus();
-    act(() => void opener.click());
-    return opener;
-  }
-
-  it("opens full screen on click, with the larger image, and focuses the close button", () => {
-    mount(<Gallery {...props} />);
-    expect(dialog()).toBeNull();
-    openFromSlide(1);
-    expect(dialog()?.open).toBe(true);
-    expect(dialog()?.getAttribute("aria-label")).toBe("Photo viewer");
-    expect(lbCounter()).toBe("2 / 5");
-    expect(dialog()?.querySelector("img")?.getAttribute("sizes")).toBe("100vw");
-    expect(document.activeElement).toBe(dialog()?.querySelector(".lightbox__close"));
-    expect(document.body.style.overflow).toBe("hidden");
-  });
-
-  it("moves with the arrow keys and keeps the gallery in sync", () => {
-    mount(<Gallery {...props} />);
-    openFromSlide(1);
-    key(dialog()!, "ArrowRight");
-    expect(lbCounter()).toBe("3 / 5");
-    expect(counter()).toBe("3 / 5");
-    key(dialog()!, "ArrowLeft");
-    key(dialog()!, "ArrowLeft");
-    key(dialog()!, "ArrowLeft"); // already first: stays
-    expect(lbCounter()).toBe("1 / 5");
-  });
-
-  it("traps Tab inside the dialog", () => {
-    mount(<Gallery {...props} />);
-    openFromSlide(1);
-    const close = dialog()!.querySelector(".lightbox__close") as HTMLElement;
-    const next = dialog()!.querySelector(".gallery__nav--next") as HTMLElement;
-    next.focus();
-    key(dialog()!, "Tab");
-    expect(document.activeElement).toBe(close); // last -> first
-    key(dialog()!, "Tab", { shiftKey: true });
-    expect(document.activeElement).toBe(next); // first -> last
-  });
-
-  it("closes with Escape or the close button and returns focus to what opened it", () => {
-    mount(<Gallery {...props} />);
-    let opener = openFromSlide(2);
-    key(dialog()!, "Escape");
-    expect(dialog()).toBeNull();
-    expect(document.activeElement).toBe(opener);
-    expect(document.body.style.overflow).toBe("");
-
-    opener = openFromSlide(0);
-    act(() => void (dialog()!.querySelector(".lightbox__close") as HTMLElement).click());
-    expect(dialog()).toBeNull();
-    expect(document.activeElement).toBe(opener);
-  });
-
-  it("after moving on in the viewer, focus goes to the current photo and the gallery stays there", () => {
-    mount(<Gallery {...props} />);
-    openFromSlide(1);
-    key(dialog()!, "ArrowRight");
-    key(dialog()!, "ArrowRight");
-    key(dialog()!, "Escape");
-    expect(dialog()).toBeNull();
-    expect(counter()).toBe("4 / 5");
-    expect(document.activeElement).toBe(container.querySelectorAll(".gallery__open")[3]);
-  });
-
-  it("can be opened and closed through the API", () => {
-    mount(<Gallery {...props} />);
-    act(() => section().openLightbox(3));
-    expect(lbCounter()).toBe("4 / 5");
-    expect(counter()).toBe("4 / 5");
-    act(() => section().closeLightbox());
-    expect(dialog()).toBeNull();
-    act(() => section().openLightbox());
-    expect(lbCounter()).toBe("4 / 5"); // no index: the current photo
-  });
-
-  it("pauses autoplay while open", () => {
-    vi.useFakeTimers();
-    mount(<Gallery {...props} autoplaySeconds={2} />);
-    act(() => section().openLightbox(0));
-    expect(section().dataset.autoplay).toBe("paused");
-    act(() => void vi.advanceTimersByTime(10_000));
-    expect(lbCounter()).toBe("1 / 5");
   });
 });

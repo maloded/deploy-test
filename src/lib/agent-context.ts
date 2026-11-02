@@ -1,4 +1,5 @@
 import type { FormSnapshot } from "./form-snapshot";
+import { EMPTY_VIEW, type PageView } from "./page-view";
 
 /**
  * The answer to the voice assistant's page_context question. Read-only: it describes the page, it is never a way to write
@@ -38,11 +39,15 @@ export function phaseOf(s: FormSnapshot): Phase {
   return s.consentGiven ? "incomplete" : "no_consent";
 }
 
-export type PageContextInput = { language: string; product: string; path: string; title: string; snapshot: FormSnapshot };
+export type PageContextInput = { language: string; product: string; path: string; title: string; snapshot: FormSnapshot; view?: PageView };
 
-export function buildPageContext({ language, product, path, title, snapshot }: PageContextInput, includeForm: boolean = AGENT_INCLUDE_FORM): Record<string, unknown> {
+/**
+ * `view` says what is on screen: { section, category, photo, index, total, spot, fullscreen } (see page-view.ts). It is in every phase and
+ * holds ids and counts only; its fields are null (fullscreen false) while the gallery is not interactive or the page has none.
+ */
+export function buildPageContext({ language, product, path, title, snapshot, view }: PageContextInput, includeForm: boolean = AGENT_INCLUDE_FORM): Record<string, unknown> {
   const phase = phaseOf(snapshot);
-  const answer: Record<string, unknown> = { language, product, path, title, dialogOpen: snapshot.dialogOpen, phase, submit: snapshot.submit, missing: phase === "complete" ? [] : [...snapshot.missing] };
+  const answer: Record<string, unknown> = { language, product, path, title, dialogOpen: snapshot.dialogOpen, phase, submit: snapshot.submit, missing: phase === "complete" ? [] : [...snapshot.missing], view: { ...(view ?? EMPTY_VIEW) } };
   if (includeForm && phase === "complete") {
     answer.form = {
       requestType: snapshot.requestType,
