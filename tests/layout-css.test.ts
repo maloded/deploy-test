@@ -367,3 +367,13 @@ describe("thumbnail strip fades and offer", () => {
     expect(rules().some((r) => r.selector === ".offer__disclaimer" && /grid-column/.test(r.body))).toBe(false);
   });
 });
+
+describe("the header logo and the hotspot card", () => {
+  const css = fs.readFileSync(path.join(process.cwd(), "src", "app", "globals.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  it("the inline logo svg does not clip to its viewBox (the dot touches the box's top edge)", () => {
+    expect(/\.site-header__logo svg\s*\{[^}]*overflow:\s*visible/.test(css)).toBe(true);
+  });
+  it("on a phone the card is a plain block under the photo: no inset moves it off the photo's edges", () => {
+    expect(/\.gallery__spot-card\s*\{\s*position:\s*relative;\s*inset:\s*auto;/.test(css)).toBe(true);
+  });
+});

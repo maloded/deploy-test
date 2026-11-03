@@ -402,6 +402,7 @@ main:focus-visible {
 
 .site-header__logo svg {
   display: block;
+  overflow: visible; /* an inline <svg> clips to its viewBox by default; a mark that touches the box edge (the dot above the ring) lost its top row of pixels */
   width: auto;
   height: calc(var(--brand-size, 1.7rem) * 1.15);
 }
@@ -1235,10 +1236,10 @@ main:focus-visible {
   animation: sofia-intro-run var(--sofia-loop, 40s) linear infinite;
 }
 
+/* a track keeps its own full width: a per cent minimum here once made the rail only as wide as ONE track (the -50% then moved half a track and the loop jumped) */
 .sofia-intro__items {
   display: flex;
   flex: none;
-  min-width: 100%;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -1812,19 +1813,32 @@ main:focus-visible {
   border-color: var(--accent);
 }
 
+/* the card: on a wide screen it floats over the photo's lower edge, centred, with the same gap to the photo's left, right and bottom edges (so it never leaves the photo);
+   on a phone it sits under the photo with exactly the photo's left and right edges */
 .gallery__spot-card {
   position: absolute;
   inset: auto var(--space-3) var(--space-3);
   max-width: 28rem;
-  padding: var(--space-3) 3.25rem var(--space-3) var(--space-4);
+  margin-inline: auto;
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--text);
 }
 
+/* title and close are one row, centred on each other (the close button is 44px, pulled out of the padding so the row stays as high as the title) */
+.gallery__spot-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
 .gallery__spot-title {
-  margin: 0 0 var(--space-1);
+  flex: 1;
+  min-width: 0;
+  margin: 0;
   font-weight: 600;
 }
 
@@ -1848,17 +1862,21 @@ main:focus-visible {
 }
 
 .gallery__spot-close {
-  position: absolute;
-  top: var(--space-1);
-  right: var(--space-1);
+  display: grid;
+  flex: none;
+  place-items: center;
   width: 2.75rem;
   height: 2.75rem;
+  margin: calc(var(--space-2) * -1) calc(var(--space-2) * -1) calc(var(--space-2) * -1) 0;
   padding: 0;
   background: none;
   border: 0;
   color: var(--text);
-  font-size: 1.5rem;
   cursor: pointer;
+}
+
+.gallery__spot-close svg {
+  display: block;
 }
 
 /* phones: swipe only (no arrows), dots instead of the thumbnail strip; the spot card opens under the photo (a long fact does not fit over a small one) */
@@ -1870,8 +1888,9 @@ main:focus-visible {
 
   .gallery__spot-card {
     position: relative;
+    inset: auto; /* a relative box would be moved by the wide-screen insets: it must sit exactly under the photo */
     max-width: none;
-    margin-top: var(--space-2);
+    margin: var(--space-2) 0 0;
   }
 }
 

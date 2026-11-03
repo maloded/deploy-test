@@ -41,3 +41,41 @@ export function sellerIconHref(env: Env = process.env, projectRoot: string = pro
     return null;
   }
 }
+
+/** A product's own icon set, next to its product.json: the tab icon (SVG), the classic .ico and the iOS home-screen icon. All optional. */
+export const PRODUCT_ICON_FILES = { svg: "icon.svg", ico: "favicon.ico", apple: "apple-touch-icon.png" } as const;
+export const PRODUCT_ICON_TYPES: Record<string, string> = { ".svg": "image/svg+xml", ".ico": "image/x-icon", ".png": "image/png" };
+
+/** The icon files a product folder holds (names only), in a fixed order. */
+export function productIconFiles(productDir: string): string[] {
+  const isFile = (name: string) => fs.existsSync(/*turbopackIgnore: true*/ path.join(productDir, name)) && fs.statSync(/*turbopackIgnore: true*/ path.join(productDir, name)).isFile();
+  return Object.values(PRODUCT_ICON_FILES).filter(isFile);
+}
+
+type IconLink = { url: string; type?: string; sizes?: string };
+export type SiteIcons = { icon: IconLink[]; apple?: IconLink[] };
+
+/**
+ * What the page links as its icons: the served product's own set when it has any (public/media/<seller>/<product>/<file>),
+ * else the seller's icon, else null (no link at all: a product without icons gets a neutral, empty default).
+ */
+export function siteIcons(env: Env = process.env, projectRoot: string = process.cwd()): SiteIcons | null {
+  try {
+    const root = contentRoot(env, projectRoot);
+    const ref = contentProduct(env, root);
+    const { seller, product } = splitRef(ref);
+    const files = productIconFiles(path.join(root, seller, product));
+    if (files.length) {
+      const url = (f: string) => `/media/${seller}/${product}/${f}`;
+      const icon: IconLink[] = [];
+      if (files.includes(PRODUCT_ICON_FILES.svg)) icon.push({ url: url(PRODUCT_ICON_FILES.svg), type: "image/svg+xml" });
+      if (files.includes(PRODUCT_ICON_FILES.ico)) icon.push({ url: url(PRODUCT_ICON_FILES.ico), sizes: "any", type: "image/x-icon" });
+      const apple = files.includes(PRODUCT_ICON_FILES.apple) ? [{ url: url(PRODUCT_ICON_FILES.apple), type: "image/png" }] : undefined;
+      return { icon, ...(apple ? { apple } : {}) };
+    }
+    const own = sellerIconHref(env, projectRoot);
+    return own ? { icon: [{ url: own.href, type: own.type }] } : null;
+  } catch {
+    return null;
+  }
+}

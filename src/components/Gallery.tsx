@@ -368,7 +368,14 @@ export function Gallery({ slides, lang, autoplaySeconds, categoryLabels = DEFAUL
           </p>
           {openSpot && (
             <div className="gallery__spot-card" id="gallery-spot-card" role="group" aria-label={openSpot.label} data-spot-card={openSpot.id}>
-              <p className="gallery__spot-title">{openSpot.label}</p>
+              <div className="gallery__spot-head">
+                <p className="gallery__spot-title">{openSpot.label}</p>
+                <button ref={cardCloseRef} type="button" className="gallery__spot-close" aria-label={ui("gallery.spot.close", lang)} onClick={() => visitor({ type: "closeSpot" })}>
+                  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+                    <path d="M3 3l10 10M13 3L3 13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                  </svg>
+                </button>
+              </div>
               {openSpot.facts.length > 0 && (
                 <dl className="gallery__spot-facts">
                   {openSpot.facts.map((f) => (
@@ -380,9 +387,6 @@ export function Gallery({ slides, lang, autoplaySeconds, categoryLabels = DEFAUL
                 </dl>
               )}
               {openSpot.text && <p className="gallery__spot-text">{openSpot.text}</p>}
-              <button ref={cardCloseRef} type="button" className="gallery__spot-close" aria-label={ui("gallery.spot.close", lang)} onClick={() => visitor({ type: "closeSpot" })}>
-                <span aria-hidden="true">×</span>
-              </button>
             </div>
           )}
         </div>

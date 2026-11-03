@@ -6,7 +6,7 @@ import { metadataRobots } from "@/lib/indexing";
 import { isLanguage } from "@/lib/languages";
 import { pick } from "@/lib/i18n";
 import { OG_HEIGHT, OG_WIDTH, ogImagePath } from "@/lib/og-image";
-import { sellerIconHref } from "@/lib/seller-icon";
+import { siteIcons } from "@/lib/seller-icon";
 import { socialMeta } from "@/lib/social-meta";
 import { themeColor } from "@/lib/theme-color";
 import { themeBootScript, themePair } from "@/lib/theme-pref";
@@ -43,7 +43,7 @@ export async function generateViewport({ params }: Params): Promise<Viewport> {
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { product, lang, seller, ref } = await siteFor(params);
-  const icon = sellerIconHref(); // the seller's own icon file, when it has one: no icon, no <link rel="icon"> (the browser asks /favicon.ico and gets a 404, which is harmless)
+  const icon = siteIcons(); // the seller's own icon file, when it has one: no icon, no <link rel="icon"> (the browser asks /favicon.ico and gets a 404, which is harmless)
   // the OG image: gallery photo 1 cut to 1200x630 by `npm run images`, with the photo's own alt text; only with an origin (a relative og:image is useless) and only when the file exists
   const ogPath = ogImagePath(ref);
   const first = product.media.gallery?.[0];
@@ -60,7 +60,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       languages: { ...Object.fromEntries(product.languages.map((l) => [l, `/${l}`])), "x-default": `/${product.defaultLanguage}` },
     },
     robots: metadataRobots(), // noindex unless SITE_INDEXABLE=1 (src/lib/indexing.ts)
-    ...(icon ? { icons: { icon: [{ url: icon.href, type: icon.type }] } } : {}),
+    ...(icon ? { icons: icon } : {}),
   };
 }
 

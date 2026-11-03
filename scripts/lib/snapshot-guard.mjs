@@ -30,6 +30,8 @@ export function forbiddenReason(rel, bytes = 0) {
     if (!/\.(svg|png)$/i.test(base)) return "a seller icon is icon.svg or icon.png";
     if (bytes > MAX_ICON_BYTES) return "a seller icon over the icon limit";
   }
+  // a product's icons (content/<seller>/<product>/icon.svg, favicon.ico, apple-touch-icon.png): small
+  if (/^content\/[^/]+\/[^/]+\/(?:icon\.svg|favicon\.ico|apple-touch-icon\.png)$/.test(rel) && bytes > MAX_ICON_BYTES) return "a product icon over the icon limit";
   // the seller's logo (an SVG named in seller.json, next to it): a small mark, never a drawing or a photo
   if (/^content\/[^/]+\/[^/]+\.svg$/i.test(rel) && !/\/icon\.svg$/i.test(rel) && bytes > MAX_LOGO_BYTES) return "a seller logo over the logo limit";
   // the shared avatar library: only the files a pack is made of, within the pack limits (a pack is web-ready, never an original)

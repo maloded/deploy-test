@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { StatusPage } from "@/components/StatusPage";
 import { languageEntry } from "@/lib/languages";
-import { sellerIconHref } from "@/lib/seller-icon";
+import { siteIcons } from "@/lib/seller-icon";
 import { getSite } from "@/lib/site";
 import { ui } from "@/lib/ui-strings";
 import "./globals.css";
@@ -14,8 +14,8 @@ import "./globals.css";
  */
 export function generateMetadata(): Metadata {
   const site = getSite(null, null);
-  const icon = sellerIconHref();
-  return { title: `${ui("notfound.title", site.lang)} · ${site.seller.displayName}`, robots: { index: false, follow: false }, ...(icon ? { icons: { icon: [{ url: icon.href, type: icon.type }] } } : {}) };
+  const icon = siteIcons();
+  return { title: `${ui("notfound.title", site.lang)} · ${site.seller.displayName}`, robots: { index: false, follow: false }, ...(icon ? { icons: icon } : {}) };
 }
 
 export default function GlobalNotFound() {

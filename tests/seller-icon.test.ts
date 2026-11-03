@@ -3,7 +3,7 @@ import path from "node:path";
 import sharp from "sharp";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { generateMetadata } from "@/app/[lang]/layout";
-import { ICON_FILES, MAX_ICON_BYTES, iconProblem, sellerIconFile, sellerIconHref } from "@/lib/seller-icon";
+import { ICON_FILES, MAX_ICON_BYTES, iconProblem, sellerIconFile, sellerIconHref, siteIcons } from "@/lib/seller-icon";
 import { makeWebImages } from "../scripts/lib/web-images.mjs";
 import { forbiddenReason } from "../scripts/lib/snapshot-guard.mjs";
 import { FIXTURE_DIR, fixtures } from "./helpers";
@@ -114,5 +114,29 @@ describe("the page links it only when there is one", () => {
     const m = await meta(content("m-none"));
     expect(m).not.toHaveProperty("icons");
     expect(m.title).toBeTruthy(); // the rest of the metadata is untouched
+  });
+});
+
+describe("a product's own icons", () => {
+  const env = (root: string) => ({ CONTENT_DIR: root, CONTENT_PRODUCT: fixtures.ref("fixture-car") });
+  const withProduct = (name: string, files: Record<string, Buffer | string>, sellerIcon = false) => {
+    const root = content(name, sellerIcon ? { file: "icon.svg", data: SVG } : undefined);
+    for (const [f, data] of Object.entries(files)) fs.writeFileSync(path.join(root, fixtures.ref("fixture-car"), f), data);
+    return root;
+  };
+
+  it("links the svg, the ico and the apple-touch-icon from the product's media folder", () => {
+    const root = withProduct("p-all", { "icon.svg": SVG, "favicon.ico": PNG, "apple-touch-icon.png": PNG });
+    const base = `/media/${fixtures.ref("fixture-car")}`;
+    expect(siteIcons(env(root))).toEqual({
+      icon: [{ url: `${base}/icon.svg`, type: "image/svg+xml" }, { url: `${base}/favicon.ico`, sizes: "any", type: "image/x-icon" }],
+      apple: [{ url: `${base}/apple-touch-icon.png`, type: "image/png" }],
+    });
+  });
+
+  it("wins over the seller's icon; without product icons the seller's icon is the fallback; without both nothing is linked", () => {
+    expect(siteIcons(env(withProduct("p-win", { "icon.svg": SVG }, true)))?.icon[0].url).toBe(`/media/${fixtures.ref("fixture-car")}/icon.svg`);
+    expect(siteIcons(env(content("p-fallback", { file: "icon.svg", data: SVG })))).toEqual({ icon: [{ url: `/media/${fixtures.seller}/icon.svg`, type: "image/svg+xml" }] });
+    expect(siteIcons(env(content("p-none")))).toBeNull();
   });
 });

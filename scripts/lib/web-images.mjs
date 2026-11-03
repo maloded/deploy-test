@@ -6,7 +6,7 @@ import path from "node:path";
 import sharp from "sharp";
 import { listProducts, listSellers } from "../../src/lib/content-root.ts";
 import { OG_HEIGHT, OG_IMAGE_FILE, OG_WIDTH, ogCropBox } from "../../src/lib/og-image.ts";
-import { iconProblem, sellerIconFile } from "../../src/lib/seller-icon.ts";
+import { iconProblem, productIconFiles, sellerIconFile } from "../../src/lib/seller-icon.ts";
 import { readProduct, referencedFiles } from "./referenced.mjs";
 
 const RESIZABLE = { ".jpg": "jpeg", ".jpeg": "jpeg", ".png": "png", ".webp": "webp" };
@@ -119,6 +119,23 @@ export async function makeWebImages({ contentDir, outDir, longSide = 2000, quali
       fs.copyFileSync(path.join(sellerDir, name), dest);
       wanted.add(dest);
       results.push({ slug: seller, file: name, action: "copied" });
+    }
+  }
+
+  // a product's own icons (<seller>/<product>/icon.svg, favicon.ico, apple-touch-icon.png): copied as they are next to the product's photos
+  if (fs.existsSync(contentDir)) {
+    for (const ref of listProducts(contentDir)) {
+      const [seller, product] = ref.split("/");
+      const productDir = path.join(contentDir, seller, product);
+      for (const name of productIconFiles(productDir)) {
+        const problem = iconProblem(path.join(productDir, name));
+        if (problem) throw new Error(`${ref}/${problem}`);
+        const dest = path.join(outDir, seller, product, name);
+        fs.mkdirSync(path.dirname(dest), { recursive: true });
+        fs.copyFileSync(path.join(productDir, name), dest);
+        wanted.add(dest);
+        results.push({ slug: ref, file: name, action: "copied" });
+      }
     }
   }
 

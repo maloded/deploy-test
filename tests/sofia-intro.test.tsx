@@ -113,4 +113,9 @@ describe("the running line (CSS contract)", () => {
     expect(css).toMatch(/\.hero\[data-card\] \.hero__lead-in\s*\{[^}]*min-height:\s*3\.4rem/);
     expect(css).toMatch(/\.hero__aside \.sofia-intro__heading\s*\{\s*font-size:\s*1\.1rem/);
   });
+
+  it("the tracks have no percentage min-width: it made the rail as wide as ONE track, so the -50% loop moved half a track and jumped", () => {
+    expect(body(".sofia-intro__items")).not.toMatch(/min-width/);
+    expect(body(".sofia-intro__items")).toMatch(/flex:\s*none/);
+  });
 });
