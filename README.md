@@ -7,10 +7,10 @@ product, `good-point/vw-multivan`, with its processed photos, and is built by th
 | | |
 |---|---|
 | Product | `good-point/vw-multivan` |
-| Template version | `0.8.0` |
-| Template commit | `6dbae7f` |
-| Content commit | `f2c7d08` |
-| Generated (UTC) | 2026-11-03 10:05 |
+| Template version | `0.9.0` |
+| Template commit | `570bf27` |
+| Content commit | `9457b63` |
+| Generated (UTC) | 2026-11-03 10:11 |
 
 A commit ending in `-dirty` means the source had uncommitted changes when this was generated. "Not recorded" means the
 source was in no git repository of its own. The same data is in `version.json`.
