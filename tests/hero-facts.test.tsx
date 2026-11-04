@@ -181,3 +181,13 @@ describe("the facts' one entrance", () => {
     });
   });
 });
+
+describe("glueUnit", () => {
+  it("keeps the last two words of a value of three or more together, and leaves shorter ones", async () => {
+    const { glueUnit } = await import("@/components/Hero");
+    expect(glueUnit("approx. 37,500 km")).toBe("approx. 37,500\u00a0km");
+    expect(glueUnit("ca. 37.500 km")).toBe("ca. 37.500\u00a0km");
+    expect(glueUnit("150 PS")).toBe("150 PS");
+    expect(glueUnit("7-Gang-DSG")).toBe("7-Gang-DSG");
+  });
+});

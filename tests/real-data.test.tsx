@@ -114,7 +114,7 @@ describe.skipIf(!hasRealContent)("mileage lives in one place: the spec (the owne
 
   it("reaches the hero through the key", () => {
     const hero = html(<Hero site={content.siteFor("vw-multivan")} />);
-    expect(hero).toMatch(/<span class="hero__fact-value">ca\. 37\.500 km<\/span><span class="hero__fact-label">(<svg[\s\S]*?<\/svg>)?<span>Kilometerstand<\/span><\/span>/);
+    expect(hero).toMatch(/<span class="hero__fact-value">ca\. 37\.500\u00a0km<\/span><span class="hero__fact-label">(<svg[\s\S]*?<\/svg>)?<span>Kilometerstand<\/span><\/span>/);
   });
 });
 
@@ -122,7 +122,7 @@ describe.skipIf(!hasRealContent)("hero highlights are spec keys", () => {
   it("take value and label from the spec, in the page language", () => {
     const hero = html(<Hero site={content.siteFor("vw-multivan")} />);
     const facts = [...hero.matchAll(/hero__fact-value">([^<]*)<\/span><span class="hero__fact-label">(?:<svg[\s\S]*?<\/svg>)?<span>([^<]*)</g)].map((m) => [m[1], m[2]]);
-    expect(facts).toEqual([["07/2023", "Erstzulassung"], ["ca. 37.500 km", "Kilometerstand"], ["150 PS", "Leistung"], ["7-Gang-DSG", "Getriebe"]]);
+    expect(facts).toEqual([["07/2023", "Erstzulassung"], ["ca. 37.500\u00a0km", "Kilometerstand"], ["150 PS", "Leistung"], ["7-Gang-DSG", "Getriebe"]]);
   });
 
   it("never repeat a value: a changed spec changes the hero", () => {

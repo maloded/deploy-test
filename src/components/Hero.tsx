@@ -22,6 +22,15 @@ import { SofiaIntro } from "./SofiaIntro";
  * focus point) when its ratio is within reach of every frame ratio, else contain on a quiet matte (never cropped).
  * The price appears only in the bottom row.
  */
+/**
+ * A fact value of three words or more ("approx. 37,500 km") keeps its last two words together (a no-break space), so that where a phone's tile is too narrow the value
+ * wraps after the first word ("approx." on its own line) and never inside "37,500 km". Two words ("150 PS") and one are left as they are.
+ */
+export function glueUnit(value: string): string {
+  const words = value.split(" ");
+  return words.length >= 3 ? `${words.slice(0, -2).join(" ")} ${words.slice(-2).join("\u00a0")}` : value;
+}
+
 export function Hero({ site }: { site: Site }) {
   const { product, images, typeFields } = site;
   const { lang } = site;
@@ -125,7 +134,7 @@ export function Hero({ site }: { site: Site }) {
                     <ul className="hero__facts-pair" data-count={pair.length} key={i}>
                       {pair.map((f, j) => (
                         <li className="hero__fact" key={f.label} style={{ "--i": i * 2 + j } as CSSProperties}>
-                          <span className="hero__fact-value">{f.value}</span>
+                          <span className="hero__fact-value">{glueUnit(f.value)}</span>
                           <span className="hero__fact-label">
                             <FactIcon factKey={f.key} />
                             <span>{f.label}</span>

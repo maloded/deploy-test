@@ -12,7 +12,6 @@ import { useAgentState } from "./use-agent-state";
 import { useDarkTheme } from "./use-dark-theme";
 import { useCallStatus } from "./use-call-status";
 import { useCallTimer } from "./use-call-timer";
-import { useBarZone } from "./use-bar-zone";
 import { AgentStartButton } from "./AgentStartButton";
 import { useCallOutcome } from "./use-call-outcome";
 import { useOrbRings } from "./use-orb-rings";
@@ -88,7 +87,6 @@ export function AgentAvatarCard({ avatar, lang, host, slot = false, placement: p
   const kind = barKind(phase);
   const barOn = Boolean(lang) && avatar.buttonIcon === "orb";
   const seconds = useCallTimer(barOn && kind === "live");
-  const zoneOff = useBarZone(barOn && kind === "idle");
   const barSlots = barOn && kind === "live" && motion ? ([...new Set([activeSlot(avatar, "call"), activeSlot(avatar, "speaking")])].filter((slot): slot is AvatarSlot => slot !== null)) : [];
   const barVideos = useRef<Partial<Record<AvatarSlot, HTMLVideoElement | null>>>({});
   const [barPlaying, setBarPlaying] = useState<Partial<Record<AvatarSlot, boolean>>>({});
@@ -154,7 +152,7 @@ export function AgentAvatarCard({ avatar, lang, host, slot = false, placement: p
   const barText_ = lang && barOn ? barText({ kind, phase, state, avatar, lang, seconds }) : null;
 
   return (
-    <section ref={cardRef} className="avatar-card" data-block="agent" data-placement={placement} data-ready={ready} data-avatar={avatar.id} data-state={state} data-call={call} data-icon={avatar.buttonIcon} data-rings={rings} data-bar-zone={zoneOff ? "off" : undefined} aria-label={avatar.name} onPointerDown={touch} onPointerEnter={touch} onFocusCapture={touch}>
+    <section ref={cardRef} className="avatar-card" data-block="agent" data-placement={placement} data-ready={ready} data-avatar={avatar.id} data-state={state} data-call={call} data-icon={avatar.buttonIcon} data-rings={rings} aria-label={avatar.name} onPointerDown={touch} onPointerEnter={touch} onFocusCapture={touch}>
       <div ref={frameRef} className="avatar-card__frame">
         <div className="avatar-card__tile">
           <div className="avatar-card__media" aria-hidden="true">

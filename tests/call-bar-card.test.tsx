@@ -243,32 +243,11 @@ describe("the call bar in the card", () => {
   });
 });
 
-describe("the bar steps aside over the offer section and the footer, when it is not in a call", () => {
-  const watcher = (block: string) => ios.find((i) => i.targets.some((t) => (t as HTMLElement).dataset?.block === block))!;
-  const enter = (block: string, on: boolean) => act(async () => watcher(block).cb([{ isIntersecting: on, target: watcher(block).targets[0] } as IntersectionObserverEntry], {} as IntersectionObserver));
-
-  it("watches the offer in the whole window and the footer in its bottom fifth", async () => {
-    await mount(PACK());
-    expect(watcher("offer").options?.rootMargin).toBe("0px");
-    expect(watcher("footer").options?.rootMargin).toBe("-80% 0px 0px 0px");
-  });
-
-  it("sets data-bar-zone while either is there, and clears it when both have left", async () => {
+describe("the bar never steps aside", () => {
+  it("watches no offer or footer zone and sets no data-bar-zone", async () => {
     const { card } = await mount(PACK());
-    expect(card.dataset.barZone).toBeUndefined();
-    await enter("offer", true);
-    expect(card.dataset.barZone).toBe("off");
-    await enter("footer", true);
-    await enter("offer", false);
-    expect(card.dataset.barZone).toBe("off"); // the footer is still there
-    await enter("footer", false);
-    expect(card.dataset.barZone).toBeUndefined();
-  });
-
-  it("does not watch at all in a call (the bar is always shown then)", async () => {
-    await mount(PACK(), { callStatus: "connecting" });
-    await settle();
     expect(ios.some((i) => i.targets.some((t) => ["offer", "footer"].includes((t as HTMLElement).dataset?.block ?? "")))).toBe(false);
+    expect(card.dataset.barZone).toBeUndefined();
   });
 });
 
@@ -297,7 +276,7 @@ describe("the stylesheet", () => {
 
   it("appears as one element (opacity, 200ms), never in parts, and at once under reduced motion", () => {
     expect(rule('.avatar-card[data-icon="orb"] .avatar-card__bar')).toMatch(/opacity: 0;\s*visibility: hidden;\s*pointer-events: none;\s*transition:\s*opacity 200ms ease,\s*visibility 0s 200ms;/);
-    expect(css).toMatch(/\.avatar-card\[data-icon="orb"\]\[data-placement="dock"\]:not\(\[data-bar-zone\]\) \.avatar-card__bar,\s*\.avatar-card\[data-icon="orb"\]\[data-placement="dock"\]:not\(\[data-call="idle"\]\) \.avatar-card__bar \{\s*opacity: 1;\s*visibility: visible;/);
+    expect(css).toMatch(/\.avatar-card\[data-icon="orb"\]\[data-placement="dock"\] \.avatar-card__bar \{\s*opacity: 1;\s*visibility: visible;/);
     expect(css).toMatch(/@media \(width < 56\.25em\) and \(prefers-reduced-motion: reduce\) \{\s*\.avatar-card\[data-icon="orb"\] \.avatar-card__bar,\s*\.avatar-card__face-video \{\s*transition: none;/);
     // no part of it has a transition of its own that could move it: the button has no separate animation in the bar
     expect(rule(".avatar-card__bar-button")).not.toMatch(/transition|animation|transform|translate/);

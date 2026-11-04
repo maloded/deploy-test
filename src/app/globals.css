@@ -1084,9 +1084,10 @@ main:focus-visible {
     position: relative;
     z-index: 1;
     display: flex;
+    flex-wrap: wrap; /* the button drops under the price, never over it, where the two do not fit side by side */
     align-items: center;
     justify-content: space-between;
-    gap: var(--space-3);
+    gap: var(--space-2) var(--space-3);
     box-sizing: border-box;
     width: calc(100% - 2 * var(--space-4));
     max-width: calc(var(--container-wide, var(--container)) - 2 * var(--space-4));
@@ -1099,7 +1100,8 @@ main:focus-visible {
 
   .hero__figure {
     gap: 0;
-    min-width: 0;
+    flex: 1 1 auto;
+    min-width: min-content; /* the price keeps its width; the button wraps under it when there is no room */
   }
 
   .hero__price-label {
@@ -1111,7 +1113,8 @@ main:focus-visible {
   }
 
   .hero__amount {
-    font-size: clamp(1.6rem, 8vw, 2.1rem);
+    font-size: clamp(1.5rem, 7vw, 2.1rem);
+    white-space: nowrap;
   }
 
   .hero__actions .button:not(.button--outline) {
@@ -1157,8 +1160,12 @@ main:focus-visible {
     display: none;
   }
 
+  /* a little smaller on a narrow tile; a value still too long wraps between its words (the unit stays with its number, see glueUnit) and never leaves the tile */
   .hero__fact-value {
-    font-size: clamp(1.1rem, 5.2vw, 1.5rem);
+    font-size: clamp(1.1rem, 4.8vw, 1.5rem);
+    white-space: normal;
+    overflow-wrap: break-word;
+    text-wrap: balance;
   }
 
   /* the description is left out on a phone (it stays in the page for readers and search, hidden here) */
@@ -4851,8 +4858,7 @@ body:has(.avatar-card) .theme-switcher {
  * pill across the bottom of the screen: her face on the left (the poster; the listening and speaking loops, crossfaded, during a call), two lines of text in the
  * middle, the call button (the same component, the same states) on the right. The pill is a fixed child of the card: no ancestor of the card has a transform, so
  * it is relative to the window, and it takes the card's state attributes (data-call, data-rings, data-state) and the theme's tokens like the card does.
- * It is shown only while the full card is out of view (data-placement="dock"), in a call too: exactly one Sofia is ever on screen. It steps aside over the offer card and the footer while idle
- * (data-bar-zone). It appears and disappears as one element (opacity, 200ms), never as parts; under reduced motion at once. Desktop is unchanged: there it is not drawn.
+ * It is shown only while the full card is out of view (data-placement="dock"), in a call too: exactly one Sofia is ever on screen. It appears and disappears as one element (opacity, 200ms), never as parts; under reduced motion at once. Desktop is unchanged: there it is not drawn.
  */
 .avatar-card__bar {
   display: none;
@@ -4899,9 +4905,8 @@ body:has(.avatar-card) .theme-switcher {
   }
 
   /* shown ONLY while the full card is out of view (docked), so there is exactly one Sofia on screen: in a call the full card stays while it is in view and the bar
-     takes over past the same threshold. While idle it also steps aside over the offer card and the footer (data-bar-zone); in a call it does not. */
-  .avatar-card[data-icon="orb"][data-placement="dock"]:not([data-bar-zone]) .avatar-card__bar,
-  .avatar-card[data-icon="orb"][data-placement="dock"]:not([data-call="idle"]) .avatar-card__bar {
+     takes over past the same threshold.  It is never hidden over the offer or the footer (the page keeps room under its last line instead). */
+  .avatar-card[data-icon="orb"][data-placement="dock"] .avatar-card__bar {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
