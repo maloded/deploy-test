@@ -9,6 +9,7 @@ import { ui } from "@/lib/ui-strings";
 import { ContactForm } from "./ContactForm";
 import type { ContactWindow } from "@/lib/contact-windows";
 import { useContactModel } from "./contact-model";
+import { FooterIcon } from "./footer-icons";
 
 /**
  * Methods placed on the contact element (the footer's contact row, #contact) for the voice agent and other outside callers. Exactly
@@ -58,7 +59,7 @@ function firstEmptyRequired(dialog: HTMLElement): HTMLElement | null {
  * form in a native <dialog>; without it they scroll to this row, whose mailto link works. The form exists ONLY in the
  * dialog, and only after the page has loaded in a browser: the static markup holds no form field.
  */
-export function ContactSection({ lang, contactWindows, timezone, email, phone, requestTypes, viewing, prototypeNote, consentText, privacyUrl, imprintUrl }: { lang: Language; contactWindows: readonly ContactWindow[]; timezone?: string; email: string; phone?: string; requestTypes: readonly RequestType[]; viewing: ViewingConfig | null; prototypeNote: boolean; consentText: string; privacyUrl?: string; imprintUrl?: string }) {
+export function ContactSection({ lang, contactWindows, timezone, email, phone, requestTypes, viewing, prototypeNote, consentText, privacyUrl }: { lang: Language; contactWindows: readonly ContactWindow[]; timezone?: string; email: string; phone?: string; requestTypes: readonly RequestType[]; viewing: ViewingConfig | null; prototypeNote: boolean; consentText: string; privacyUrl?: string }) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const opener = useRef<HTMLElement | null>(null);
@@ -171,29 +172,43 @@ export function ContactSection({ lang, contactWindows, timezone, email, phone, r
   };
 
   return (
-    <div ref={sectionRef} className="site-footer__contact" id="contact" data-block="contact">
-      <p className="site-footer__row">
-        <span>{ui("footer.contact", lang)}: </span>
-        <a href={`mailto:${email}`}>{email}</a>
-        {phone && (
-          <>
-            <span aria-hidden="true"> · </span>
-            <a href={`tel:${phone.replace(/[^+\d]/g, "")}`}>{phone}</a>
-          </>
-        )}
-        {privacyUrl && (
-          <>
-            <span aria-hidden="true"> · </span>
-            <a href={privacyUrl}>{ui("footer.privacy", lang)}</a>
-          </>
-        )}
-        {imprintUrl && (
-          <>
-            <span aria-hidden="true"> · </span>
-            <a href={imprintUrl}>{ui("footer.imprint", lang)}</a>
-          </>
-        )}
+    <div ref={sectionRef} className="site-footer__contact" id="contact" data-block="contact" role="group" aria-label={ui("footer.contact", lang)}>
+      {/* one row: a link per kind of request this page offers (it opens the form on that tab, like every "#contact" button; without script it scrolls here), then the e-mail */}
+      <p className="site-footer__contact-title" aria-hidden="true">
+        {ui("footer.contact", lang)}
       </p>
+      <ul className="site-footer__links">
+        {requestTypes.map((type) => (
+          <li key={type}>
+            <a
+              href="#contact"
+              data-request-type={type}
+              onClick={(e) => {
+                if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                e.preventDefault();
+                open(e.currentTarget);
+              }}
+            >
+              <FooterIcon name={type} />
+              <span>{REQUEST_TYPES[type].label[lang]}</span>
+            </a>
+          </li>
+        ))}
+        <li className="site-footer__links-line">
+          <a href={`mailto:${email}`}>
+            <FooterIcon name="mail" />
+            <span>{email}</span>
+          </a>
+        </li>
+        {phone && (
+          <li className="site-footer__links-line">
+            <a href={`tel:${phone.replace(/[^+\d]/g, "")}`}>
+              <FooterIcon name="phone" />
+              <span>{phone}</span>
+            </a>
+          </li>
+        )}
+      </ul>
 
       <dialog
         ref={dialogRef}

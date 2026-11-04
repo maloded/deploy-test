@@ -2582,15 +2582,154 @@ main:focus-visible {
   font-size: 0.85rem;
 }
 
+/* as wide as the header and the hero (--container-wide): the left edge lines up with the logo, the right edge with the buttons */
 .site-footer__inner {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-3);
+  width: 100%;
+  max-width: var(--container-wide, var(--container));
+  margin-inline: auto;
+  padding-inline: var(--space-4);
 }
 
-.site-footer__name {
-  color: var(--text);
-  font-family: var(--font-heading);
-  font-size: 1.1rem;
+/*
+ * Row 1, three columns: the logo and the city (left), the contact links in a column (centre), the assistant's badge (right). One column on a phone, in the
+ * order of the markup: logo and city, contacts, the badge.
+ */
+.site-footer__top {
+  display: grid;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+}
+
+@media (min-width: 56em) {
+  .site-footer__top {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-5);
+  }
+
+  .site-footer__top > .site-footer__badge {
+    justify-self: end;
+  }
+}
+
+/* the logo is the header's own (site-header__brand / __logo / __name), the city sits under it */
+.site-footer__brand {
+  display: grid;
+  gap: 0;
+  justify-items: start;
+}
+
+/* directly under the wordmark: the mark is a little taller than the wordmark's line, so the city keeps a hair of room under it */
+.site-footer__city {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  line-height: 1.2;
+}
+
+.site-footer__contact {
+  min-width: 0;
+}
+
+/* the small heading over the contact links: the quiet label (small, uppercase, spaced), its top on the logo's top */
+.site-footer__contact-title {
+  margin: 0 0 var(--space-2);
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.site-footer__links {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-footer__links a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-decoration-color: color-mix(in srgb, currentcolor 35%, transparent);
+  text-underline-offset: 0.2em;
+}
+
+.site-footer__links a:hover {
+  color: var(--accent);
+  text-decoration-color: currentcolor;
+}
+
+.site-footer__links a:focus-visible,
+.site-footer__badge:focus-visible,
+.site-footer__legal-links a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.site-footer__icon {
+  flex: none;
+  color: var(--muted);
+}
+
+/*
+ * Row 2, under a thin divider, three columns: the note (left), the developer's badge (centre), the legal links with the version line under them (right).
+ * One column on a phone: the note, the badge, the legal links, the version.
+ */
+.site-footer__bottom {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.site-footer__end {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+@media (min-width: 56em) {
+  .site-footer__bottom {
+    /* the note takes all the room the badge and the legal links leave (one line on a desktop window; it wraps only when the window is really too narrow) */
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: start;
+    gap: var(--space-5);
+  }
+
+  .site-footer__bottom > .site-footer__badge {
+    justify-self: end;
+  }
+
+  .site-footer__end {
+    justify-items: end;
+    text-align: right;
+  }
+}
+
+.site-footer__notes {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.site-footer__legal,
+.site-footer__credit {
+  margin: 0;
+}
+
+/* the non-binding note: a step below the body text, quiet, never hyphenated (it wraps between words only) */
+.site-footer__legal {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  hyphens: none;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 /* the music credit line (only when a track's licence asks for it): quiet, like the legal note */
@@ -2600,22 +2739,198 @@ main:focus-visible {
   overflow-wrap: anywhere;
 }
 
-.site-footer__prototype {
-  color: var(--text);
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+/*
+ * The two credit badges: a pill with a thin border and the theme's colours; the assistant's brand emblem keeps its own orange, the developer's mark takes the text colour.
+ * Two lines of text: the small line muted, the name bold in the text colour.
+ */
+.site-footer__badge {
+  display: inline-flex;
+  justify-self: start;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: 99rem;
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  color: var(--muted);
+  text-decoration: none;
+  transition: border-color 0.2s;
 }
 
-.site-footer__version {
-  font-family: var(--font-mono, monospace); /* optional theme variable; a theme without it gets the browser's monospace */
-  font-size: 0.7rem;
+a.site-footer__badge:hover {
+  border-color: var(--accent);
+}
+
+.site-footer__emblem {
+  flex: none;
+  display: block;
+  width: 2rem;
+  height: 2rem;
+}
+
+.site-footer__developer-icon {
+  flex: none;
+  display: block;
+  width: 1.4rem;
+  color: var(--text);
+}
+
+.site-footer__developer-icon svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.site-footer__badge-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.site-footer__badge-text small {
   color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.site-footer__badge-text b {
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+/* the developer's badge is ONE line ("Entwickelt von GoodPoint Labs") in a compact pill as high as a line of the note */
+.site-footer__badge--developer {
+  padding-block: 0.15rem;
+  white-space: nowrap;
+}
+
+.site-footer__badge--developer .site-footer__developer-icon {
+  width: 1rem;
+}
+
+.site-footer__badge--developer .site-footer__badge-text {
+  flex-direction: row;
+  align-items: baseline;
+  gap: var(--space-1);
+  line-height: 1.5;
+}
+
+.site-footer__badge--developer .site-footer__badge-text small,
+.site-footer__badge--developer .site-footer__badge-text b {
+  font-size: 0.8rem;
+}
+
+.site-footer__badge-text em {
+  font-style: normal;
+  font-weight: 300;
+}
+
+.site-footer__legal-links {
+  white-space: nowrap;
+}
+
+/*
+ * The phone footer (below 56em; the desktop and tablet layouts above are untouched), compact: the logo with the city on its line (right of the wordmark) and the
+ * assistant's badge under it, left; the contact links side by side
+ * (wrapping), the e-mail on its own line; the divider; the note full width; the developer's badge on the left and the legal links on the right (the links go under
+ * the badge, right-aligned, when they do not fit); the version line last, centred. Links are at least 44px tall to tap. The room under the last line for the call bar
+ * is the footer's bottom padding (.site-footer--agent-card, below).
+ */
+@media (width < 56em) {
+  /* row A: the logo on the left and the city at the right edge of the same line, centred to the logo (a city too long for the room drops under the logo); the assistant's badge under it, left */
+  .site-footer__top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .site-footer__top > .site-footer__brand {
+    order: 1;
+    flex: 0 0 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-3);
+  }
+
+  .site-footer__brand .site-footer__city {
+    margin: 0;
+  }
+
+  .site-footer__top > .site-footer__badge {
+    order: 2;
+  }
+
+  .site-footer__top > .site-footer__contact {
+    order: 3;
+    flex: 0 0 100%;
+  }
+
+  .site-footer__links {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: var(--space-4);
+    row-gap: 0;
+  }
+
+  .site-footer__links a {
+    min-height: 2.75rem;
+  }
+
+  .site-footer__links-line {
+    flex: 0 0 100%;
+  }
+
+  .site-footer__bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+  }
+
+  .site-footer__notes {
+    flex: 0 0 100%;
+  }
+
+  .site-footer__end {
+    display: contents;
+  }
+
+  .site-footer__legal-links {
+    margin-left: auto;
+    text-align: right;
+  }
+
+  .site-footer__legal-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+  }
+
+  .site-footer__version {
+    flex: 0 0 100%;
+    text-align: center;
+  }
+}
+
+/* the version line: the smallest and the quietest text of the page, on the right under the legal links (the left on a phone) */
+.site-footer__version {
+  margin: 0;
+  color: color-mix(in srgb, var(--muted) 70%, var(--bg));
+  font-family: var(--font-mono, monospace); /* optional theme variable; a theme without it gets the browser's monospace */
+  font-size: 0.62rem;
   overflow-wrap: anywhere;
 }
 
 .site-footer a {
   color: var(--text);
+}
+
+.site-footer .site-footer__badge {
+  color: var(--muted);
 }
 
 /* development theme switcher */
@@ -3199,6 +3514,13 @@ main:focus-visible {
  */
 .avatar-card {
   font-size: calc(var(--avatar-card-w, 12.5rem) / 16);
+}
+
+/* the docked card in the corner stops above the footer: the script (use-card-footer-cap.ts) adds the lift to its usual offset, so it rises with the page instead of sitting over the footer */
+@media (width >= 56.25em) and (height >= 32.5em) {
+  .avatar-card[data-placement="dock"] {
+    bottom: calc(var(--avatar-card-bottom, 6rem) + var(--avatar-card-lift, 0rem));
+  }
 }
 
 .avatar-card[data-placement="hero"] {
@@ -4382,11 +4704,9 @@ main:focus-visible {
 }
 
 /*
- * Room for the fixed card, only where it can cover footer text. Narrow and tiny windows: the footer's text runs the full width, so the
- * card (a fixed box) needs the space below the last line (the default here). Wide windows: the card sits in the right column, so the
- * footer reserves that column's width on its right side instead and ends at the page bottom with no empty zone; where the centred
- * container leaves enough room beside the card (very wide windows) the reserve is just the container's own padding. The scrollbar
- * (100vw counts it, the card does not) is covered by the 1.25rem safety margin.
+ * The footer ends the page: no reserve below it. The docked card stops above the footer's top edge as the page reaches it (use-card-footer-cap lifts it by
+ * --avatar-card-lift), so it never sits over the footer. Only the windows where the card stays fixed in its corner (a tiny window: a small circle) keep room
+ * below the last line.
  */
 .site-footer--agent-card {
   padding-bottom: calc(var(--space-5) + var(--avatar-card-h, 15.625rem) + var(--avatar-card-bottom, 6rem));
@@ -4395,10 +4715,6 @@ main:focus-visible {
 @media (width >= 40em) and (height >= 32.5em) {
   .site-footer--agent-card {
     padding-bottom: var(--space-5);
-  }
-
-  .site-footer--agent-card .site-footer__inner {
-    padding-right: max(var(--space-4), calc(var(--avatar-card-w, 12.5rem) + var(--space-3) * 2 + 1.25rem - max(0rem, (100vw - var(--container)) / 2)));
   }
 }
 
@@ -4754,9 +5070,5 @@ body:has(.avatar-card) .theme-switcher {
 
   .site-footer--agent-card {
     padding-bottom: calc(var(--space-5) + var(--avatar-card-h, 4.5rem) + var(--avatar-card-bottom, 1.5rem));
-  }
-
-  .site-footer--agent-card .site-footer__inner {
-    padding-right: 0;
   }
 }

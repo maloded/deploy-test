@@ -2,6 +2,10 @@
   "schemaVersion": 1,
   "displayName": "Good Point",
   "logo": "logo.svg",
+  "city": {
+    "de": "Wien",
+    "en": "Vienna"
+  },
   "legalNote": {
     "en": "Information on this page is indicative and does not constitute a binding offer.",
     "de": "Die Angaben auf dieser Seite sind unverbindlich und stellen kein verbindliches Angebot dar."
@@ -18,6 +22,11 @@
   "consentText": {
     "de": "Ich bin damit einverstanden, dass Good Point meine Angaben verarbeitet, um meine Anfrage zu beantworten und mich dazu zu kontaktieren. Die Angaben werden nur zu diesem Zweck gespeichert. Mehr dazu in der Datenschutzerklärung.",
     "en": "I agree that Good Point processes my details to answer my enquiry and to contact me about it. The details are stored for this purpose only. More in the privacy notice."
+  },
+  "developer": {
+    "name": "GoodPoint Labs",
+    "url": "https://goodpoint.at",
+    "icon": "developer-icon.svg"
   },
   "agent": {
     "id": "6adfaa35eb18f467f5a255e9",
@@ -108,7 +117,13 @@
           }
         ]
       }
+    },
+    "credit": {
+      "provider": "hanc•ai",
+      "url": "https://hanc.ai"
     }
   },
-  "timezone": "Europe/Vienna"
+  "timezone": "Europe/Vienna",
+  "privacyUrl": "https://goodpoint.at/datenschutz",
+  "imprintUrl": "https://goodpoint.at/impressum"
 }

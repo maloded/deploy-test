@@ -88,12 +88,12 @@ describe("one button per place, with its preset in the markup", () => {
     expect(out).toMatch(/<section class="offer"[\s\S]*data-request-type="question">Request details<\/a>/);
   });
 
-  it("exactly three buttons outside the contact row after hydration: no duplicate in the offer block", () => {
+  it("exactly three buttons outside the contact row after hydration (its own links to the dialog are in the row): no duplicate in the offer block", () => {
     mount(car("en"));
     expect([...box!.querySelectorAll('a[href="#contact"]')].filter((a) => !q("#contact").contains(a))).toHaveLength(3);
     expect(box!.querySelectorAll('.offer a[href="#contact"]')).toHaveLength(1);
     expect(box!.querySelectorAll('.offer .button')).toHaveLength(1);
-    expect(q("#contact .site-footer__row").querySelectorAll(".button")).toHaveLength(0); // the contact row has no call-to-action button
+    expect(q("#contact .site-footer__links").querySelectorAll(".button")).toHaveLength(0); // the contact row has no call-to-action button
   });
 });
 

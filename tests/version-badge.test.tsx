@@ -116,24 +116,23 @@ describe("the footer line", () => {
   const html = () => renderToStaticMarkup(<Footer site={fixtures.siteFor("fixture-car")} />);
   const INFO = JSON.stringify({ version: "0.2.0", template: "9328a8e", content: "4b59167", built: "2026-10-28 14:10" });
 
-  it("shows only with NEXT_PUBLIC_PROTOTYPE_NOTE", () => {
-    vi.stubEnv("NEXT_PUBLIC_PROTOTYPE_NOTE", "");
+  it("is always shown, with or without NEXT_PUBLIC_PROTOTYPE_NOTE (the footer's quiet last line)", () => {
     vi.stubEnv("VERSION_INFO", INFO);
-    expect(html()).not.toContain("site-footer__version");
-    expect(html()).not.toContain("9328a8e");
-    vi.stubEnv("NEXT_PUBLIC_PROTOTYPE_NOTE", "1");
-    expect(html()).toContain('<p class="site-footer__version">v0.2.0 · template 9328a8e · content 4b59167 · 2026-10-28 14:10 UTC</p>');
+    for (const flag of ["", "1"]) {
+      vi.stubEnv("NEXT_PUBLIC_PROTOTYPE_NOTE", flag);
+      expect(html()).toContain('<p class="site-footer__version">v0.2.0 · template 9328a8e · content 4b59167 · 2026-10-28 14:10 UTC</p>');
+    }
   });
 
   it('says "dev" in the working repository (no version.json)', () => {
-    vi.stubEnv("NEXT_PUBLIC_PROTOTYPE_NOTE", "1");
+    vi.stubEnv("NEXT_PUBLIC_PROTOTYPE_NOTE", "");
     vi.stubEnv("VERSION_INFO", "");
     expect(html()).toContain('<p class="site-footer__version">dev</p>');
   });
 
   it("uses theme variables only (an optional --font-mono with a monospace fallback, no raw colour)", () => {
     const css = fs.readFileSync("src/app/globals.css", "utf8");
-    const rule = /\.site-footer__version \{([^}]*)\}/.exec(css)![1];
+    const rule = /^\.site-footer__version \{([^}]*)\}/m.exec(css)![1];
     expect(rule).toMatch(/font-family: var\(--font-mono, monospace\)/);
     expect(rule).not.toMatch(/#[0-9a-f]{3,6}\b|rgb\(/i);
   });

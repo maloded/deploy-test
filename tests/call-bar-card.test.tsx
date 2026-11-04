@@ -243,32 +243,32 @@ describe("the call bar in the card", () => {
   });
 });
 
-describe("the bar steps aside over the offer card and the footer, when it is not in a call", () => {
-  const zoneIO = () => ios.find((i) => i.options?.rootMargin === "-80% 0px 0px 0px")!;
-  const enter = (target: Element, on: boolean) => act(async () => zoneIO().cb([{ isIntersecting: on, target } as IntersectionObserverEntry], {} as IntersectionObserver));
+describe("the bar steps aside over the offer section and the footer, when it is not in a call", () => {
+  const watcher = (block: string) => ios.find((i) => i.targets.some((t) => (t as HTMLElement).dataset?.block === block))!;
+  const enter = (block: string, on: boolean) => act(async () => watcher(block).cb([{ isIntersecting: on, target: watcher(block).targets[0] } as IntersectionObserverEntry], {} as IntersectionObserver));
 
-  it("watches the offer and the footer in the bottom fifth of the window", async () => {
+  it("watches the offer in the whole window and the footer in its bottom fifth", async () => {
     await mount(PACK());
-    expect(zoneIO().targets.map((t) => (t as HTMLElement).dataset.block)).toEqual(["offer", "footer"]);
+    expect(watcher("offer").options?.rootMargin).toBe("0px");
+    expect(watcher("footer").options?.rootMargin).toBe("-80% 0px 0px 0px");
   });
 
   it("sets data-bar-zone while either is there, and clears it when both have left", async () => {
     const { card } = await mount(PACK());
-    const [offer, footer] = zoneIO().targets;
     expect(card.dataset.barZone).toBeUndefined();
-    await enter(offer, true);
+    await enter("offer", true);
     expect(card.dataset.barZone).toBe("off");
-    await enter(footer, true);
-    await enter(offer, false);
+    await enter("footer", true);
+    await enter("offer", false);
     expect(card.dataset.barZone).toBe("off"); // the footer is still there
-    await enter(footer, false);
+    await enter("footer", false);
     expect(card.dataset.barZone).toBeUndefined();
   });
 
   it("does not watch at all in a call (the bar is always shown then)", async () => {
     await mount(PACK(), { callStatus: "connecting" });
     await settle();
-    expect(ios.filter((i) => i.options?.rootMargin === "-80% 0px 0px 0px").every((i) => i.targets.length === 0)).toBe(true);
+    expect(ios.some((i) => i.targets.some((t) => ["offer", "footer"].includes((t as HTMLElement).dataset?.block ?? "")))).toBe(false);
   });
 });
 

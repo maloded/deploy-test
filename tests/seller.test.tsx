@@ -136,7 +136,7 @@ describe("header and footer read the seller", () => {
 
   it("shows seller.displayName in the header and the footer", () => {
     expect(html(<Header site={site} />)).toContain(`>${site.seller.displayName}<`);
-    expect(html(<Footer site={site} />)).toContain(`<p class="site-footer__name">${site.seller.displayName}</p>`);
+    expect(html(<Footer site={site} />)).toContain(`<span class="site-header__name">${site.seller.displayName}</span>`);
   });
 
   it("shows seller.legalNote in the page language, and no legal line without it", () => {

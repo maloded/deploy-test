@@ -287,14 +287,13 @@ describe("the card's place and stacking", () => {
     expect(body("body:has(.avatar-card) .theme-switcher")).toContain("var(--avatar-card-w, 12.5rem)");
   });
 
-  it("the footer keeps room for the card's height on narrow and tiny windows only", () => {
+  it("the footer ends the page on windows where the card docks (the card is capped above the footer instead); tiny ones keep the room below", () => {
     expect(body(".site-footer--agent-card")).toMatch(/padding-bottom: calc\(var\(--space-5\) \+ var\(--avatar-card-h, 15\.625rem\) \+ var\(--avatar-card-bottom, 6rem\)\)/);
     const WIDE = "@media (width >= 40em) and (height >= 32.5em)";
-    // wide windows: no vertical reserve (no dead zone below the footer), a reserve on the right where the card sits
+    // docked card: no reserve below the footer (no empty band), the card is lifted above the footer by the cap
     expect(body(".site-footer--agent-card", WIDE)).toMatch(/padding-bottom: var\(--space-5\)/);
-    const side = body(".site-footer--agent-card .site-footer__inner", WIDE);
-    expect(side).toMatch(/padding-right: max\(var\(--space-4\), calc\(var\(--avatar-card-w, 12\.5rem\) \+ var\(--space-3\) \* 2 \+ 1\.25rem - max\(0rem, \(100vw - var\(--container\)\) \/ 2\)\)\)/);
-    expect(side).not.toMatch(/(^|;|\s)(transform|translate|scale|rotate|filter|contain)\s*:/);
+    // the footer is as wide as the header, nothing reserved beside it
+    expect(body(".site-footer--agent-card .site-footer__inner", WIDE)).toBe("");
     expect(body(":root")).toContain("--avatar-card-h: calc(var(--avatar-card-w, 12.5rem) * 1.25)");
   });
 });

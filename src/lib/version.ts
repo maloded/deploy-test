@@ -56,3 +56,8 @@ export function versionLine(info: VersionInfo | null): string {
   const parts = [info.version && `v${info.version}`, info.template && `template ${info.template}`, info.content && `content ${info.content}`, info.built && `${info.built} UTC`];
   return parts.filter(Boolean).join(" · ") || "dev";
 }
+
+/** "v0.9.0" only (no commits, no time), or "" when there is no version: the line of a release build. */
+export function versionOnly(info: VersionInfo | null): string {
+  return info?.version ? `v${info.version}` : "";
+}

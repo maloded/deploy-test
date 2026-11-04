@@ -173,10 +173,10 @@ const STRINGS = {
   "contact.success.title": { en: "Thank you", de: "Vielen Dank" },
   "contact.success.text": { en: "Your request has been sent. We will get back to you.", de: "Ihre Anfrage wurde gesendet. Wir melden uns bei Ihnen." },
   "lang.switch": { en: "Language", de: "Sprache" },
-  "footer.prototype": {
-    en: "Prototype. Content is a draft and not yet confirmed by the seller.",
-    de: "Prototyp. Die Inhalte sind ein Entwurf und noch nicht vom Verkäufer bestätigt.",
-  },
+  "footer.agentCredit": { en: "AI sales assistant by", de: "KI-Verkaufsberaterin von" },
+  "footer.developedBy": { en: "Developed by", de: "Entwickelt von" },
+  "footer.badges": { en: "Credits", de: "Hinweise" },
+  "footer.legalLinks": { en: "Legal", de: "Rechtliches" },
   ...STATUS_STRINGS, // the 404 and error pages (src/lib/status-texts.ts)
 } as const satisfies Record<string, Localized>;
 

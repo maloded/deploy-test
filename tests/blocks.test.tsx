@@ -75,7 +75,7 @@ describe("car layout", () => {
       expect(out).toMatch(new RegExp(`<section[^>]*id="${id}"[^>]*data-block="${id}"[^>]*aria-label="[^"]+"`));
     }
     // "contact" is listed in the order, but it is the footer's contact row: an element with the id, not a section
-    expect(out).toMatch(/<footer[\s\S]*<div class="site-footer__contact" id="contact" data-block="contact">/);
+    expect(out).toMatch(/<footer[\s\S]*<div class="site-footer__contact" id="contact" data-block="contact"/);
     expect(out).not.toMatch(/<section[^>]*id="contact"/);
   });
 
@@ -558,16 +558,20 @@ describe("prototype note", () => {
   const site = siteFor("fixture-car", null);
   afterEach(() => vi.unstubAllEnvs());
 
-  it("is shown in the footer only when NEXT_PUBLIC_PROTOTYPE_NOTE is set", () => {
-    expect(html(<Footer site={site} />)).not.toContain("Prototype");
-    vi.stubEnv("NEXT_PUBLIC_PROTOTYPE_NOTE", "1");
-    expect(html(<Footer site={site} />)).toContain('<p class="site-footer__prototype">Prototype. Content is a draft and not yet confirmed by the seller.</p>');
+  it("has no prototype line any more; the quiet version line is always there (\"dev\" without a version.json)", () => {
     vi.stubEnv("NEXT_PUBLIC_PROTOTYPE_NOTE", "");
-    expect(html(<Footer site={site} />)).not.toContain("Prototype");
+    vi.stubEnv("VERSION_INFO", "");
+    for (const flag of ["", "1"]) {
+      vi.stubEnv("NEXT_PUBLIC_PROTOTYPE_NOTE", flag);
+      const out = html(<Footer site={site} />);
+      expect(out).toContain('<p class="site-footer__version">dev</p>');
+      expect(out).not.toContain("Prototype");
+      expect(out).not.toContain("site-footer__prototype");
+    }
   });
 
-  it("is a UI string with a draft for de", () => {
-    expect(ui("footer.prototype", "de")).toBe("Prototyp. Die Inhalte sind ein Entwurf und noch nicht vom Verkäufer bestätigt.");
+  it("is no UI string any more", () => {
+    expect(UI_KEYS).not.toContain("footer.prototype");
   });
 });
 

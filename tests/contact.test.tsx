@@ -66,7 +66,7 @@ describe("the contact block (the footer's contact row)", () => {
       const s = site(lang);
       const out = renderToStaticMarkup(<ProductLayout site={s} />);
       expect(out.match(/id="contact"/g)).toHaveLength(1);
-      expect(out).toMatch(/<footer[^>]*>[\s\S]*<div class="site-footer__contact" id="contact" data-block="contact">[\s\S]*<\/footer>/);
+      expect(out).toMatch(/<footer[^>]*>[\s\S]*<div class="site-footer__contact" id="contact" data-block="contact"[^>]*>[\s\S]*<\/footer>/);
       expect(out).not.toMatch(/<section[^>]*(id="contact"|data-block="contact")/);
       expect(out).toContain(`href="mailto:${s.seller.contact.email}"`);
       expect(out).toContain('data-block-order="hero gallery specs offer faq contact"');
@@ -105,7 +105,7 @@ describe("the contact block (the footer's contact row)", () => {
   it("is one row: the e-mail is not repeated in a second footer line", () => {
     const out = renderToStaticMarkup(<ProductLayout site={site("en")} />);
     expect(out.match(/mailto:/g)).toHaveLength(1);
-    expect(out.match(/site-footer__row/g)).toHaveLength(1);
+    expect(out.match(/<ul class="site-footer__links">/g)).toHaveLength(1); // one list, one row
   });
 
   it("links privacy and imprint only when the seller has set them (never a dead #anchor)", () => {

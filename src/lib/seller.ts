@@ -101,6 +101,17 @@ export const sellerAgentSchema = z
       })
       .strict()
       .optional(),
+    /**
+     * The quiet credit in the footer ("AI sales assistant by <provider>"): shown only when this is set. `url` (optional) makes the provider's name a link
+     * to the provider's site; without it the credit is plain text. Nothing here is a claim the page makes about the visitor, only about who made the assistant.
+     */
+    credit: z
+      .object({
+        provider: z.string().trim().min(1).max(40),
+        url: link.optional(),
+      })
+      .strict()
+      .optional(),
     voiceServiceUrl: z.url({ protocol: /^https$/ }).default(DEFAULT_VOICE_SERVICE_URL),
   })
   .strict()
@@ -113,6 +124,8 @@ export const sellerShape = {
   displayName: z.string().min(1).max(40),
   /** Registered name for the imprint, per language. Optional: no imprint text is invented. */
   legalName: localizedSchema.optional(),
+  /** The seller's city, per language (for example "Wien" / "Vienna"): the footer shows it under the brand. Optional: none is invented. */
+  city: localizedSchema.optional(),
   /** The small legal line in the footer (for example "indicative, not a binding offer"), per language. */
   legalNote: localizedSchema.optional(),
   contact: sellerContactSchema,
@@ -132,6 +145,18 @@ export const sellerShape = {
   timezone: z.string().refine(isTimeZone, 'must be an IANA time zone such as "Europe/Vienna"').optional(),
   /** Optional override of the contact windows the form offers (the defaults are in contact-windows.ts). "anytime" must be one of them. */
   contactWindows: contactWindowsSchema.optional(),
+  /**
+   * Optional "Developed by" credit in the footer: the developer's `name`, an optional `url` (the name becomes a link) and an optional `icon` (an SVG file next to
+   * seller.json, checked like the logo and inlined, so its currentColor takes the theme's colour). Shown only when set.
+   */
+  developer: z
+    .object({
+      name: z.string().trim().min(1).max(40),
+      url: link.optional(),
+      icon: z.string().regex(LOGO_FILE, LOGO_FILE_MESSAGE).optional(),
+    })
+    .strict()
+    .optional(),
   /** Optional voice assistant (see sellerAgentSchema). Nothing is loaded or registered without it. */
   agent: sellerAgentSchema.optional(),
   /** Placeholders until the seller supplies the real pages. */
@@ -165,7 +190,7 @@ export type SellerFieldDescriptor = {
   key: keyof typeof sellerShape;
   label: Localized;
   required: boolean;
-  type: "version" | "text" | "file" | "localized" | "contact" | "languages" | "language" | "theme" | "link" | "viewing" | "agent" | "timezone" | "contactWindows";
+  type: "version" | "text" | "file" | "localized" | "contact" | "languages" | "language" | "theme" | "link" | "viewing" | "agent" | "developer" | "timezone" | "contactWindows";
 };
 
 export const SELLER_FIELDS = [
@@ -173,6 +198,7 @@ export const SELLER_FIELDS = [
   { key: "displayName", label: { en: "Brand shown on the page", de: "Marke auf der Seite" }, required: true, type: "text" },
   { key: "logo", label: { en: "Logo (SVG file next to seller.json)", de: "Logo (SVG-Datei neben seller.json)" }, required: false, type: "file" },
   { key: "legalName", label: { en: "Legal name", de: "Rechtlicher Name" }, required: false, type: "localized" },
+  { key: "city", label: { en: "City (shown in the footer)", de: "Ort (in der Fußzeile)" }, required: false, type: "localized" },
   { key: "legalNote", label: { en: "Legal note in the footer", de: "Rechtlicher Hinweis in der Fußzeile" }, required: false, type: "localized" },
   { key: "contact", label: { en: "Contact (email, phone, website)", de: "Kontakt (E-Mail, Telefon, Website)" }, required: true, type: "contact" },
   { key: "languages", label: { en: "Languages", de: "Sprachen" }, required: true, type: "languages" },
@@ -182,6 +208,7 @@ export const SELLER_FIELDS = [
   { key: "viewing", label: { en: "Viewing settings (default)", de: "Besichtigungseinstellungen (Standard)" }, required: false, type: "viewing" },
   { key: "timezone", label: { en: "Time zone (IANA, for example Europe/Vienna)", de: "Zeitzone (IANA, zum Beispiel Europe/Vienna)" }, required: false, type: "timezone" },
   { key: "contactWindows", label: { en: "Contact windows (override of the defaults)", de: "Erreichbarkeitsfenster (überschreibt die Standardwerte)" }, required: false, type: "contactWindows" },
+  { key: "developer", label: { en: "Developed-by credit in the footer (name, link, icon)", de: "Entwickelt-von-Hinweis in der Fußzeile (Name, Link, Symbol)" }, required: false, type: "developer" },
   { key: "agent", label: { en: "Voice assistant widget (id, variant, placement, theme, avatar)", de: "Sprachassistent-Widget (ID, Variante, Platzierung, Theme, Avatar)" }, required: false, type: "agent" },
   { key: "privacyUrl", label: { en: "Privacy page (placeholder)", de: "Datenschutzseite (Platzhalter)" }, required: false, type: "link" },
   { key: "imprintUrl", label: { en: "Imprint page (placeholder)", de: "Impressum (Platzhalter)" }, required: false, type: "link" },

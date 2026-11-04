@@ -63,6 +63,8 @@ export type LoadedProduct = {
   avatar: ResolvedAvatar | null;
   /** The seller's logo as inline SVG markup (seller.json "logo", checked); null without one. */
   logo: string | null;
+  /** The developer credit's icon as inline SVG markup (seller.json developer.icon, checked); null without one. */
+  developerIcon: string | null;
   /** Missing media files, only reported (instead of thrown) when `strictMedia` is false. */
   warnings: string[];
 };
@@ -101,22 +103,25 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
   }
   const seller = completeLocalized(sellerResult.seller, languages, defaultLanguage);
 
-  // the seller's logo (an SVG next to seller.json): a missing file is an error like a missing photo (a warning when strictMedia is false); a file that is not plain shapes always stops the load
-  let logo: string | null = null;
-  let logoWarning: string | null = null;
-  if (seller.logo) {
-    const file = path.join(/*turbopackIgnore: true*/ sellerDir, seller.logo);
+  // the seller's logo and the developer credit's icon (SVG files next to seller.json): a missing file is an error like a missing photo (a warning when strictMedia is false);
+  // a file that is not plain shapes always stops the load
+  const warnings0: string[] = [];
+  const sellerSvg = (name: string | undefined, field: string): string | null => {
+    if (!name) return null;
+    const file = path.join(/*turbopackIgnore: true*/ sellerDir, name);
     if (!fs.existsSync(/*turbopackIgnore: true*/ file)) {
-      const msg = `logo: file "${seller.logo}" not found in ${sellerSlug}/`;
+      const msg = `${field}: file "${name}" not found in ${sellerSlug}/`;
       if (strictMedia) throw new ContentError(`${sellerSlug}/seller.json`, [msg]);
-      logoWarning = `${sellerSlug}/seller.json: ${msg}`;
-    } else {
-      const text = fs.readFileSync(/*turbopackIgnore: true*/ file, "utf8");
-      const problem = logoProblem(text, fs.statSync(/*turbopackIgnore: true*/ file).size);
-      if (problem) throw new ContentError(`${sellerSlug}/seller.json`, [`logo: "${seller.logo}" ${problem}`]);
-      logo = logoMarkup(text);
+      warnings0.push(`${sellerSlug}/seller.json: ${msg}`);
+      return null;
     }
-  }
+    const text = fs.readFileSync(/*turbopackIgnore: true*/ file, "utf8");
+    const problem = logoProblem(text, fs.statSync(/*turbopackIgnore: true*/ file).size);
+    if (problem) throw new ContentError(`${sellerSlug}/seller.json`, [`${field}: "${name}" ${problem}`]);
+    return logoMarkup(text);
+  };
+  const logo = sellerSvg(seller.logo, "logo");
+  const developerIcon = sellerSvg(seller.developer?.icon, "developer.icon");
 
   // the avatar is chosen by id from the shared library; an id that is not there (or a broken pack) stops the build
   let avatar: ResolvedAvatar | null = null;
@@ -152,7 +157,7 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
   const mediaDirName = fs.existsSync(/*turbopackIgnore: true*/ path.join(dir, "media")) ? "media" : "media-web";
 
   const images: Record<string, MediaImage> = {};
-  const warnings: string[] = logoWarning ? [logoWarning] : [];
+  const warnings: string[] = [...warnings0];
   for (const r of refs) {
     const abs = path.join(/*turbopackIgnore: true*/ dir, mediaDirName, r.file);
     if (!fs.existsSync(/*turbopackIgnore: true*/ abs)) {
@@ -203,5 +208,5 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
   // without it gets it last (listing "contact" only decides where it goes)
   const listed = file.blocks ?? defaultBlocksFor(typeFields);
   const blocks: BlockId[] = listed.includes("contact") ? [...listed] : [...listed, "contact"];
-  return { ref, seller, product, typeFields, blocks, viewing, images, translationWarnings, coverage, warnings, avatar, logo };
+  return { ref, seller, product, typeFields, blocks, viewing, images, translationWarnings, coverage, warnings, avatar, logo, developerIcon };
 }

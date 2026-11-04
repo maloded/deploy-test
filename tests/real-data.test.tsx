@@ -97,7 +97,7 @@ describe.skipIf(!hasRealContent)("the vw-multivan sample is a sale in German and
 
   it("shows only the brand in the footer", () => {
     const footer = html(<Footer site={content.siteFor("vw-multivan")} />);
-    expect(footer).toContain(`<p class="site-footer__name">${content.sellerJson().displayName}</p>`);
+    expect(footer).toContain(`<span class="site-header__name">${content.sellerJson().displayName}</span>`);
     expect(footer).not.toMatch(/GmbH|UID|ATU|FN \d/);
   });
 });

@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const IMAGE = /\.(jpe?g|png|webp|gif|svg|heic|heif|avif|tiff?|ico)$/i;
-const ALLOWED = ["examples/", "tests/fixtures/"];
+const ALLOWED = ["examples/", "tests/fixtures/", "public/brand/"]; // public/brand: the template's own emblem, not a client photo
 
 describe("the template tracks no client photos", () => {
   it("git ls-files lists no image outside examples/ and tests/fixtures", () => {
