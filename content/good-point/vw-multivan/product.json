@@ -402,16 +402,14 @@
     }
   ],
   "media": {
-    "hero": "Front-side.jpg",
-    "heroFocus": {
-      "x": 0.6,
-      "y": 0.45
-    },
+    "hero": "Hero-cutout.webp",
+    "heroCutout": true,
     "gallery": [
       {
         "id": "front-side",
         "category": "exterior",
         "file": "Front-side.jpg",
+        "cutout": "Hero-cutout.webp",
         "alt": {
           "de": "Dreiviertelansicht von vorn: der graue Multivan an einem Bordstein auf nasser Pflasterstraße, Schiebetür offen, Scheinwerfer und Kühlergrill",
           "en": "Front three-quarter view of the grey Multivan at a kerb on a wet cobbled street, sliding door open, headlight and grille"
@@ -430,14 +428,47 @@
         "hotspots": [
           {
             "id": "sliding-door",
-            "x": 0.2,
-            "y": 0.42,
+            "aliases": [
+              "front-side-sliding-door"
+            ],
+            "x": 0.19,
+            "y": 0.4,
             "label": {
-              "de": "Schiebetür",
-              "en": "Sliding door"
+              "de": "Schiebetür offen",
+              "en": "Sliding door open"
             },
-            "specKeys": [
-              "doors"
+            "facts": [
+              {
+                "label": {
+                  "de": "Türen",
+                  "en": "Doors"
+                },
+                "value": {
+                  "de": "5 (zwei Schiebetüren mit Soft-Close, elektrische Heckklappe)",
+                  "en": "5 (two sliding doors with soft-close, electric tailgate)"
+                }
+              }
+            ]
+          },
+          {
+            "id": "front-side-headlights",
+            "x": 0.55,
+            "y": 0.55,
+            "label": {
+              "de": "Scheinwerfer",
+              "en": "Headlights"
+            },
+            "facts": [
+              {
+                "label": {
+                  "de": "Licht",
+                  "en": "Lights"
+                },
+                "value": {
+                  "de": "IQ.Light Matrix-LED-Scheinwerfer, dunkle LED-Rückleuchten",
+                  "en": "IQ.Light matrix LED headlights, dark LED tail lights"
+                }
+              }
             ]
           }
         ]
@@ -446,6 +477,7 @@
         "id": "front",
         "category": "exterior",
         "file": "Front.jpg",
+        "cutout": "Front-cutout.webp",
         "alt": {
           "de": "Frontansicht des grauen Multivan an einem Bordstein auf nasser Straße: VW-Emblem, Scheinwerfer und Kühlergrill",
           "en": "Front view of the grey Multivan at a kerb on a wet street: VW emblem, headlights and grille"
@@ -459,15 +491,27 @@
         ],
         "hotspots": [
           {
-            "id": "headlights",
-            "x": 0.26,
-            "y": 0.47,
+            "id": "front-headlights",
+            "aliases": [
+              "headlights"
+            ],
+            "x": 0.255,
+            "y": 0.46,
             "label": {
               "de": "Scheinwerfer",
               "en": "Headlights"
             },
-            "specKeys": [
-              "lights"
+            "facts": [
+              {
+                "label": {
+                  "de": "Licht",
+                  "en": "Lights"
+                },
+                "value": {
+                  "de": "IQ.Light Matrix-LED-Scheinwerfer, dunkle LED-Rückleuchten",
+                  "en": "IQ.Light matrix LED headlights, dark LED tail lights"
+                }
+              }
             ]
           }
         ]
@@ -476,6 +520,7 @@
         "id": "side",
         "category": "exterior",
         "file": "Side.jpg",
+        "cutout": "Side-cutout.webp",
         "alt": {
           "de": "Seitenansicht des Multivan von links mit Schiebetür und Leichtmetallrädern",
           "en": "Left side view of the Multivan with the sliding door and alloy wheels"
@@ -489,15 +534,58 @@
         ],
         "hotspots": [
           {
-            "id": "door-repair",
-            "x": 0.43,
-            "y": 0.48,
+            "id": "side-sliding-door",
+            "aliases": [
+              "door-repair"
+            ],
+            "x": 0.42,
+            "y": 0.52,
             "label": {
-              "de": "Schiebetür ersetzt",
-              "en": "Sliding door replaced"
+              "de": "Schiebetür",
+              "en": "Sliding door"
             },
-            "specKeys": [
-              "damage"
+            "facts": [
+              {
+                "label": {
+                  "de": "Türen",
+                  "en": "Doors"
+                },
+                "value": {
+                  "de": "5 (zwei Schiebetüren mit Soft-Close, elektrische Heckklappe)",
+                  "en": "5 (two sliding doors with soft-close, electric tailgate)"
+                }
+              },
+              {
+                "label": {
+                  "de": "Schadensereignis",
+                  "en": "Damage event"
+                },
+                "value": {
+                  "de": "23.06.2025: Schiebetür ersetzt (Reparaturrechnung vom 28.07.2025, bei ca. 25.000 km)",
+                  "en": "23.06.2025: sliding door replaced (repair invoice dated 28.07.2025, at approx. 25,000 km)"
+                }
+              }
+            ]
+          },
+          {
+            "id": "side-wheels",
+            "x": 0.245,
+            "y": 0.66,
+            "label": {
+              "de": "Räder",
+              "en": "Wheels"
+            },
+            "facts": [
+              {
+                "label": {
+                  "de": "Bereifung",
+                  "en": "Tyres"
+                },
+                "value": {
+                  "de": "235/55 R17 auf 17-Zoll-Leichtmetallrädern „Dundrod“, zusätzlich ein Satz Sommerreifen",
+                  "en": "235/55 R17 on 17-inch “Dundrod” alloy wheels, plus a set of summer tyres"
+                }
+              }
             ]
           }
         ]
@@ -522,17 +610,59 @@
         ],
         "hotspots": [
           {
-            "id": "tailgate",
-            "x": 0.5,
+            "id": "rear-tailgate",
+            "aliases": [
+              "tailgate"
+            ],
+            "x": 0.49,
             "y": 0.62,
             "label": {
               "de": "Heckklappe",
               "en": "Tailgate"
             },
-            "text": {
-              "de": "Elektrische Heckklappe",
-              "en": "Power tailgate"
-            }
+            "facts": [
+              {
+                "label": {
+                  "de": "Türen",
+                  "en": "Doors"
+                },
+                "value": {
+                  "de": "5 (zwei Schiebetüren mit Soft-Close, elektrische Heckklappe)",
+                  "en": "5 (two sliding doors with soft-close, electric tailgate)"
+                }
+              },
+              {
+                "label": {
+                  "de": "Sicherheit und Anhängerkupplung",
+                  "en": "Safety and tow bar"
+                },
+                "value": {
+                  "de": "PreCrash, Anhängerkupplung mit elektrischer Entriegelung",
+                  "en": "PreCrash, tow bar with electric release"
+                }
+              }
+            ]
+          },
+          {
+            "id": "rear-lights",
+            "x": 0.23,
+            "y": 0.48,
+            "label": {
+              "de": "Rückleuchten",
+              "en": "Tail lights"
+            },
+            "facts": [
+              {
+                "label": {
+                  "de": "Licht",
+                  "en": "Lights"
+                },
+                "value": {
+                  "de": "IQ.Light Matrix-LED-Scheinwerfer, dunkle LED-Rückleuchten",
+                  "en": "IQ.Light matrix LED headlights, dark LED tail lights"
+                }
+              }
+            ]
           }
         ]
       },
@@ -561,15 +691,27 @@
         ],
         "hotspots": [
           {
-            "id": "tyres",
-            "x": 0.5,
-            "y": 0.5,
-            "label": {
-              "de": "Räder und Reifen",
-              "en": "Wheels and tyres"
-            },
-            "specKeys": [
+            "id": "wheel-tyres",
+            "aliases": [
               "tyres"
+            ],
+            "x": 0.5,
+            "y": 0.52,
+            "label": {
+              "de": "Bereifung",
+              "en": "Tyres"
+            },
+            "facts": [
+              {
+                "label": {
+                  "de": "Bereifung",
+                  "en": "Tyres"
+                },
+                "value": {
+                  "de": "235/55 R17 auf 17-Zoll-Leichtmetallrädern „Dundrod“, zusätzlich ein Satz Sommerreifen",
+                  "en": "235/55 R17 on 17-inch “Dundrod” alloy wheels, plus a set of summer tyres"
+                }
+              }
             ]
           }
         ]
@@ -593,28 +735,58 @@
         "hotspots": [
           {
             "id": "seats",
-            "x": 0.3,
-            "y": 0.55,
+            "x": 0.34,
+            "y": 0.58,
             "label": {
               "de": "Sitze",
               "en": "Seats"
             },
-            "specKeys": [
-              "seats"
+            "facts": [
+              {
+                "label": {
+                  "de": "Sitze",
+                  "en": "Seats"
+                },
+                "value": {
+                  "de": "7 (2-2-3)",
+                  "en": "7 (2-2-3)"
+                }
+              },
+              {
+                "label": {
+                  "de": "Innenraum",
+                  "en": "Interior"
+                },
+                "value": {
+                  "de": "Family-Paket (Multifunktions-Tischkonsole, Schubladen unter den Sitzen), Armlehnen vorne, elektrische Lendenwirbelstütze, Klapptische, Stoff „Bi-Color Bright Dots“",
+                  "en": "Family package (multifunction table console, drawers under the seats), front armrests, electric lumbar support, folding tables, “Bi-Color Bright Dots” upholstery"
+                }
+              }
             ]
           },
           {
             "id": "roof",
-            "x": 0.45,
+            "aliases": [
+              "panoramic-roof"
+            ],
+            "x": 0.44,
             "y": 0.07,
             "label": {
-              "de": "Dach",
-              "en": "Roof"
-            },
-            "text": {
               "de": "Panorama-Glasdach",
               "en": "Panoramic glass roof"
-            }
+            },
+            "facts": [
+              {
+                "label": {
+                  "de": "Karosserie und Fenster",
+                  "en": "Body and windows"
+                },
+                "value": {
+                  "de": "Panorama-Glasdach, Easy Open/Easy Close, Schiebefenster, Privacy-Verglasung (65 %) ab B-Säule",
+                  "en": "Panoramic glass roof, Easy Open/Easy Close, sliding windows, privacy glass (65 %) from the B-pillar"
+                }
+              }
+            ]
           }
         ]
       },
@@ -656,6 +828,27 @@
         ],
         "hotspots": [
           {
+            "id": "assist",
+            "x": 0.19,
+            "y": 0.58,
+            "label": {
+              "de": "Assistenzsysteme",
+              "en": "Driver assistance"
+            },
+            "facts": [
+              {
+                "label": {
+                  "de": "Assistenzsysteme",
+                  "en": "Driver assistance"
+                },
+                "value": {
+                  "de": "Travel & Emergency Assist, adaptive Geschwindigkeitsregelung ACC Stop&Go, Lane Assist, Side Assist, Ausstiegsassistent, Türöffnungswarnung, Car2X, Parksensoren vorn und hinten, Rückfahrkamera",
+                  "en": "Travel & Emergency Assist, adaptive cruise control ACC Stop&Go, Lane Assist, Side Assist, exit warning, door opening warning, Car2X, front and rear parking sensors, rear-view camera"
+                }
+              }
+            ]
+          },
+          {
             "id": "infotainment",
             "x": 0.57,
             "y": 0.46,
@@ -695,15 +888,48 @@
         ],
         "hotspots": [
           {
-            "id": "comfort",
+            "id": "touchscreen",
             "x": 0.47,
-            "y": 0.65,
+            "y": 0.3,
             "label": {
-              "de": "Komfort",
-              "en": "Comfort"
+              "de": "Touchscreen",
+              "en": "Touchscreen"
             },
-            "specKeys": [
+            "facts": [
+              {
+                "label": {
+                  "de": "Multimedia",
+                  "en": "Multimedia"
+                },
+                "value": {
+                  "de": "Digital Cockpit 10,25 Zoll, Discover Media Navigation, kabelloses App-Connect (CarPlay/Android Auto), DAB+, 8 Lautsprecher, USB-C vorn und hinten",
+                  "en": "10.25-inch Digital Cockpit, Discover Media navigation, wireless App-Connect (CarPlay/Android Auto), DAB+, 8 speakers, USB-C front and rear"
+                }
+              }
+            ]
+          },
+          {
+            "id": "climate",
+            "aliases": [
               "comfort"
+            ],
+            "x": 0.46,
+            "y": 0.62,
+            "label": {
+              "de": "Klima und Komfort",
+              "en": "Climate and comfort"
+            },
+            "facts": [
+              {
+                "label": {
+                  "de": "Komfort",
+                  "en": "Comfort"
+                },
+                "value": {
+                  "de": "Standheizung mit Fernbedienung, beheizbare Frontscheibe, Sitzheizung vorn, Climatronic, Keyless Advanced, 4 Schlüssel",
+                  "en": "Auxiliary heating with remote control, heated windscreen, heated front seats, Climatronic, Keyless Advanced, 4 keys"
+                }
+              }
             ]
           }
         ]
@@ -749,6 +975,39 @@
         },
         "tags": [
           "dashboard"
+        ],
+        "hotspots": [
+          {
+            "id": "digital-cockpit",
+            "x": 0.52,
+            "y": 0.42,
+            "label": {
+              "de": "Digital Cockpit",
+              "en": "Digital Cockpit"
+            },
+            "facts": [
+              {
+                "label": {
+                  "de": "Multimedia",
+                  "en": "Multimedia"
+                },
+                "value": {
+                  "de": "Digital Cockpit 10,25 Zoll, Discover Media Navigation, kabelloses App-Connect (CarPlay/Android Auto), DAB+, 8 Lautsprecher, USB-C vorn und hinten",
+                  "en": "10.25-inch Digital Cockpit, Discover Media navigation, wireless App-Connect (CarPlay/Android Auto), DAB+, 8 speakers, USB-C front and rear"
+                }
+              },
+              {
+                "label": {
+                  "de": "Getriebe",
+                  "en": "Gearbox"
+                },
+                "value": {
+                  "de": "7-Gang-DSG (Automatik)",
+                  "en": "7-speed DSG (automatic)"
+                }
+              }
+            ]
+          }
         ]
       },
       {
@@ -772,7 +1031,7 @@
         ],
         "hotspots": [
           {
-            "id": "assist",
+            "id": "assist-zoom",
             "x": 0.27,
             "y": 0.55,
             "label": {
@@ -804,8 +1063,8 @@
         "hotspots": [
           {
             "id": "mileage-reading",
-            "x": 0.72,
-            "y": 0.42,
+            "x": 0.65,
+            "y": 0.43,
             "label": {
               "de": "Kilometerstand",
               "en": "Mileage"
@@ -838,17 +1097,28 @@
         ],
         "hotspots": [
           {
-            "id": "usb",
-            "x": 0.48,
-            "y": 0.37,
+            "id": "usb-c",
+            "aliases": [
+              "usb"
+            ],
+            "x": 0.42,
+            "y": 0.26,
             "label": {
               "de": "USB-C",
               "en": "USB-C"
             },
-            "text": {
-              "de": "Zwei USB-C-Anschlüsse",
-              "en": "Two USB-C ports"
-            }
+            "facts": [
+              {
+                "label": {
+                  "de": "Multimedia",
+                  "en": "Multimedia"
+                },
+                "value": {
+                  "de": "Digital Cockpit 10,25 Zoll, Discover Media Navigation, kabelloses App-Connect (CarPlay/Android Auto), DAB+, 8 Lautsprecher, USB-C vorn und hinten",
+                  "en": "10.25-inch Digital Cockpit, Discover Media navigation, wireless App-Connect (CarPlay/Android Auto), DAB+, 8 speakers, USB-C front and rear"
+                }
+              }
+            ]
           }
         ]
       }

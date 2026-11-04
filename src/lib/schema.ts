@@ -79,18 +79,24 @@ const fileName = z.string().min(1).regex(/^[^/\\]+$/, "must be a plain file name
 /** A slug: lower-case words joined by single hyphens. Used for photo and spot ids. */
 const slugSchema = z.string().min(1).max(40).regex(SLUG_PATTERN, "must be a slug: lower-case letters and digits, words joined by single hyphens");
 
-/** A spot on a gallery photo: a position (0..1 of the photo), a label, and facts - spec keys (the figure lives in specs) and/or a short text. */
+/**
+ * A spot on a gallery photo: a position (0..1 of the photo), a label, and facts: spec keys (the figure lives in specs), explicit rows
+ * (label and value in each language, for a row that is worded for this spot) and/or a short text. `aliases` are other names that
+ * resolve to this spot (older ids, or the names another site uses).
+ */
 const hotspotSchema = z
   .object({
     id: slugSchema,
+    aliases: z.array(slugSchema).min(1).max(8).optional(),
     x: z.number().min(0).max(1),
     y: z.number().min(0).max(1),
     label: localizedSchema,
     specKeys: z.array(z.string().min(1)).min(1).max(6).optional(),
+    facts: z.array(z.object({ label: localizedSchema, value: localizedSchema }).strict()).min(1).max(6).optional(),
     text: localizedSchema.optional(),
   })
   .strict()
-  .refine((h) => h.specKeys !== undefined || h.text !== undefined, { message: "needs specKeys or text (the facts of the spot)" });
+  .refine((h) => h.specKeys !== undefined || h.facts !== undefined || h.text !== undefined, { message: "needs specKeys, facts or text (the facts of the spot)" });
 
 /**
  * Optional background music. Not shown on the page: `license` is a note for whoever keeps the content (where the track is
@@ -175,6 +181,8 @@ export const baseShape = {
   media: z.object({
     hero: fileName,
     heroFocus: focusSchema.optional(),
+    /** The hero file is a cut-out on transparency (a PNG or WebP with an alpha channel): it is never cropped, and the theme paints a soft backdrop behind it instead of a photo box. */
+    heroCutout: z.boolean().optional(),
     gallery: z.array(
       z.object({
         /** Stable id (a slug): the address of the photo (#photo-<id>) and its name for the voice agent. Unique in the gallery. */
@@ -183,6 +191,8 @@ export const baseShape = {
         aliases: z.array(slugSchema).min(1).max(8).optional(),
         category: z.enum(GALLERY_CATEGORIES),
         file: fileName,
+        /** A cut-out of this photo (a PNG or WebP on transparency) that the page uses instead of it where the van is shown on the theme's backdrop (the hero and its tiles). */
+        cutout: fileName.optional(),
         alt: localizedSchema,
         /** Short text shown under the photo (alt is for screen readers and stays the longer description). */
         caption: localizedSchema.optional(),

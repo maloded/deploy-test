@@ -59,6 +59,7 @@ export const OPTIONAL_VARS = [
   "--avatar-danger",
   "--avatar-card-radius",
   "--avatar-hero-card-w",
+  "--hero-panel-edge",
 ];
 
 export const THEMES_DIR = path.join(process.cwd(), "public", "themes");

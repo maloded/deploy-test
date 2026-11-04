@@ -10,7 +10,8 @@ assertSiteUrl();
 
 const nextConfig: NextConfig = {
   // 75 is the default; 85 is used by the hero image (see Hero.tsx)
-  images: { qualities: [75, 85] },
+  // the photos are /media/... with a ?v=<version of the file> (src/lib/content.ts), so a changed file is a new address for the optimizer's cache and the browser's
+  images: { qualities: [75, 85], localPatterns: [{ pathname: "/media/**" }] },
   // the 404 page for every unmatched URL: the root layout is in [lang], so there is none to compose it from (src/app/global-not-found.tsx)
   experimental: { globalNotFound: true },
   // the seller's default language, inlined for the proxy, which sends "/" to "/<defaultLanguage>" (no Accept-Language negotiation)

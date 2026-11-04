@@ -8,7 +8,10 @@ export function referencedFiles(product) {
   const list = [];
   const add = (where, file) => file && typeof file === "string" && list.push({ where, file });
   add("media.hero", media.hero);
-  (media.gallery ?? []).forEach((g, i) => add(`media.gallery.${i}.file`, g?.file));
+  (media.gallery ?? []).forEach((g, i) => {
+    add(`media.gallery.${i}.file`, g?.file);
+    add(`media.gallery.${i}.cutout`, g?.cutout);
+  });
   add("media.videoPoster", media.videoPoster);
   add("media.background", media.background);
   if (typeof media.video === "string" && !/^https?:\/\//i.test(media.video)) add("media.video", media.video);

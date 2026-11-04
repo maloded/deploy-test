@@ -79,7 +79,23 @@ export function Gallery({ slides, lang, autoplaySeconds, categoryLabels = DEFAUL
 
   /** Smooth unless the visitor asked for less motion. */
   const scrollSectionIntoView = useCallback(() => {
-    sectionRef.current?.scrollIntoView?.({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+    const section = sectionRef.current;
+    if (!section) return;
+    // the whole block (stage, dots, tabs, thumbnails) must be on screen, not only the photo: when the title above the stage does not fit with it, the scroll
+    // goes a little past the section's top (a negative scroll margin), so the stage starts a little under the top of the window; when it fits, the title shows too
+    const stage = section.querySelector<HTMLElement>(".gallery__viewport");
+    // the last control under the stage that is drawn: the thumbnails (not on a phone, where they are hidden), else the dots and the category marker
+    const drawn = (el: HTMLElement | null) => (el && el.getBoundingClientRect().height > 0 ? el : null);
+    const strip = drawn(section.querySelector<HTMLElement>(".gallery__thumbs-wrap")) ?? drawn(section.querySelector<HTMLElement>(".gallery__info")) ?? stage;
+    section.style.scrollMarginTop = "";
+    if (stage && strip) {
+      const top = section.getBoundingClientRect().top;
+      const above = stage.getBoundingClientRect().top - top;
+      const blockHeight = strip.getBoundingClientRect().bottom - stage.getBoundingClientRect().top;
+      const air = 16;
+      if (above > air && above + blockHeight + 2 * air > window.innerHeight) section.style.scrollMarginTop = `${-(above - air)}px`;
+    }
+    section.scrollIntoView?.({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
   }, [reducedMotion]);
 
   /** An address or the agent. `via` "visitor": a link the visitor followed (applied at once, the address is already in the bar); "api": the agent (queued behind the visitor's own action, the address is written). */
@@ -141,7 +157,10 @@ export function Gallery({ slides, lang, autoplaySeconds, categoryLabels = DEFAUL
   useEffect(() => {
     const track = trackRef.current;
     if (!track || track.clientWidth === 0) return;
-    if (clamp(track.scrollLeft / track.clientWidth) === current) return;
+    // "already there" is only true when no slide to ANOTHER photo is still flying: a second agent request that arrives while the track passes
+    // its photo would otherwise be skipped, and the first slide would settle on the old one (confirmed to the agent, never shown)
+    const flyingElsewhere = pending.current !== null && pending.current !== current;
+    if (!flyingElsewhere && clamp(track.scrollLeft / track.clientWidth) === current) return;
     pending.current = current;
     if (typeof track.scrollTo === "function") track.scrollTo({ left: current * track.clientWidth, behavior: reducedMotion ? "auto" : "smooth" });
   }, [current, st.revision, clamp, reducedMotion]);

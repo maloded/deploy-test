@@ -50,8 +50,8 @@
   --space-5: 48px;
   --space-6: 80px;
   --space-7: 120px;
-  --container: 1180px;
-  --container-wide: 1320px; /* optional: width of the hero (default: --container) */
+  --container: 1140px;
+  --container-wide: 1280px; /* optional: width of the hero (default: --container) */
   --hero-headline-size: clamp(2rem, 4vw, 3.75rem); /* optional: size of the hero headline (default clamp(1.9rem, 4vw, 3.25rem)) */
   --hero-photo-min-width: 30%; /* optional: narrowest hero photo, a share of the container (default 40%) */
   --hero-frame-max-ratio: 4 / 3; /* optional: widest frame ratio (default 16 / 9); 4 / 3 shows a 4:3 photo without a crop */
@@ -64,6 +64,7 @@
   --avatar-stage: #243049; /* optional: the dark stage of the card: navy here, the background of the recoloured dark loops */
   --avatar-edge: 0 0 0 1px var(--accent), 0 0 0 6px color-mix(in srgb, var(--accent) 8%, transparent); /* optional: the card's edge: a 1px line in the accent and a faint 5px halo around it */
   --avatar-ink: #f7f1ec; /* optional: the text and light parts on that stage */
+  --hero-panel-edge: var(--bg); /* optional: where the backdrop of a cut-out hero panel ends at its edges: the page background here */
   --avatar-live: #22c55e; /* optional: the dot of the live-call pill */
   --avatar-danger: linear-gradient(135deg, #8a3b3b, #a24f4f); /* optional: the disc of the call button after an error (a darker, desaturated red here, next to the gold) */
   --call-ring-1: 0.35; /* optional: the strength of the call button's two rest rings and of its outward waves (Hanc: 0.5, 0.22 and 0.9); softer here */

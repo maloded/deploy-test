@@ -380,6 +380,15 @@ describe("hero photo fit", () => {
     expect(new Set(outs).size).toBe(5); // and only the photo zone differs
   });
 
+  it("a cut-out hero (media.heroCutout) is never cropped and is marked, so the theme paints its backdrop; without the flag nothing is marked", () => {
+    const plain = html(<Hero site={withHero("hero.jpg")} />);
+    expect(plain).not.toContain("data-cutout");
+    const cut = withProduct(withHero("hero.jpg"), (p) => (p.media.heroCutout = true));
+    const out = html(<Hero site={cut} />);
+    expect(out).toContain('<div class="hero__photo" data-fit="contain" data-cutout="true">');
+    expect(/<img [^>]*class="hero__image"[^>]*>/.exec(out)![0]).not.toContain("object-position");
+  });
+
   it("shows a placeholder frame, in the same frame, when the file is missing", () => {
     const out = html(<Hero site={{ ...site, images: {} }} />);
     expect(out).toContain('<div class="hero__photo" data-fit="cover">');

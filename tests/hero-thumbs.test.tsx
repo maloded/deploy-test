@@ -26,6 +26,13 @@ describe("which photos the thumbnails are", () => {
     expect(heroThumbs(SLIDES, "/p3.jpg")[0].position).toBeUndefined();
     expect(heroThumbs(SLIDES, "/p2.jpg")[0].position).toBe("30% 40%");
   });
+  it("a photo that has a cut-out is shown by it, and a hero that IS that cut-out counts as that photo (the tiles are the photos after it)", () => {
+    const cut = (n: number) => ({ ...slide(n), cutout: { src: `/c${n}.webp`, width: 1500, height: 1000 } });
+    const slides = [cut(1), cut(2), slide(3), cut(4)];
+    expect(heroThumbs(slides, "/c1.webp").map((t) => [t.n, t.src, t.width, t.cutout])).toEqual([[2, "/c2.webp", 1500, true], [3, "/p3.jpg", 800, false]]);
+    expect(heroThumbs(slides, "/c1.webp")[0].position).toBeUndefined(); // a cut-out is never cropped: no focus point
+    expect(heroThumbs(slides, "/p2.jpg").map((t) => t.n)).toEqual([3, 4]); // the photo's own file works as before
+  });
   it("are the first two when the hero photo is not in the gallery, and fewer when the gallery has fewer left", () => {
     expect(heroThumbs(SLIDES, "/other.jpg").map((t) => t.n)).toEqual([1, 2]);
     expect(heroThumbs(SLIDES, undefined).map((t) => t.n)).toEqual([1, 2]);

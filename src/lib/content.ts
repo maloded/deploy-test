@@ -25,6 +25,20 @@ export class ContentError extends Error {
   }
 }
 
+/**
+ * "?v=<size and time of the served copy>" for a photo, or "" when there is no served copy (a test, a bare clone). The served copy is
+ * public/media/<ref>/<file> (made by `npm run images`). A changed picture is then another address, so neither Next's image cache
+ * (keyed by address and kept in .next across restarts) nor a browser can hand out the old one.
+ */
+export function mediaVersion(ref: string, file: string, root: string = process.cwd()): string {
+  try {
+    const stat = fs.statSync(/*turbopackIgnore: true*/ path.join(root, "public", "media", ref, file));
+    return `?v=${stat.size.toString(36)}${Math.floor(stat.mtimeMs / 1000).toString(36)}`;
+  } catch {
+    return "";
+  }
+}
+
 export type MediaImage = { src: string; width: number; height: number };
 
 export type LoadedProduct = {
@@ -123,7 +137,10 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
   if (file.slug !== slug) issues.push(`slug: is "${file.slug}" but the folder is named "${slug}"`);
 
   const refs: { where: string; file: string }[] = [{ where: "media.hero", file: file.media.hero }];
-  file.media.gallery.forEach((g, i) => refs.push({ where: `media.gallery.${i}.file`, file: g.file }));
+  file.media.gallery.forEach((g, i) => {
+    refs.push({ where: `media.gallery.${i}.file`, file: g.file });
+    if (g.cutout) refs.push({ where: `media.gallery.${i}.cutout`, file: g.cutout });
+  });
   if (file.media.background) refs.push({ where: "media.background", file: file.media.background });
   if (file.media.video && !/^https?:\/\//i.test(file.media.video)) {
     refs.push({ where: "media.video", file: file.media.video });
@@ -152,7 +169,7 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
     if (IMAGE_EXT.test(r.file) && !images[r.file]) {
       try {
         const { width, height } = readImageSize(abs);
-        images[r.file] = { src: `/media/${ref}/${r.file}`, width, height };
+        images[r.file] = { src: `/media/${ref}/${r.file}${mediaVersion(ref, r.file)}`, width, height };
       } catch (e) {
         issues.push(`${r.where}: ${(e as Error).message}`);
       }

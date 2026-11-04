@@ -7,7 +7,7 @@ export type GalleryCategory = (typeof GALLERY_CATEGORIES)[number];
 /** Lower-case words joined by single hyphens: "front-side", "mileage-reading". */
 export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-export type GalleryItemRef = { id: string; aliases?: readonly string[]; category: GalleryCategory; hotspots?: readonly { id: string }[] };
+export type GalleryItemRef = { id: string; aliases?: readonly string[]; category: GalleryCategory; hotspots?: readonly { id: string; aliases?: readonly string[] }[] };
 
 /** The one sequence: exterior, then interior, then details; inside a category the order of the file. Stable, never mutates. */
 export function orderGallery<T extends { category: GalleryCategory }>(items: readonly T[]): T[] {
@@ -31,10 +31,13 @@ export function indexOfPhoto(items: readonly GalleryItemRef[], name: string): nu
   return byId >= 0 ? byId : items.findIndex((g) => g.aliases?.includes(name));
 }
 
-/** Where a spot is: the photo index and the spot id, or null. */
-export function findSpot(items: readonly GalleryItemRef[], spotId: string): { index: number; spotId: string } | null {
-  const index = items.findIndex((g) => g.hotspots?.some((h) => h.id === spotId));
-  return index >= 0 ? { index, spotId } : null;
+/** Where a spot is, by its id or an alias: the photo index and the spot's own (canonical) id, or null. */
+export function findSpot(items: readonly GalleryItemRef[], name: string): { index: number; spotId: string } | null {
+  for (let index = 0; index < items.length; index++) {
+    const spot = items[index].hotspots?.find((h) => h.id === name) ?? items[index].hotspots?.find((h) => h.aliases?.includes(name));
+    if (spot) return { index, spotId: spot.id };
+  }
+  return null;
 }
 
 /** What an address means for the gallery. `unknown` is a gallery-looking address that names nothing here. */
@@ -71,7 +74,10 @@ export function resolveGalleryHash(items: readonly GalleryItemRef[], hash: strin
   }
   if (m[1] === "photo") {
     const index = indexOfPhoto(items, rest);
-    return index >= 0 ? { kind: "photo", index } : { kind: "unknown", reason: `no photo "${rest}"` };
+    if (index >= 0) return { kind: "photo", index };
+    // a name that is no photo but a spot opens that spot (the photo with its card): "#photo-seats"
+    const spot = findSpot(items, rest);
+    return spot ? { kind: "spot", ...spot } : { kind: "unknown", reason: `no photo "${rest}"` };
   }
   const spot = findSpot(items, rest);
   return spot ? { kind: "spot", ...spot } : { kind: "unknown", reason: `no spot "${rest}"` };

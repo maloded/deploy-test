@@ -83,6 +83,26 @@ describe("make-web-images", () => {
     expect(third.filter((r) => r.action !== "cached").map((r) => r.file)).toEqual(["photo-1.jpg", "og-1200x630.jpg"]);
   });
 
+  it("redoes a source that is put back with an OLDER date (a restore must not be taken for 'the copy is newer')", async () => {
+    const content = path.join(tmp, "content3");
+    fs.cpSync(FIXTURE_DIR, content, { recursive: true });
+    const outDir = path.join(tmp, "out3");
+    const original = path.join(content, fixtures.ref("fixture-car"), "media", "photo-1.jpg");
+    await makeWebImages({ contentDir: content, outDir });
+    // another picture takes the file's place, then the first one comes back with a date from long ago (cp -p, a backup restore)
+    const mine = fs.readFileSync(original);
+    fs.copyFileSync(path.join(content, fixtures.ref("fixture-car"), "media", "photo-2.jpg"), original);
+    await makeWebImages({ contentDir: content, outDir });
+    fs.writeFileSync(original, mine);
+    const old = new Date("2020-01-01T00:00:00Z");
+    fs.utimesSync(original, old, old);
+    const back = await makeWebImages({ contentDir: content, outDir });
+    expect(back.filter((r) => r.action === "resized").map((r) => r.file)).toContain("photo-1.jpg");
+    const served = await sharp(path.join(outDir, fixtures.ref("fixture-car"), "photo-1.jpg")).stats();
+    const wanted = await sharp(mine).stats();
+    expect(Math.round(served.channels[0].mean / 4)).toBe(Math.round(wanted.channels[0].mean / 4));
+  });
+
   it("removes outputs whose source is gone", async () => {
     const content = path.join(tmp, "content-gone");
     fs.cpSync(FIXTURE_DIR, content, { recursive: true });

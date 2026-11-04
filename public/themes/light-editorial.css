@@ -64,6 +64,7 @@
   --avatar-orb-b: #ec4899;
   --avatar-stage: #120e0c; /* optional: the dark stage of the card (the card is a screen in both themes) */
   --avatar-ink: #f7f1ec; /* optional: the text and light parts on that stage */
+  --hero-panel-edge: color-mix(in srgb, var(--accent) 50%, var(--avatar-stage)); /* optional: where the backdrop of a cut-out hero panel ends at its edges: halfway between the primary button (--accent, gold-brown) and the card stage colour here */
   --avatar-live: #22c55e; /* optional: the dot of the live-call pill */
   --avatar-danger: linear-gradient(135deg, #dc2626, #ef4444); /* optional: the disc of the call button after an error */
 }

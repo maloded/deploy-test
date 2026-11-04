@@ -6,7 +6,7 @@ import { examples } from "./helpers";
 const SEQ: GalleryItemRef[] = [
   { id: "front", category: "exterior" },
   { id: "rear", aliases: ["back"], category: "exterior" },
-  { id: "cabin", category: "interior", hotspots: [{ id: "seats" }, { id: "roof" }] },
+  { id: "cabin", category: "interior", hotspots: [{ id: "seats" }, { id: "roof", aliases: ["panoramic-roof"] }] },
   { id: "cockpit", aliases: ["steering-wheel-panel"], category: "interior" },
   { id: "mileage", category: "details", hotspots: [{ id: "mileage-reading" }] },
 ];
@@ -39,6 +39,8 @@ describe("ids and aliases", () => {
     expect(indexOfPhoto(SEQ, "nope")).toBe(-1);
     expect(findSpot(SEQ, "roof")).toEqual({ index: 2, spotId: "roof" });
     expect(findSpot(SEQ, "front")).toBeNull();
+    // an alias finds the spot and answers with its own id
+    expect(findSpot(SEQ, "panoramic-roof")).toEqual({ index: 2, spotId: "roof" });
   });
   it("slugs are lower-case words joined by single hyphens", () => {
     for (const ok of ["front", "front-side", "a1", "mileage-reading"]) expect(SLUG_PATTERN.test(ok), ok).toBe(true);
@@ -63,6 +65,12 @@ describe("resolveGalleryHash: every address of the API table", () => {
     expect(r("#photo-back")).toEqual({ kind: "photo", index: 1 });
   });
   it("a spot: its photo and the spot", () => expect(r("#spot-seats")).toEqual({ kind: "spot", index: 2, spotId: "seats" }));
+  it("a spot by an alias is the canonical spot", () => expect(r("#spot-panoramic-roof")).toEqual({ kind: "spot", index: 2, spotId: "roof" }));
+  it("#photo-<name> that is no photo but a spot (or an alias of one) opens that spot; a real photo name still wins", () => {
+    expect(r("#photo-seats")).toEqual({ kind: "spot", index: 2, spotId: "seats" });
+    expect(r("#photo-panoramic-roof")).toEqual({ kind: "spot", index: 2, spotId: "roof" });
+    expect(r("#photo-cockpit")).toEqual({ kind: "photo", index: 3 });
+  });
   it("unknown names are reported, never silently mapped", () => {
     for (const h of ["#gallery-6", "#gallery-0", "#gallery-01", "#gallery-garden", "#photo-nope", "#spot-nope", "#spot-cockpit", "#photo-"]) {
       expect(r(h), h).toMatchObject({ kind: "unknown" });
@@ -111,9 +119,23 @@ describe("the schema checks of the gallery", () => {
     p.media.gallery = [photo("a", { hotspots: [spot("s", { x: 1.2 })] })];
     expect(issues(p).join("\n")).toMatch(/hotspots\.0\.x/);
     p.media.gallery = [photo("a", { hotspots: [spot("s", { text: undefined })] })];
-    expect(issues(p).join("\n")).toMatch(/needs specKeys or text/);
+    expect(issues(p).join("\n")).toMatch(/needs specKeys, facts or text/);
     p.media.gallery = [photo("a", { hotspots: [spot("s", { specKeys: ["nonsense"] })] })];
     expect(issues(p).join("\n")).toMatch(/hotspots\.0\.specKeys\.0: no spec with key "nonsense"/);
+  });
+  it("spot aliases are unique among spot names, and an alias may not repeat a spot id", () => {
+    const p = base();
+    const spot = (id: string, extra: object = {}) => ({ id, x: 0.5, y: 0.5, label: { en: id }, text: { en: "t" }, ...extra });
+    p.media.gallery = [photo("a", { hotspots: [spot("s", { aliases: ["x"] })] }), photo("b", { hotspots: [spot("t", { aliases: ["x"] })] })];
+    expect(issues(p).join("\n")).toMatch(/media\.gallery\.1\.hotspots\.0\.aliases\.0: "x" is already used by media\.gallery\.0\.hotspots\.0\.aliases\.0/);
+    p.media.gallery = [photo("a", { hotspots: [spot("s"), spot("t", { aliases: ["s"] })] })];
+    expect(issues(p).join("\n")).toMatch(/hotspots\.1\.aliases\.0: "s" is already used/);
+  });
+  it("a spot may have explicit rows (label and value in each language) instead of spec keys", () => {
+    const p = base();
+    const ok = { id: "s", x: 0.5, y: 0.5, label: { en: "s" }, facts: [{ label: { en: "Doors" }, value: { en: "5" } }] };
+    p.media.gallery = [photo("a", { hotspots: [ok] })];
+    expect(issues(p)).toEqual([]);
   });
   it("a photo id and a spot id may be the same word (their addresses differ)", () => {
     const p = base();

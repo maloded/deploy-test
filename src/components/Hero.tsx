@@ -32,7 +32,9 @@ export function Hero({ site }: { site: Site }) {
   const lead = splitLead(heroDescription(product, lang));
   const mobile = heroMobile(product, typeFields, lang);
   const hasCard = Boolean(site.seller.agent && site.avatar);
-  const fit = image ? heroFit(image.width, image.height, frameRangeForTheme(site.theme)) : "cover";
+  const cutout = product.media.heroCutout === true;
+  // a cut-out is never cropped (contain), and its backdrop is the theme's (see .hero__photo[data-cutout])
+  const fit = image ? (cutout ? "contain" : heroFit(image.width, image.height, frameRangeForTheme(site.theme))) : "cover";
 
   // with the agent's card the left column has room beside the photo: the next two gallery photos after the hero one, as thumbnails that open the gallery
   // at that photo (the same deep link as /#gallery-N). Only when the page renders the gallery block.
@@ -43,7 +45,7 @@ export function Hero({ site }: { site: Site }) {
   const stage = (
     <>
       <h1 className="hero__headline">{heroHeadline(product, lang)}</h1>
-      <div className="hero__photo" data-fit={fit} data-thumbs={thumbs.length > 0 ? thumbs.length : undefined}>
+      <div className="hero__photo" data-fit={fit} data-cutout={cutout ? "true" : undefined} data-thumbs={thumbs.length > 0 ? thumbs.length : undefined}>
         <div className="hero__frame">
           <div className="hero__box">
             {image ? (
@@ -71,7 +73,7 @@ export function Hero({ site }: { site: Site }) {
         {thumbs.length > 0 && (
           <HeroThumbs>
             {thumbs.map((t) => (
-              <a key={t.n} className="hero__thumb" href={`#gallery-${t.n}`}>
+              <a key={t.n} className="hero__thumb" href={`#gallery-${t.n}`} data-cutout={t.cutout ? "true" : undefined}>
                 <Image className="hero__thumb-image" src={t.src} width={t.width} height={t.height} alt={t.alt} sizes="(min-width: 56em) 16rem, 0px" style={t.position ? { objectPosition: t.position } : undefined} />
               </a>
             ))}

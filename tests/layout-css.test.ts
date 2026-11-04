@@ -377,3 +377,81 @@ describe("the header logo and the hotspot card", () => {
     expect(/\.gallery__spot-card\s*\{\s*position:\s*relative;\s*inset:\s*auto;/.test(css)).toBe(true);
   });
 });
+
+describe("the cut-out hero's backdrop", () => {
+  const css = fs.readFileSync(path.join(process.cwd(), "src", "app", "globals.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const body = /\.hero__photo\[data-cutout\] \.hero__box,\s*\.hero__thumb\[data-cutout\]\s*\{([^}]*)\}/.exec(css)?.[1] ?? "";
+
+  it("is for the big photo and for the tiles alike: one radial gradient from the card's stage colour (with its ink) at the van out to the theme's edge token, with fallbacks", () => {
+    expect(body).not.toBe("");
+    expect(body).toMatch(/radial-gradient\(\s*ellipse/);
+    expect(body).not.toMatch(/linear-gradient/); // one shape, no second layer that could show as a ring or a band
+    expect(body).toMatch(/var\(--hero-panel-edge, var\(--avatar-stage, var\(--surface\)\)\)\s+100%/); // ends in the edge colour
+    expect(body).toMatch(/var\(--avatar-ink, white\)/);
+    expect(body).not.toMatch(/#[0-9a-f]{3,8}\b|rgba?\(/i); // no colour of its own: only the theme's tokens
+  });
+
+  it("is smooth: at least ten stops, and the share of the edge colour never jumps by more than a fifth between two neighbours", () => {
+    const shares = [...body.matchAll(/--hero-panel-edge, var\(--avatar-stage, var\(--surface\)\)\) ([\d.]+)%/g)].map((m) => Number(m[1]));
+    expect(shares.length).toBeGreaterThanOrEqual(9);
+    for (let i = 1; i < shares.length; i++) {
+      expect(shares[i]).toBeGreaterThan(shares[i - 1]);
+      expect(shares[i] - shares[i - 1]).toBeLessThanOrEqual(20);
+    }
+  });
+
+  it("keeps the rounded panel (no radius reset) and shows the van whole, with room around it", () => {
+    expect(body).not.toMatch(/border-radius/);
+    expect(css).toMatch(/\.hero__photo\[data-cutout\] \.hero__image,\s*\.hero__thumb\[data-cutout\] \.hero__thumb-image\s*\{[^}]*object-fit:\s*contain;[^}]*padding:/);
+  });
+});
+
+describe("the edge of the hero panel in the bundled themes", () => {
+  const theme = (t: string) => fs.readFileSync(path.join(process.cwd(), "public", "themes", `${t}.css`), "utf8");
+  it("is halfway between the primary button and the card's stage in the light theme and the page background in the dark one, both by token (no colour value)", () => {
+    expect(theme("light-editorial")).toMatch(/--hero-panel-edge:\s*color-mix\(in srgb, var\(--accent\) 50%, var\(--avatar-stage\)\);/);
+    expect(theme("dark-premium")).toMatch(/--hero-panel-edge:\s*var\(--bg\);/);
+  });
+});
+
+describe("one screen: the short-window hero and the gallery", () => {
+  const css = fs.readFileSync(path.join(process.cwd(), "src", "app", "globals.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  /** Every block with this media prelude, joined (the same query may appear more than once). */
+  const at = (media: string) => {
+    let all = "";
+    for (let start = css.indexOf(`@media ${media} {`); start >= 0; start = css.indexOf(`@media ${media} {`, start + 1)) all += css.slice(start, css.indexOf("\n}\n", start));
+    return all;
+  };
+
+  it("under 50em tall the row's floor is 15rem, the card may be 11rem wide, the photo zone 8rem, and the gap to the divider is 24px", () => {
+    const tier = at("(min-width: 56em) and (min-height: 37.5em) and (max-height: 50em)");
+    expect(tier).toMatch(/\.hero__top\s*\{[^}]*min-height:\s*15rem;[^}]*margin-bottom:\s*var\(--space-4\)/);
+    expect(tier).toMatch(/\.hero__slot\s*\{[^}]*min-width:\s*11rem/);
+    expect(tier).toMatch(/\.hero__photo\s*\{[^}]*min-height:\s*8rem/);
+  });
+
+  it("under 45em tall the gap is 16px and the description is three lines; the eyebrow band keeps its height (the invitation must clear the header)", () => {
+    const tier = at("(min-width: 56em) and (min-height: 37.5em) and (max-height: 45em)");
+    expect(tier).toMatch(/\.hero__top\s*\{[^}]*margin-bottom:\s*var\(--space-3\)/);
+    expect(tier).toMatch(/line-clamp:\s*3/);
+    expect(tier).not.toMatch(/lead-in/);
+  });
+
+  it("between 801 and 960px tall the right column below the divider is tightened (16/0/16/8px), the floors are lowered, and under 864px the buttons are 2.6rem high", () => {
+    const tier = at("(min-width: 56em) and (min-height: 50.01em) and (max-height: 60em)");
+    expect(tier).toMatch(/\.hero__intro-grid\s*\{[^}]*padding-top:\s*var\(--space-3\)/);
+    expect(tier).toMatch(/\.hero__figure\s*\{[^}]*gap:\s*0/);
+    expect(tier).toMatch(/\.hero__actions\s*\{[^}]*gap:\s*var\(--space-2\);[^}]*margin-top:\s*var\(--space-3\)/);
+    expect(tier).toMatch(/\.hero__top\s*\{[^}]*min-height:\s*18rem/);
+    expect(tier).toMatch(/\.hero__slot\s*\{[^}]*min-width:\s*13rem/);
+    const buttons = at("(min-width: 56em) and (min-height: 50.01em) and (max-height: 54em)");
+    expect(buttons).toMatch(/\.hero__actions \.button\s*\{[^}]*height:\s*2\.6rem/);
+    expect(tier + buttons).not.toMatch(/font-size|amount/); // the price and the button text keep their sizes
+  });
+
+  it("the gallery stage and its thumbnails are as wide as the window's height leaves room for, times the photo's ratio, and never wider than the container", () => {
+    expect(css).toMatch(/--gallery-stage-w:\s*min\(100%, calc\(\(100svh - var\(--gallery-chrome, 10\.5rem\)\) \* var\(--gallery-ratio-n, 1\.5\)\)\)/);
+    expect(css).toMatch(/\.gallery__viewport\s*\{[^}]*width:\s*var\(--gallery-stage-w, 100%\);[^}]*margin-inline:\s*auto/);
+    expect(css).toMatch(/\.gallery__thumbs-wrap\s*\{[^}]*width:\s*var\(--gallery-stage-w, 100%\);[^}]*margin-inline:\s*auto/);
+  });
+});

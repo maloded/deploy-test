@@ -486,6 +486,38 @@ main:focus-visible {
   background: var(--surface);
 }
 
+/*
+ * A cut-out hero photo (media.heroCutout: a PNG or WebP on transparency) and the cut-out tiles beside it sit on a rounded panel painted like the agent card
+ * of the theme: lighter where the van is (the card's stage colour with a little of its ink, --avatar-stage and --avatar-ink), deeper towards the edges, where
+ * it blends into the theme's --hero-panel-edge (a mix of the primary button and the card's stage in the light theme, the page background in the dark one;
+ * without it the stage colour).
+ * One radial gradient with eleven stops on an ease-in-out curve (a smoothstep of the share of the edge colour), so there is no visible ring or band. The van
+ * has no box of its own inside the panel (the file is transparent).
+ */
+.hero__photo[data-cutout] .hero__box,
+.hero__thumb[data-cutout] {
+  background: radial-gradient(
+    ellipse 80% 82% at 50% 42%,
+    color-mix(in srgb, var(--avatar-stage, var(--surface)) 88%, var(--avatar-ink, white)) 0%,
+    color-mix(in srgb, var(--hero-panel-edge, var(--avatar-stage, var(--surface))) 2.8%, color-mix(in srgb, var(--avatar-stage, var(--surface)) 88%, var(--avatar-ink, white))) 10%,
+    color-mix(in srgb, var(--hero-panel-edge, var(--avatar-stage, var(--surface))) 10.4%, color-mix(in srgb, var(--avatar-stage, var(--surface)) 88%, var(--avatar-ink, white))) 20%,
+    color-mix(in srgb, var(--hero-panel-edge, var(--avatar-stage, var(--surface))) 21.6%, color-mix(in srgb, var(--avatar-stage, var(--surface)) 88%, var(--avatar-ink, white))) 30%,
+    color-mix(in srgb, var(--hero-panel-edge, var(--avatar-stage, var(--surface))) 35.2%, color-mix(in srgb, var(--avatar-stage, var(--surface)) 88%, var(--avatar-ink, white))) 40%,
+    color-mix(in srgb, var(--hero-panel-edge, var(--avatar-stage, var(--surface))) 50%, color-mix(in srgb, var(--avatar-stage, var(--surface)) 88%, var(--avatar-ink, white))) 50%,
+    color-mix(in srgb, var(--hero-panel-edge, var(--avatar-stage, var(--surface))) 64.8%, color-mix(in srgb, var(--avatar-stage, var(--surface)) 88%, var(--avatar-ink, white))) 60%,
+    color-mix(in srgb, var(--hero-panel-edge, var(--avatar-stage, var(--surface))) 78.4%, color-mix(in srgb, var(--avatar-stage, var(--surface)) 88%, var(--avatar-ink, white))) 70%,
+    color-mix(in srgb, var(--hero-panel-edge, var(--avatar-stage, var(--surface))) 89.6%, color-mix(in srgb, var(--avatar-stage, var(--surface)) 88%, var(--avatar-ink, white))) 80%,
+    color-mix(in srgb, var(--hero-panel-edge, var(--avatar-stage, var(--surface))) 97.2%, color-mix(in srgb, var(--avatar-stage, var(--surface)) 88%, var(--avatar-ink, white))) 90%,
+    var(--hero-panel-edge, var(--avatar-stage, var(--surface))) 100%
+  );
+}
+
+.hero__photo[data-cutout] .hero__image,
+.hero__thumb[data-cutout] .hero__thumb-image {
+  object-fit: contain;
+  padding: var(--space-2);
+}
+
 .hero__image {
   position: absolute;
   inset: 0;
@@ -1212,6 +1244,98 @@ main:focus-visible {
   }
 }
 
+/*
+ * Windows between 801 and 960px tall (a 1080p screen with the browser bars, a 900px laptop): the two buttons are still stacked here, so the right column below
+ * the divider (price, note, button, button) is the lowest part of the hero. Its vertical spacing is tightened first: divider to price 24 -> 16px, price to
+ * note 4 -> 0, note to the first button 24 -> 16px, between the buttons 16 -> 8px. Under 864px the buttons are a little lower (3rem -> 2.6rem; the text keeps
+ * its size and the price keeps its size). Only if that is not enough does the row of the photo and the card give: its floor is 18rem here (was 24rem), and the
+ * card may be 13rem wide (was 18rem). Under 801px the compact tier below takes over.
+ */
+@media (min-width: 56em) and (min-height: 50.01em) and (max-height: 60em) {
+  .hero__top {
+    min-height: 18rem;
+  }
+
+  .hero__slot {
+    min-width: 13rem;
+  }
+
+  .hero__intro-grid {
+    padding-top: var(--space-3);
+  }
+
+  .hero__figure {
+    gap: 0;
+  }
+
+  .hero__actions {
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+}
+
+@media (min-width: 56em) and (min-height: 50.01em) and (max-height: 54em) {
+  .hero__actions .button {
+    height: 2.6rem;
+  }
+}
+
+/*
+ * Short wide windows (a laptop or a 1080p screen with the browser bars): the whole hero, header to the last button, is the first screen. The row of the photo
+ * and the card takes what is left (flex), so the lower parts only have to be as tight as the window needs. In two steps by height, the spacing first:
+ *   under 50em (800px): the gap between the row and the divider is 24px (was 40), the facts row sits 8px closer to the text above it;
+ *   under 45em (720px): the headline's and the photo's margins, the divider and the facts row are tighter again, the description is three lines (was four).
+ * The band of the eyebrow keeps its height (3.4rem): the invitation hangs into it and must stay clear of the header.
+ * and the floors that stop a hero from being squeezed are lowered, so the panels and the card (which stay level and 4:5) are the last thing to give:
+ * the row's floor is 15rem (was 24rem), the card may be as narrow as 11rem (was 18rem), the photo zone as low as 8rem (was 12rem).
+ * The headline, the price and the buttons keep their sizes.
+ */
+@media (min-width: 56em) and (min-height: 37.5em) and (max-height: 50em) {
+  .hero__top {
+    min-height: 15rem;
+    margin-bottom: var(--space-4);
+  }
+
+  .hero__slot {
+    min-width: 11rem;
+  }
+
+  .hero__photo {
+    min-height: 8rem;
+  }
+
+  .hero__facts {
+    margin-top: var(--space-2);
+  }
+}
+
+@media (min-width: 56em) and (min-height: 37.5em) and (max-height: 45em) {
+  .hero__stage {
+    padding-top: var(--space-2);
+  }
+
+  .hero__top {
+    margin-bottom: var(--space-3);
+  }
+
+  .hero__photo {
+    margin-block: var(--space-2) var(--space-2);
+  }
+
+  .hero__intro {
+    padding-bottom: var(--space-2);
+  }
+
+  .hero__intro-grid {
+    padding-block: var(--space-3) var(--space-2);
+  }
+
+  .hero__description {
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+}
+
 .sofia-intro__heading {
   margin: 0;
   font-family: var(--font-heading);
@@ -1601,9 +1725,29 @@ main:focus-visible {
   padding-block: var(--space-5);
 }
 
+/*
+ * The stage is never taller than the window leaves room for: its width is the window's height less the controls under it (dots, the category marker and
+ * the thumbnails, --gallery-chrome, with a little air above and below), times the photo's ratio, and never more than the container. So the photo keeps its
+ * ratio (nothing is cropped, the spots stay on their places) and the stage, the dots, the tabs and the thumbnails are one screen; the controls are as wide
+ * as the stage. On a tall window the cap is above the container's width and changes nothing (and on a phone held upright likewise).
+ */
+.gallery {
+  --gallery-chrome: 5rem; /* a phone: the dots and the category marker only */
+  --gallery-stage-w: min(100%, calc((100vh - var(--gallery-chrome, 10.5rem)) * var(--gallery-ratio-n, 1.5)));
+  --gallery-stage-w: min(100%, calc((100svh - var(--gallery-chrome, 10.5rem)) * var(--gallery-ratio-n, 1.5)));
+}
+
+@media (width >= 56.25em) {
+  .gallery {
+    --gallery-chrome: 10.5rem; /* with the thumbnail strip: the dots and the marker (about 3rem), the strip (4.5rem) and the air */
+  }
+}
+
 /* gallery: scroll-snap track, so touch swipe and momentum are native */
 .gallery__viewport {
   position: relative;
+  width: var(--gallery-stage-w, 100%);
+  margin-inline: auto;
 }
 
 .gallery__track {
@@ -1918,7 +2062,9 @@ main:focus-visible {
 .gallery__thumbs-wrap {
   position: relative;
   flex: 1;
+  width: var(--gallery-stage-w, 100%);
   min-width: 0;
+  margin-inline: auto;
 }
 
 /* soft edge fades (painted with the page color) show that the strip scrolls; they appear only on the sides with more */

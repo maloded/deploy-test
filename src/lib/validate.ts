@@ -28,10 +28,13 @@ function checkDetails(
   if (!r.success) issues.push(...formatIssues(r.error, path));
 }
 
-/** Ids are the addresses the page and the voice agent use, so they must be unambiguous: unique photo ids and aliases, unique spot ids, real spec keys. */
+/**
+ * Ids are the addresses the page and the voice agent use, so they must be unambiguous: unique photo ids and aliases, unique spot ids and
+ * aliases (a photo and a spot may share a name: "#photo-x" is the photo, "#spot-x" the spot, and "#photo-x" is the spot only when no photo has that name), real spec keys.
+ */
 function checkGallery(p: ProductFile, issues: string[]) {
   const photoNames = new Map<string, string>(); // id or alias -> where it was first used
-  const spotIds = new Map<string, string>();
+  const spotNames = new Map<string, string>();
   const specKeys = new Set(p.specs.map((s) => s.key));
   p.media.gallery.forEach((g, i) => {
     const claim = (name: string, where: string) => {
@@ -41,11 +44,17 @@ function checkGallery(p: ProductFile, issues: string[]) {
     };
     claim(g.id, `media.gallery.${i}.id`);
     g.aliases?.forEach((a, j) => claim(a, `media.gallery.${i}.aliases.${j}`));
+  });
+  p.media.gallery.forEach((g, i) => {
     g.hotspots?.forEach((h, j) => {
       const where = `media.gallery.${i}.hotspots.${j}`;
-      const first = spotIds.get(h.id);
-      if (first) issues.push(`${where}.id: "${h.id}" is already used by ${first} (spot ids are unique in the gallery)`);
-      else spotIds.set(h.id, where);
+      const claim = (name: string, at: string) => {
+        const first = spotNames.get(name);
+        if (first) issues.push(`${at}: "${name}" is already used by ${first} (spot ids and aliases are unique in the gallery)`);
+        else spotNames.set(name, at);
+      };
+      claim(h.id, `${where}.id`);
+      h.aliases?.forEach((a, k) => claim(a, `${where}.aliases.${k}`));
       h.specKeys?.forEach((key, k) => {
         if (!specKeys.has(key)) issues.push(`${where}.specKeys.${k}: no spec with key "${key}". Spec keys: ${[...specKeys].join(", ") || "(none)"}`);
       });

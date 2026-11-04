@@ -14,7 +14,7 @@ const base = galleryProps(siteFor("fixture-car"));
 // the fixture has no spots: give the third photo (cabin) two, one with facts from specs and one with a text
 const slides: GallerySlide[] = base.slides.map((s) =>
   s.id === "cabin"
-    ? { ...s, spots: [{ id: "seats", x: 0.3, y: 0.5, label: "Seats", facts: [{ label: "Seats", value: "7 (2-2-3)" }], text: null }, { id: "roof", x: 0.5, y: 0.1, label: "Roof", facts: [], text: "Panoramic glass roof" }] }
+    ? { ...s, spots: [{ id: "seats", aliases: [], x: 0.3, y: 0.5, label: "Seats", facts: [{ label: "Seats", value: "7 (2-2-3)" }], text: null }, { id: "roof", aliases: [], x: 0.5, y: 0.1, label: "Roof", facts: [], text: "Panoramic glass roof" }] }
     : s,
 );
 const props = { ...base, slides };
@@ -230,6 +230,34 @@ describe("addresses and the agent: showAddress", () => {
     expect(view().photo).toBe("boot");
   });
 
+  describe("the whole block is on screen after a scroll", () => {
+    const rect = (top: number, bottom: number) => ({ top, bottom, left: 0, right: 100, width: 100, height: bottom - top, x: 0, y: top, toJSON: () => ({}) }) as DOMRect;
+    const withLayout = (innerHeight: number) => {
+      mount(<Gallery {...props} />);
+      const sec = section();
+      sec.scrollIntoView = vi.fn();
+      sec.getBoundingClientRect = () => rect(1000, 2040);
+      (sec.querySelector(".gallery__viewport") as HTMLElement).getBoundingClientRect = () => rect(1131, 1859); // 131 under the section's top, 728 high
+      (sec.querySelector(".gallery__thumbs-wrap") as HTMLElement).getBoundingClientRect = () => rect(1900, 2004);
+      Object.defineProperty(window, "innerHeight", { configurable: true, value: innerHeight });
+      return sec;
+    };
+
+    it("when the title and the block do not fit together, the scroll goes past the section's top so the stage starts 16px under the window's top", () => {
+      const sec = withLayout(900);
+      act(() => void sec.showAddress("#photo-rear"));
+      expect(sec.style.scrollMarginTop).toBe("-115px"); // 131 above the stage, less 16
+      expect(sec.scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+    });
+
+    it("when they do fit, the title stays in view and there is no scroll margin", () => {
+      const sec = withLayout(1400);
+      sec.style.scrollMarginTop = "-5px"; // left from an earlier scroll: cleared
+      act(() => void sec.showAddress("#photo-rear"));
+      expect(sec.style.scrollMarginTop).toBe("");
+    });
+  });
+
   it("unknown names are unhandled, never silently mapped, and change nothing", () => {
     mount(<Gallery {...props} />);
     vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -330,6 +358,28 @@ describe("the agent's own slide is not the visitor's activity", () => {
     let result = "";
     act(() => void (result = section().showAddress("#photo-detail")));
     expect(result).toBe("queued");
+    expect(counter()).toBe("3 / 5");
+  });
+});
+
+describe("two agent requests close together", () => {
+  it("a second request for the photo the track is just passing still slides there (the first slide must not settle on the old photo)", () => {
+    vi.useFakeTimers();
+    mount(<Gallery {...props} />);
+    const track = container.querySelector(".gallery__track") as HTMLElement;
+    Object.defineProperty(track, "clientWidth", { configurable: true, value: 100 });
+    const scrollTo = vi.fn();
+    track.scrollTo = scrollTo as any;
+    let first = "";
+    act(() => void (first = section().showAddress("#photo-detail"))); // a long slide to the last photo (index 4)
+    expect(first).toBe("handled");
+    track.scrollLeft = 200; // the track is passing photo 3 on its way
+    act(() => void track.dispatchEvent(new Event("scroll")));
+    scrollTo.mockClear();
+    let second = "";
+    act(() => void (second = section().showAddress("#photo-cabin"))); // photo 3: the one it is passing right now
+    expect(second).toBe("handled");
+    expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ left: 200 }));
     expect(counter()).toBe("3 / 5");
   });
 });

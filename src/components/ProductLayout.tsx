@@ -11,6 +11,12 @@ import type { Site } from "./blocks";
  * the type's default; "contact" is the footer's row), footer. What differs per type (media ratios, spec groups, details) comes from the type's
  * descriptor in site.typeFields. A type that needs its own frame is registered in product-types/layouts.ts.
  */
+/** "3 / 2" as 1.5 (a CSS ratio cannot be multiplied, so the gallery gets the number too, for the stage's width cap); 1.5 when the text is not "a / b". */
+export function ratioNumber(ratio: string): number {
+  const m = /^\s*(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\s*$/.exec(ratio);
+  return m && Number(m[2]) > 0 ? Math.round((Number(m[1]) / Number(m[2])) * 1000) / 1000 : 1.5;
+}
+
 export default function ProductLayout({ site }: { site: Site }) {
   const { media } = site.typeFields;
   const agent = site.seller.agent;
@@ -23,7 +29,7 @@ export default function ProductLayout({ site }: { site: Site }) {
       className={`pt pt-${site.product.productType}`}
       data-lang={site.lang}
       data-block-order={renderedBlocks(site).join(" ")}
-      style={{ "--media-ratio": media.heroRatio, "--gallery-ratio": media.galleryRatio, ...(agentHeader ? { "--header-h": "5.5rem" } : {}), ...(agentTop ? { "--agent-top-h": agentTop.variant === "inline" ? "7rem" : "3.5rem" } : {}) } as CSSProperties}
+      style={{ "--media-ratio": media.heroRatio, "--gallery-ratio": media.galleryRatio, "--gallery-ratio-n": ratioNumber(media.galleryRatio), ...(agentHeader ? { "--header-h": "5.5rem" } : {}), ...(agentTop ? { "--agent-top-h": agentTop.variant === "inline" ? "7rem" : "3.5rem" } : {}) } as CSSProperties}
     >
       <Header site={site} agent={agentHeader} />
       {agentTop && <AgentWidget agent={agentTop} lang={site.lang} product={site.ref} />}

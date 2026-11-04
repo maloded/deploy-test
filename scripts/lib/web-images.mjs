@@ -11,6 +11,8 @@ import { readProduct, referencedFiles } from "./referenced.mjs";
 
 const RESIZABLE = { ".jpg": "jpeg", ".jpeg": "jpeg", ".png": "png", ".webp": "webp" };
 const STAMP = ".web-images.json";
+/** What each copy was made from (size and time of its source): see the cache rule in makeWebImages. */
+const SIGNATURES = ".web-images-sources.json";
 
 /** Every file below `dir` as a relative path with forward slashes, sorted. */
 function filesBelow(dir, prefix = "") {
@@ -32,6 +34,14 @@ export async function makeWebImages({ contentDir, outDir, longSide = 2000, quali
     cached = false;
   }
   if (!cached) fs.rmSync(outDir, { recursive: true, force: true });
+  const signatureFile = path.join(outDir, SIGNATURES);
+  let previous = {};
+  try {
+    previous = JSON.parse(fs.readFileSync(signatureFile, "utf8"));
+  } catch {
+    previous = {};
+  }
+  const signatures = {};
   fs.mkdirSync(outDir, { recursive: true });
 
   const results = [];
@@ -57,7 +67,12 @@ export async function makeWebImages({ contentDir, outDir, longSide = 2000, quali
         fs.mkdirSync(path.dirname(dest), { recursive: true });
         wanted.add(dest);
 
-        if (fs.existsSync(dest) && fs.statSync(dest).mtimeMs >= fs.statSync(src).mtimeMs) {
+        // cached only when the source is EXACTLY the one this copy was made from (size and time recorded in the stamp). "The copy is newer than the
+        // source" is not enough: an original that is put back (a restore, a copy that keeps its old date) is older than the copy of what it replaced
+        const stat = fs.statSync(src);
+        const signature = `${stat.size}:${Math.floor(stat.mtimeMs)}`;
+        signatures[`${slug}/${file}`] = signature;
+        if (fs.existsSync(dest) && previous[`${slug}/${file}`] === signature) {
           results.push({ slug, file, action: "cached" });
           continue;
         }
@@ -154,6 +169,7 @@ export async function makeWebImages({ contentDir, outDir, longSide = 2000, quali
   prune(outDir);
 
   fs.writeFileSync(stampFile, JSON.stringify(settings));
+  fs.writeFileSync(signatureFile, JSON.stringify(signatures));
   for (const r of results) {
     if (r.action === "resized") log(`${r.slug}/${r.file}: ${r.width}x${r.height}, ${(r.sourceBytes / 1024).toFixed(0)} KB -> ${(r.bytes / 1024).toFixed(0)} KB`);
   }
