@@ -313,22 +313,64 @@ main:focus-visible {
 
 .lang-menu__list {
   position: absolute;
-  inset-inline-start: 0;
+  inset-inline-end: 0;
   top: calc(100% + var(--space-1));
   z-index: 30;
-  min-width: 100%;
+  min-width: max(100%, 12rem);
   margin: 0;
   padding: var(--space-1);
   list-style: none;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: var(--radius, 0);
+  /* rounded like the header's other buttons (the theme's --radius-menu, 0.75rem in both themes; --radius where a theme has none), the rows and their hover clipped to it */
+  border-radius: var(--radius-menu, var(--radius));
+  overflow: hidden;
+  box-shadow: 0 0.5rem 1.5rem -0.75rem color-mix(in srgb, var(--text) 40%, transparent);
 }
 
+/* the button: a small globe, the current language's CODE and the arrow; the globe and the code take the text colour like the other header buttons */
+.lang-menu__globe {
+  flex: none;
+  color: var(--muted);
+}
+
+.lang-menu__current-code {
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+/* a row: the code in a pill, the language's own name, the check mark of the current one */
 .lang-menu__list a {
-  padding-inline: var(--space-3);
+  gap: var(--space-2);
+  padding-inline: var(--space-2);
   border-bottom: 0;
+  border-radius: calc(var(--radius-menu, var(--radius)) / 2); /* half of the panel's, and the panel's padding keeps the hover off its corners */
   white-space: nowrap;
+  width: 100%;
+}
+
+.lang-menu__code {
+  flex: none;
+  min-width: 2.1rem;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 99rem;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.lang-menu__name {
+  flex: 1 1 auto;
+}
+
+.lang-menu__check {
+  flex: none;
+  visibility: hidden;
+  color: var(--accent-line, var(--accent));
 }
 
 .lang-menu__list a[aria-current="true"] {
@@ -336,8 +378,21 @@ main:focus-visible {
   font-weight: 600;
 }
 
-.lang-menu__list a:hover {
-  color: var(--accent-line, var(--accent));
+.lang-menu__list a[aria-current="true"] .lang-menu__code {
+  border-color: var(--accent-line, var(--accent));
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--text);
+}
+
+.lang-menu__list a[aria-current="true"] .lang-menu__check {
+  visibility: visible;
+}
+
+.lang-menu__list a:hover,
+.lang-menu__list a:focus-visible {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--text);
+  text-decoration: none;
 }
 
 /* the button to the footer's contact row: its own size (the generic small button), exactly as high as the other controls */
@@ -751,9 +806,20 @@ main:focus-visible {
     flex-grow: 1;
   }
 
-  /* one size for all wide windows; never below 1.25rem */
+  /* one size for all wide windows, 1.25rem to 1.5rem; HeroFacts scales it down (--fact-scale, 0.8 at the least: never below 1rem) only where a language or a font needs more room than the row has */
   .hero__fact-value {
-    font-size: clamp(1.25rem, 1.9vw, 1.5rem);
+    font-size: calc(clamp(1.25rem, 1.9vw, 1.5rem) * var(--fact-scale, 1));
+  }
+
+  /* the four facts stay in ONE row on a wide window (HeroFacts sets data-row once the row is wide enough and measured): the pairs never wrap onto a second row; a value that
+     does not fit even at the smallest size wraps inside its own tile ("прибл." over "37 500 км", the unit kept together by glueUnit) */
+  .hero__facts[data-row] {
+    flex-wrap: nowrap;
+  }
+
+  .hero__facts[data-row="wrap"] .hero__fact-value {
+    white-space: normal;
+    text-wrap: balance;
   }
 }
 
@@ -1228,8 +1294,12 @@ main:focus-visible {
     min-width: 0;
   }
 
+  /* one line, always: the block grows upward from the card, so a second line would slide under the header (IntroHeading scales the size down to fit, then this clips with an ellipsis) */
   .hero__aside .sofia-intro__heading {
-    font-size: 1.1rem;
+    font-size: calc(1.1rem * var(--intro-scale, 1));
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .hero__aside .sofia-intro__marquee {

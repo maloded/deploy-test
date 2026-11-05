@@ -115,6 +115,6 @@ describe("/ redirects to the default language", () => {
     expect(rootRedirectEnv(env)).toEqual({ SITE_DEFAULT_LANGUAGE: "de" });
     expect(rootRedirectEnv({ CONTENT_DIR: path.join(tmp, "missing") })).toEqual({});
     fs.writeFileSync(path.join(dir, fixtures.seller, "seller.json"), JSON.stringify({ defaultLanguage: "xx" }));
-    expect(() => siteDefaultLanguage(env)).toThrow(/not a supported language \(de, en\)/);
+    expect(() => siteDefaultLanguage(env)).toThrow(/not a supported language \(de, en, tr, bg\)/);
   });
 });

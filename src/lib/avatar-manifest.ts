@@ -193,8 +193,8 @@ export type ResolvedAvatar = {
   bubble: Localized | null;
   /** The job line under the name (agent.avatar.role); null: the line shows the languages only. */
   role: Localized | null;
-  /** The languages the seller offers, in the order of seller.json: the line under the name ends with their own names. */
-  languages: Language[];
+  /** The languages the assistant speaks (agent.avatar.languages; else the page languages the seller offers, in the order of seller.json): the line under the name ends with their own names. */
+  languages: string[];
   /** The example call shown on the large card (agent.avatar.example); null: the card has no transcript block. */
   example: ExampleCall | null;
   /** The sentence under "Live call" while a call runs (agent.avatar.liveText, {name} is replaced); null: the page's standard sentence. */
@@ -204,7 +204,7 @@ export type ResolvedAvatar = {
 };
 
 /** The manifest turned into URLs. `nameOverride` is agent.avatar.name from seller.json, `texts` its tagline and badge. */
-export function resolveAvatar(manifest: AvatarManifest, nameOverride?: string, texts: { tagline?: Localized; badge?: Localized; startLabel?: Localized; endLabel?: Localized; buttonIcon?: ButtonIcon; role?: Localized; languages?: Language[]; example?: ExampleCall; bubble?: Localized; liveText?: Localized; intro?: { heading?: Localized; items?: Localized[] } } = {}): ResolvedAvatar {
+export function resolveAvatar(manifest: AvatarManifest, nameOverride?: string, texts: { tagline?: Localized; badge?: Localized; startLabel?: Localized; endLabel?: Localized; buttonIcon?: ButtonIcon; role?: Localized; languages?: readonly string[]; example?: ExampleCall; bubble?: Localized; liveText?: Localized; intro?: { heading?: Localized; items?: Localized[] } } = {}): ResolvedAvatar {
   const url = (f: LoopFiles | null): ResolvedLoop | null => {
     if (!f) return null;
     return { ...(f.mp4 ? { mp4: avatarUrl(manifest.id, f.mp4) } : {}), ...(f.webm ? { webm: avatarUrl(manifest.id, f.webm) } : {}) };
@@ -233,7 +233,7 @@ export function resolveAvatar(manifest: AvatarManifest, nameOverride?: string, t
     buttonIcon: texts.buttonIcon ?? "orb",
     bubble: texts.bubble ?? null,
     role: texts.role ?? null,
-    languages: texts.languages ?? [],
+    languages: [...(texts.languages ?? [])],
     example: texts.example ?? null,
     liveText: texts.liveText ?? null,
     intro: texts.intro ? { heading: texts.intro.heading ?? null, items: texts.intro.items ?? [] } : null,

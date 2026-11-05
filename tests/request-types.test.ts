@@ -6,7 +6,7 @@ import { productTypes } from "@/product-types";
 describe("request types", () => {
   it("are viewing, test_drive, question and offer, with labels in every registry language", () => {
     expect(REQUEST_TYPE_IDS).toEqual(["viewing", "test_drive", "question", "offer"]);
-    for (const r of Object.values(REQUEST_TYPES)) expect(Object.keys(r.label).sort()).toEqual(["de", "en"]);
+    for (const r of Object.values(REQUEST_TYPES)) expect(Object.keys(r.label).sort()).toEqual(["bg", "de", "en", "tr"]);
     expect(DEFAULT_REQUEST_TYPE).toBe("question");
     expect(isRequestType("viewing")).toBe(true);
     expect(isRequestType("toString")).toBe(false);

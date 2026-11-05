@@ -4,12 +4,12 @@ import { pick } from "./i18n";
 import type { Language, Localized } from "./schema";
 
 export const STATUS_STRINGS = {
-  "notfound.title": { en: "Page not found", de: "Seite nicht gefunden" },
-  "notfound.text": { en: "The page you are looking for does not exist.", de: "Die gesuchte Seite gibt es nicht." },
-  "page.back": { en: "Back to the page", de: "Zurück zur Seite" },
-  "error.title": { en: "Something went wrong", de: "Etwas ist schiefgelaufen" },
-  "error.text": { en: "Please try again in a moment.", de: "Bitte versuchen Sie es gleich noch einmal." },
-  "error.retry": { en: "Try again", de: "Erneut versuchen" },
+  "notfound.title": { en: "Page not found", de: "Seite nicht gefunden", tr: "Sayfa bulunamadı", bg: "Страницата не е намерена" },
+  "notfound.text": { en: "The page you are looking for does not exist.", de: "Die gesuchte Seite gibt es nicht.", tr: "Aradığınız sayfa mevcut değil.", bg: "Страницата, която търсите, не съществува." },
+  "page.back": { en: "Back to the page", de: "Zurück zur Seite", tr: "Sayfaya geri dön", bg: "Обратно към страницата" },
+  "error.title": { en: "Something went wrong", de: "Etwas ist schiefgelaufen", tr: "Bir şeyler ters gitti", bg: "Нещо се обърка" },
+  "error.text": { en: "Please try again in a moment.", de: "Bitte versuchen Sie es gleich noch einmal.", tr: "Lütfen birazdan tekrar deneyin.", bg: "Моля, опитайте отново след малко." },
+  "error.retry": { en: "Try again", de: "Erneut versuchen", tr: "Tekrar dene", bg: "Опитайте отново" },
 } as const satisfies Record<string, Localized>;
 
 export type StatusKey = keyof typeof STATUS_STRINGS;

@@ -4,24 +4,32 @@
   "logo": "logo.svg",
   "city": {
     "de": "Wien",
-    "en": "Vienna"
+    "en": "Vienna",
+    "tr": "Viyana",
+    "bg": "Виена"
   },
   "legalNote": {
     "en": "Information on this page is indicative and does not constitute a binding offer.",
-    "de": "Die Angaben auf dieser Seite sind unverbindlich und stellen kein verbindliches Angebot dar."
+    "de": "Die Angaben auf dieser Seite sind unverbindlich und stellen kein verbindliches Angebot dar.",
+    "tr": "Bu sayfadaki bilgiler bağlayıcı değildir ve bağlayıcı bir teklif oluşturmaz.",
+    "bg": "Информацията на тази страница не е обвързваща и не представлява обвързваща оферта."
   },
   "contact": {
     "email": "vw@hanc.ai"
   },
   "languages": [
     "de",
-    "en"
+    "en",
+    "tr",
+    "bg"
   ],
   "defaultLanguage": "de",
   "theme": "light-editorial",
   "consentText": {
     "de": "Ich bin damit einverstanden, dass Good Point meine Angaben verarbeitet, um meine Anfrage zu beantworten und mich dazu zu kontaktieren. Die Angaben werden nur zu diesem Zweck gespeichert. Mehr dazu in der Datenschutzerklärung.",
-    "en": "I agree that Good Point processes my details to answer my enquiry and to contact me about it. The details are stored for this purpose only. More in the privacy notice."
+    "en": "I agree that Good Point processes my details to answer my enquiry and to contact me about it. The details are stored for this purpose only. More in the privacy notice.",
+    "tr": "Good Point’in talebime yanıt vermek ve bu konuda benimle iletişime geçmek amacıyla bilgilerimi işlemesini kabul ediyorum. Bilgiler yalnızca bu amaçla saklanır. Ayrıntılar için gizlilik bildirimine bakın.",
+    "bg": "Съгласен/съгласна съм Good Point да обработва данните ми, за да отговори на запитването ми и да се свърже с мен във връзка с него. Данните се съхраняват само за тази цел. Повече информация – в известието за поверителност."
   },
   "developer": {
     "name": "GoodPoint Labs",
@@ -36,20 +44,28 @@
       "name": "Sofia",
       "tagline": {
         "de": "Ich erzähle Ihnen gerne mehr oder helfe weiter.",
-        "en": "Happy to tell you more or help."
+        "en": "Happy to tell you more or help.",
+        "tr": "Size daha fazlasını anlatmaktan ya da yardımcı olmaktan memnuniyet duyarım.",
+        "bg": "С удоволствие ще Ви разкажа повече или ще Ви помогна."
       },
       "badge": {
         "de": "KI-Assistentin",
-        "en": "AI assistant"
+        "en": "AI assistant",
+        "tr": "Yapay zekâ asistanı",
+        "bg": "ИИ асистент"
       },
       "endLabel": {
         "de": "Gespräch beenden",
-        "en": "End call"
+        "en": "End call",
+        "tr": "Görüşmeyi bitir",
+        "bg": "Прекрати разговора"
       },
       "buttonIcon": "orb",
       "role": {
         "de": "Verkaufsberaterin",
-        "en": "Sales Rep"
+        "en": "Sales Rep",
+        "tr": "Satış danışmanı",
+        "bg": "Консултант"
       },
       "example": {
         "de": [
@@ -87,36 +103,90 @@
             "speaker": "agent",
             "text": "I'll pass your request to Good Point. You'll get a confirmation."
           }
+        ],
+        "tr": [
+          {
+            "speaker": "caller",
+            "text": "Multivan’ı bu hafta görebilir miyim?"
+          },
+          {
+            "speaker": "agent",
+            "text": "Elbette. Size en uygun zaman ne zaman?"
+          },
+          {
+            "speaker": "caller",
+            "text": "Perşembe öğleden sonra."
+          },
+          {
+            "speaker": "agent",
+            "text": "Talebinizi Good Point’e iletiyorum. Bir onay alacaksınız."
+          }
+        ],
+        "bg": [
+          {
+            "speaker": "caller",
+            "text": "Мога ли да разгледам Multivan тази седмица?"
+          },
+          {
+            "speaker": "agent",
+            "text": "С удоволствие. Кога Ви е най-удобно?"
+          },
+          {
+            "speaker": "caller",
+            "text": "В четвъртък следобед."
+          },
+          {
+            "speaker": "agent",
+            "text": "Ще предам запитването Ви на Good Point. Ще получите потвърждение."
+          }
         ]
       },
       "intro": {
         "heading": {
           "de": "Lieber reden als lesen?",
-          "en": "Rather talk than read?"
+          "en": "Rather talk than read?",
+          "tr": "Okumak yerine konuşun",
+          "bg": "Вместо да четете – говорете"
         },
         "items": [
           {
             "de": "Fragen zum Auto",
-            "en": "Questions about the car"
+            "en": "Questions about the car",
+            "tr": "Araçla ilgili sorular",
+            "bg": "Въпроси за автомобила"
           },
           {
             "de": "Probefahrt buchen",
-            "en": "Book a test drive"
+            "en": "Book a test drive",
+            "tr": "Test sürüşü planlayın",
+            "bg": "Запазете тест драйв"
           },
           {
             "de": "Preisangebot",
-            "en": "Price offer"
+            "en": "Price offer",
+            "tr": "Fiyat teklifi",
+            "bg": "Ценова оферта"
           },
           {
             "de": "Fotos zeigen",
-            "en": "Show photos"
+            "en": "Show photos",
+            "tr": "Fotoğrafları göster",
+            "bg": "Покажи снимките"
           },
           {
             "de": "Rückruf",
-            "en": "Callback"
+            "en": "Callback",
+            "tr": "Geri arama",
+            "bg": "Обратно обаждане"
           }
         ]
-      }
+      },
+      "languages": [
+        "de",
+        "en",
+        "ru",
+        "bg"
+      ]
     },
     "credit": {
       "provider": "hanc•ai",

@@ -1,6 +1,7 @@
 import { pick } from "@/lib/i18n";
 import { ui } from "@/lib/ui-strings";
 import type { Site } from "./blocks";
+import { IntroHeading } from "./IntroHeading";
 
 /** At least this many items in a track, so a track is always wider than the column it runs in (the items are repeated to get there). */
 const MIN_ITEMS_PER_TRACK = 10;
@@ -26,7 +27,7 @@ export function SofiaIntro({ site }: { site: Site }) {
   const track = Array.from({ length: repeats }, (_, r) => items.map((t, i) => ({ t, key: `${r}-${i}`, repeat: r > 0 }))).flat();
   return (
     <div className="sofia-intro">
-      <p className="sofia-intro__heading">{heading}</p>
+      <IntroHeading>{heading}</IntroHeading>
       {items.length > 0 && (
         <div className="sofia-intro__marquee">
           <div className="sofia-intro__rail" style={{ "--sofia-loop": `${SECONDS_PER_LIST * repeats}s` } as React.CSSProperties}>

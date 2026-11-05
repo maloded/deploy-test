@@ -2,7 +2,7 @@
 // checks, the switcher labels and the Intl calls all derive from it. To add a language, follow "Add a language" in PROJECT.md.
 
 /** Font subsets a language needs; the theme fonts must ship a woff2 file for each (public/fonts/<theme>/, scripts/copy-fonts.mjs). */
-export type FontSubset = "latin" | "cyrillic";
+export type FontSubset = "latin" | "latin-ext" | "cyrillic";
 
 export type LanguageEntry = {
   /** The code used in seller.json, product.json and the URL: /<code>. */
@@ -12,11 +12,16 @@ export type LanguageEntry = {
   /** BCP-47 locale for Intl (numbers, prices, dates). */
   locale: string;
   fontSubsets: readonly FontSubset[];
+  /** Money is written with the symbol after the number ("53.900 €"), as the reference site does, not before it ("€53.900"). */
+  currencyAfter: boolean;
 };
 
 export const LANGUAGE_REGISTRY = [
-  { code: "de", name: "Deutsch", locale: "de-DE", fontSubsets: ["latin"] },
-  { code: "en", name: "English", locale: "en-GB", fontSubsets: ["latin"] },
+  { code: "de", name: "Deutsch", locale: "de-DE", fontSubsets: ["latin"], currencyAfter: true },
+  { code: "en", name: "English", locale: "en-GB", fontSubsets: ["latin"], currencyAfter: false },
+  // Turkish needs the latin-ext subset (ğ ş İ); Bulgarian the cyrillic one (digits, € and punctuation stay in latin)
+  { code: "tr", name: "Türkçe", locale: "tr-TR", fontSubsets: ["latin", "latin-ext"], currencyAfter: true },
+  { code: "bg", name: "Български", locale: "bg-BG", fontSubsets: ["latin", "cyrillic"], currencyAfter: true },
 ] as const satisfies readonly LanguageEntry[];
 
 export type Language = (typeof LANGUAGE_REGISTRY)[number]["code"];

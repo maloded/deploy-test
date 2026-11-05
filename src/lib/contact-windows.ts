@@ -17,10 +17,10 @@ export const ANYTIME = "anytime";
 export const CODE_PATTERN = /^[a-z][a-z0-9_-]{0,31}$/;
 
 export const DEFAULT_CONTACT_WINDOWS: readonly ContactWindow[] = [
-  { code: ANYTIME, label: { en: "Any time", de: "Jederzeit" } },
-  { code: "morning", from: "09:00", to: "12:00", label: { en: "Morning (09:00–12:00)", de: "Vormittags (09:00–12:00)" } },
-  { code: "afternoon", from: "12:00", to: "17:00", label: { en: "Afternoon (12:00–17:00)", de: "Nachmittags (12:00–17:00)" } },
-  { code: "evening", from: "17:00", to: "20:00", label: { en: "Evening (17:00–20:00)", de: "Abends (17:00–20:00)" } },
+  { code: ANYTIME, label: { en: "Any time", de: "Jederzeit", tr: "Her zaman", bg: "По всяко време" } },
+  { code: "morning", from: "09:00", to: "12:00", label: { en: "Morning (09:00–12:00)", de: "Vormittags (09:00–12:00)", tr: "Öğleden önce (09:00–12:00)", bg: "Сутрин (09:00–12:00)" } },
+  { code: "afternoon", from: "12:00", to: "17:00", label: { en: "Afternoon (12:00–17:00)", de: "Nachmittags (12:00–17:00)", tr: "Öğleden sonra (12:00–17:00)", bg: "Следобед (12:00–17:00)" } },
+  { code: "evening", from: "17:00", to: "20:00", label: { en: "Evening (17:00–20:00)", de: "Abends (17:00–20:00)", tr: "Akşam (17:00–20:00)", bg: "Вечер (17:00–20:00)" } },
 ];
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -66,12 +66,12 @@ export const sellerZone = (viewingZone: string | undefined, sellerTimezone: stri
 
 /** Known zones: the city in each language and the whole sentence, so no string is ever half translated. */
 const KNOWN_ZONES: Record<string, { city: Record<Language, string>; hint: Record<Language, string> }> = {
-  "Europe/Vienna": { city: { en: "Vienna", de: "Wien" }, hint: { en: "Times are in Vienna time.", de: "Alle Zeiten in Wiener Zeit." } },
-  "Europe/Berlin": { city: { en: "Berlin", de: "Berlin" }, hint: { en: "Times are in Berlin time.", de: "Alle Zeiten in Berliner Zeit." } },
-  "Europe/Zurich": { city: { en: "Zurich", de: "Zürich" }, hint: { en: "Times are in Zurich time.", de: "Alle Zeiten in Zürcher Zeit." } },
-  "Europe/London": { city: { en: "London", de: "London" }, hint: { en: "Times are in London time.", de: "Alle Zeiten in Londoner Zeit." } },
+  "Europe/Vienna": { city: { en: "Vienna", de: "Wien", tr: "Viyana", bg: "Виена" }, hint: { en: "Times are in Vienna time.", de: "Alle Zeiten in Wiener Zeit.", tr: "Tüm saatler Viyana saatiyle verilmiştir.", bg: "Всички часове са по виенско време." } },
+  "Europe/Berlin": { city: { en: "Berlin", de: "Berlin", tr: "Berlin", bg: "Берлин" }, hint: { en: "Times are in Berlin time.", de: "Alle Zeiten in Berliner Zeit.", tr: "Tüm saatler Berlin saatidir.", bg: "Всички часове са по берлинско време." } },
+  "Europe/Zurich": { city: { en: "Zurich", de: "Zürich", tr: "Zürih", bg: "Цюрих" }, hint: { en: "Times are in Zurich time.", de: "Alle Zeiten in Zürcher Zeit.", tr: "Tüm saatler Zürih saatidir.", bg: "Всички часове са по цюрихско време." } },
+  "Europe/London": { city: { en: "London", de: "London", tr: "Londra", bg: "Лондон" }, hint: { en: "Times are in London time.", de: "Alle Zeiten in Londoner Zeit.", tr: "Tüm saatler Londra saatidir.", bg: "Всички часове са по лондонско време." } },
 };
-const GENERIC_HINT: Record<Language, string> = { en: "Times are in the seller's local time.", de: "Alle Zeiten in Ortszeit des Verkäufers." };
+const GENERIC_HINT: Record<Language, string> = { en: "Times are in the seller's local time.", de: "Alle Zeiten in Ortszeit des Verkäufers.", tr: "Tüm saatler satıcının yerel saatidir.", bg: "Всички часове са по местното време на продавача." };
 
 /** The one-line hint under the window select; null without a zone. */
 export function zoneHint(zone: string | undefined, lang: Language): string | null {

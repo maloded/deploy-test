@@ -18,9 +18,9 @@ import { sampleJson } from "./helpers";
 type L = Record<string, string | undefined>;
 
 describe("the language registry", () => {
-  it("lists exactly de and en, with a native name, an Intl locale and font subsets", () => {
-    expect(LANGUAGES).toEqual(["de", "en"]);
-    expect(LANGUAGE_REGISTRY.map((l) => l.name)).toEqual(["Deutsch", "English"]);
+  it("lists exactly de, en, tr and bg, with a native name, an Intl locale and font subsets", () => {
+    expect(LANGUAGES).toEqual(["de", "en", "tr", "bg"]);
+    expect(LANGUAGE_REGISTRY.map((l) => l.name)).toEqual(["Deutsch", "English", "Türkçe", "Български"]);
     for (const l of LANGUAGE_REGISTRY) {
       expect(() => new Intl.NumberFormat(l.locale)).not.toThrow();
       expect(Intl.getCanonicalLocales(l.locale)).toHaveLength(1);
@@ -86,7 +86,7 @@ describe("every registry language is complete", () => {
 });
 
 describe("a language outside the registry", () => {
-  const supported = "Supported languages: de, en";
+  const supported = "Supported languages: de, en, tr, bg";
 
   it("fails in a localized text with the supported ones listed", () => {
     const r = localizedSchema.safeParse({ en: "x", ru: "y" });
@@ -106,7 +106,7 @@ describe("a language outside the registry", () => {
     const v = validateSeller(seller);
     expect(v.ok).toBe(false);
     const text = v.ok ? "" : v.issues.join("\n");
-    expect(text).toMatch(/^languages\.1: unsupported language "ru"\. Supported languages: de, en/m);
+    expect(text).toMatch(/^languages\.1: unsupported language "ru"\. Supported languages: de, en, tr, bg/m);
     expect(text).toMatch(/^defaultLanguage: unsupported language "ru"/m);
   });
 

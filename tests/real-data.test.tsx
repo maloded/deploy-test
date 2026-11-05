@@ -25,7 +25,7 @@ describe.skipIf(!hasRealContent)("the vw-multivan sample is a sale in German and
     expect(issues(p)).toEqual([]);
     expect(p.offerType).toBe("sale");
     const s = content.sellerJson();
-    expect(s.languages).toEqual(["de", "en"]);
+    expect(s.languages).toEqual(["de", "en", "tr", "bg"]);
     expect(s.defaultLanguage).toBe("de");
     expect(typeof s.displayName).toBe("string"); // the seller's name; the test does not pin which one
     expect(p.brand).toBeUndefined();
@@ -37,7 +37,8 @@ describe.skipIf(!hasRealContent)("the vw-multivan sample is a sale in German and
     expect(p.rent).toBeUndefined();
     expect(p.price.per).toBeUndefined();
     // the seller confirmed "inkl. MwSt." in writing (2026-11-02): it is the only tax statement, and it is the price note
-    expect(p.price).toEqual({ amount: 53900, currency: "EUR", note: { de: "inkl. MwSt.", en: "incl. VAT" } });
+    expect(p.price).toMatchObject({ amount: 53900, currency: "EUR", note: { de: "inkl. MwSt.", en: "incl. VAT" } });
+    expect(Object.keys(p.price).sort()).toEqual(["amount", "currency", "note"]);
   });
 
   it("has German and English for every text field", () => {
@@ -68,7 +69,7 @@ describe.skipIf(!hasRealContent)("the vw-multivan sample is a sale in German and
 
   it("makes no claim about warranty, VAT, a bank, the absence of damage or a new car, and discloses the 2025 damage event", () => {
     const { note: confirmedVatNote, ...price } = sample().price; // the one confirmed tax statement (see the price test above)
-    expect(confirmedVatNote).toEqual({ de: "inkl. MwSt.", en: "incl. VAT" });
+    expect(confirmedVatNote).toMatchObject({ de: "inkl. MwSt.", en: "incl. VAT" });
     const text = JSON.stringify({ ...sample(), price }).toLowerCase();
     const stems = ["garantie", "warranty", "steuer", "neuwagen", "new car", "unfall", "accident"]; // also match longer words
     const words = ["mwst", "ust", "vat", "bank"]; // short: whole words only ("ust" is inside "Ausstattung")
@@ -106,7 +107,7 @@ describe.skipIf(!hasRealContent)("mileage lives in one place: the spec (the owne
   it("is a spec, shown as ca. 37.500 km, and nowhere else in the data", () => {
     const p = sample();
     const spec = p.specs.find((s: any) => s.key === "mileage");
-    expect(spec.value).toEqual({ de: "ca. 37.500 km", en: "approx. 37,500 km" });
+    expect(spec.value).toMatchObject({ de: "ca. 37.500 km", en: "approx. 37,500 km" });
     const rest = JSON.stringify({ ...p, specs: p.specs.filter((s: any) => s.key !== "mileage") });
     expect(rest).not.toMatch(/37[.,]?500/); // one place only: the spec (the hero takes it through the key)
     expect(rest).not.toMatch(/37[.,]?100/); // the earlier, photographed figure is not left anywhere

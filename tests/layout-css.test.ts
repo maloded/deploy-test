@@ -1,3 +1,4 @@
+import { FACT_MIN_SCALE } from "@/lib/fact-fit";
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -277,9 +278,12 @@ describe("long words never widen the page", () => {
     const sizes = rules().filter((r) => r.selector === ".hero__fact-value").flatMap((r) => [...r.body.matchAll(/font-size:\s*([^;]+);/g)].map((m) => m[1]));
     expect(sizes.length).toBeGreaterThan(0);
     for (const size of sizes) {
-      expect(size, size).toMatch(/^(\d+(\.\d+)?rem|clamp\(\s*\d+(\.\d+)?rem,\s*[\d.]+vw,\s*\d+(\.\d+)?rem\s*\))$/); // rem only, theme-safe
+      // rem only, theme-safe; the wide size may be scaled down by HeroFacts (--fact-scale, FACT_MIN_SCALE at the least)
+      expect(size, size).toMatch(/^(\d+(\.\d+)?rem|clamp\(\s*\d+(\.\d+)?rem,\s*[\d.]+vw,\s*\d+(\.\d+)?rem\s*\)|calc\(clamp\(\s*\d+(\.\d+)?rem,\s*[\d.]+vw,\s*\d+(\.\d+)?rem\s*\) \* var\(--fact-scale, 1\)\))$/);
       const rems = [...size.matchAll(/(\d+(?:\.\d+)?)rem/g)].map((m) => Number(m[1]));
-      for (const r of rems) expect(r, size).toBeGreaterThanOrEqual(1.1); // always above the base text size (1rem); the phone tiles' floor is 1.1rem
+      const scaled = size.includes("--fact-scale") ? FACT_MIN_SCALE : 1;
+      for (const r of rems.slice(0, 1)) expect(r * scaled, size).toBeGreaterThanOrEqual(1); // never below the base text size (1rem), also at the smallest scale; the phone tiles' floor is 1.1rem
+      for (const r of rems) if (!size.includes("--fact-scale")) expect(r, size).toBeGreaterThanOrEqual(1.1);
       for (const r of rems) expect(r, size).toBeLessThanOrEqual(1.75);
     }
     expect(css).not.toMatch(/hero__fact-value[^{]*\{[^}]*font-size:\s*[\d.]+px/);

@@ -5,34 +5,46 @@
   "offerType": "sale",
   "title": {
     "de": "Volkswagen Multivan (T7) Business 2.0 TDI",
-    "en": "Volkswagen Multivan (T7) Business 2.0 TDI"
+    "en": "Volkswagen Multivan (T7) Business 2.0 TDI",
+    "tr": "Volkswagen Multivan (T7) Business 2.0 TDI",
+    "bg": "Volkswagen Multivan (T7) Business 2.0 TDI"
   },
   "tagline": {
     "de": "Gepflegter Siebensitzer mit DSG-Automatik, Fahrzeugpapiere frei von Belastungen.",
-    "en": "Well-kept seven-seater with DSG automatic gearbox, vehicle papers free of encumbrance."
+    "en": "Well-kept seven-seater with DSG automatic gearbox, vehicle papers free of encumbrance.",
+    "tr": "DSG otomatik şanzımanlı, bakımlı yedi koltuklu araç; araç belgeleri her türlü yükten arı.",
+    "bg": "Поддържан седемместен автомобил с автоматична DSG кутия, документите на автомобила са без тежести."
   },
   "price": {
     "amount": 53900,
     "currency": "EUR",
     "note": {
       "de": "inkl. MwSt.",
-      "en": "incl. VAT"
+      "en": "incl. VAT",
+      "tr": "KDV dahil",
+      "bg": "с ДДС"
     }
   },
   "hero": {
     "eyebrow": [
       {
         "de": "Wien",
-        "en": "Vienna"
+        "en": "Vienna",
+        "tr": "Viyana",
+        "bg": "Виена"
       }
     ],
     "headline": {
       "de": "VW Multivan 2.0 TDI",
-      "en": "VW Multivan 2.0 TDI"
+      "en": "VW Multivan 2.0 TDI",
+      "tr": "VW Multivan 2.0 TDI",
+      "bg": "VW Multivan 2.0 TDI"
     },
     "description": {
       "de": "Volkswagen Multivan (T7) in Indiumgrau mit sieben Sitzen, Dieselmotor und 7-Gang-DSG. Technisch in gutem Zustand, ausschließlich in VW-Servicebetrieben gewartet. Zustand und Historie, auch ein Schadensereignis im Jahr 2025, finden Sie unter Technische Daten.",
-      "en": "Volkswagen Multivan (T7) in Indium grey with seven seats, diesel engine and 7-speed DSG. Technically in good condition, serviced only at VW service centres. Condition and history, including a damage event in 2025, are listed under Specifications."
+      "en": "Volkswagen Multivan (T7) in Indium grey with seven seats, diesel engine and 7-speed DSG. Technically in good condition, serviced only at VW service centres. Condition and history, including a damage event in 2025, are listed under Specifications.",
+      "tr": "Yedi koltuklu, İndiyum Gri Volkswagen Multivan (T7); dizel motor ve 7 ileri DSG şanzıman. Teknik olarak iyi durumda, yalnızca VW yetkili servislerinde bakım gördü. Durum ve geçmiş, 2025’teki bir hasar olayı dâhil, Teknik veriler bölümünde yer almaktadır.",
+      "bg": "Volkswagen Multivan (T7) в цвят Индиум сив със седем места, дизелов двигател и 7-степенна DSG. Технически в добро състояние, обслужван само във VW сервизи. Състоянието и историята, включително щета от 2025 г., са описани в раздел „Технически данни“."
     },
     "highlights": [
       "year",
@@ -43,24 +55,34 @@
     "trust": [
       {
         "de": "Ausschließlich in VW-Servicebetrieben gewartet",
-        "en": "Serviced only at VW service centres"
+        "en": "Serviced only at VW service centres",
+        "tr": "Yalnızca VW yetkili servislerinde bakım gördü",
+        "bg": "Обслужван единствено във VW сервизи"
       },
       {
         "de": "Pickerl gültig bis 07/2028",
-        "en": "Inspection valid until 07/2028"
+        "en": "Inspection valid until 07/2028",
+        "tr": "Muayene (Pickerl) 07/2028’e kadar geçerli",
+        "bg": "Технически преглед (Pickerl) валиден до 07/2028"
       },
       {
         "de": "Zusätzlicher Satz Sommerreifen",
-        "en": "Additional set of summer tyres"
+        "en": "Additional set of summer tyres",
+        "tr": "Ek bir set yazlık lastik",
+        "bg": "Допълнителен комплект летни гуми"
       }
     ],
     "priceLabel": {
       "de": "Kaufpreis",
-      "en": "Price"
+      "en": "Price",
+      "tr": "Satış fiyatı",
+      "bg": "Продажна цена"
     },
     "shortCta": {
       "de": "Termin",
-      "en": "Book a visit"
+      "en": "Book a visit",
+      "tr": "Randevu",
+      "bg": "Оглед"
     }
   },
   "specs": [
@@ -68,11 +90,15 @@
       "key": "power",
       "label": {
         "de": "Leistung",
-        "en": "Power"
+        "en": "Power",
+        "tr": "Güç",
+        "bg": "Мощност"
       },
       "value": {
         "de": "150 PS (110 kW)",
-        "en": "150 PS (110 kW)"
+        "en": "150 PS (110 kW)",
+        "tr": "150 PS (110 kW)",
+        "bg": "150 к.с. (110 kW)"
       },
       "group": "engine"
     },
@@ -80,11 +106,15 @@
       "key": "fuel",
       "label": {
         "de": "Kraftstoff",
-        "en": "Fuel"
+        "en": "Fuel",
+        "tr": "Yakıt",
+        "bg": "Гориво"
       },
       "value": {
         "de": "Diesel (2,0 l)",
-        "en": "Diesel (2.0 l)"
+        "en": "Diesel (2.0 l)",
+        "tr": "Dizel (2,0 l)",
+        "bg": "Дизел (2,0 l)"
       },
       "group": "engine"
     },
@@ -92,11 +122,15 @@
       "key": "emission",
       "label": {
         "de": "Abgasnorm",
-        "en": "Emission standard"
+        "en": "Emission standard",
+        "tr": "Emisyon standardı",
+        "bg": "Екологична норма"
       },
       "value": {
         "de": "Euro 6",
-        "en": "Euro 6"
+        "en": "Euro 6",
+        "tr": "Euro 6",
+        "bg": "Euro 6"
       },
       "group": "engine"
     },
@@ -104,11 +138,15 @@
       "key": "gearbox",
       "label": {
         "de": "Getriebe",
-        "en": "Gearbox"
+        "en": "Gearbox",
+        "tr": "Şanzıman",
+        "bg": "Скоростна кутия"
       },
       "value": {
         "de": "7-Gang-DSG (Automatik)",
-        "en": "7-speed DSG (automatic)"
+        "en": "7-speed DSG (automatic)",
+        "tr": "7 ileri DSG (otomatik)",
+        "bg": "7-степенна DSG (автоматична)"
       },
       "group": "engine"
     },
@@ -116,11 +154,15 @@
       "key": "drive",
       "label": {
         "de": "Antrieb",
-        "en": "Drive"
+        "en": "Drive",
+        "tr": "Çekiş",
+        "bg": "Задвижване"
       },
       "value": {
         "de": "Frontantrieb",
-        "en": "Front-wheel drive"
+        "en": "Front-wheel drive",
+        "tr": "Önden çekiş",
+        "bg": "Предно задвижване"
       },
       "group": "engine"
     },
@@ -128,11 +170,15 @@
       "key": "consumption",
       "label": {
         "de": "Verbrauch (WLTP)",
-        "en": "Consumption (WLTP)"
+        "en": "Consumption (WLTP)",
+        "tr": "Yakıt tüketimi (WLTP)",
+        "bg": "Разход на гориво (WLTP)"
       },
       "value": {
         "de": "6,6 l/100 km",
-        "en": "6.6 l/100 km"
+        "en": "6.6 l/100 km",
+        "tr": "6,6 l/100 km",
+        "bg": "6,6 l/100 км"
       },
       "group": "engine"
     },
@@ -140,11 +186,15 @@
       "key": "co2",
       "label": {
         "de": "CO₂-Emissionen (WLTP)",
-        "en": "CO₂ emissions (WLTP)"
+        "en": "CO₂ emissions (WLTP)",
+        "tr": "CO₂ emisyonu (WLTP)",
+        "bg": "CO₂ емисии (WLTP)"
       },
       "value": {
         "de": "174 g/km",
-        "en": "174 g/km"
+        "en": "174 g/km",
+        "tr": "174 g/km",
+        "bg": "174 g/км"
       },
       "group": "engine"
     },
@@ -152,11 +202,15 @@
       "key": "colour",
       "label": {
         "de": "Farbe",
-        "en": "Colour"
+        "en": "Colour",
+        "tr": "Renk",
+        "bg": "Цвят"
       },
       "value": {
         "de": "Indiumgrau Metallic",
-        "en": "Indium grey metallic"
+        "en": "Indium grey metallic",
+        "tr": "İndiyum Gri Metalik",
+        "bg": "Индиум сив металик"
       },
       "group": "body"
     },
@@ -164,11 +218,15 @@
       "key": "doors",
       "label": {
         "de": "Türen",
-        "en": "Doors"
+        "en": "Doors",
+        "tr": "Kapılar",
+        "bg": "Врати"
       },
       "value": {
         "de": "5 (zwei Schiebetüren mit Soft-Close, elektrische Heckklappe)",
-        "en": "5 (two sliding doors with soft close, electric tailgate)"
+        "en": "5 (two sliding doors with soft close, electric tailgate)",
+        "tr": "5 (Soft-Close’lu iki sürgülü kapı, elektrikli bagaj kapağı)",
+        "bg": "5 (две плъзгащи се врати със Soft-Close, електрически заден капак)"
       },
       "group": "body"
     },
@@ -176,11 +234,15 @@
       "key": "dimensions",
       "label": {
         "de": "Maße (L × B × H)",
-        "en": "Dimensions (L × W × H)"
+        "en": "Dimensions (L × W × H)",
+        "tr": "Ölçüler (U × G × Y)",
+        "bg": "Размери (Д × Ш × В)"
       },
       "value": {
         "de": "4.973 × 1.941 × 1.887 mm",
-        "en": "4,973 × 1,941 × 1,887 mm"
+        "en": "4,973 × 1,941 × 1,887 mm",
+        "tr": "4.973 × 1.941 × 1.887 mm",
+        "bg": "4973 × 1941 × 1887 mm"
       },
       "group": "body"
     },
@@ -188,11 +250,15 @@
       "key": "towing",
       "label": {
         "de": "Anhängelast",
-        "en": "Towing capacity"
+        "en": "Towing capacity",
+        "tr": "Çekme kapasitesi",
+        "bg": "Допустимо тегло на ремаркето"
       },
       "value": {
         "de": "bis 2.000 kg gebremst, 750 kg ungebremst",
-        "en": "up to 2,000 kg braked, 750 kg unbraked"
+        "en": "up to 2,000 kg braked, 750 kg unbraked",
+        "tr": "frenli 2.000 kg’a, frensiz 750 kg’a kadar",
+        "bg": "до 2000 kg със спирачки, 750 kg без спирачки"
       },
       "group": "body"
     },
@@ -200,11 +266,15 @@
       "key": "tyres",
       "label": {
         "de": "Bereifung",
-        "en": "Tyres"
+        "en": "Tyres",
+        "tr": "Lastikler",
+        "bg": "Гуми"
       },
       "value": {
         "de": "235/55 R17 auf 17-Zoll-Leichtmetallrädern „Dundrod“, zusätzlich ein Satz Sommerreifen",
-        "en": "235/55 R17 on 17-inch “Dundrod” alloy wheels, plus a set of summer tyres"
+        "en": "235/55 R17 on 17-inch “Dundrod” alloy wheels, plus a set of summer tyres",
+        "tr": "17 inç “Dundrod” alaşım jantlarda 235/55 R17, ayrıca bir set yazlık lastik",
+        "bg": "235/55 R17 на 17-инчови алуминиеви джанти „Dundrod“, плюс допълнителен комплект летни гуми"
       },
       "group": "body"
     },
@@ -212,11 +282,15 @@
       "key": "bodyEquipment",
       "label": {
         "de": "Karosserie und Fenster",
-        "en": "Body and windows"
+        "en": "Body and windows",
+        "tr": "Kaporta ve camlar",
+        "bg": "Каросерия и стъкла"
       },
       "value": {
         "de": "Panorama-Glasdach, Easy Open/Easy Close, Schiebefenster, Privacy-Verglasung (65 %) ab B-Säule",
-        "en": "Panoramic glass roof, Easy Open/Easy Close, sliding windows, 65% privacy glass from the B-pillar"
+        "en": "Panoramic glass roof, Easy Open/Easy Close, sliding windows, 65% privacy glass from the B-pillar",
+        "tr": "Panoramik cam tavan, Easy Open/Easy Close, sürgülü camlar, B sütunundan itibaren gizlilik camı (%65)",
+        "bg": "Панорамен стъклен покрив, Easy Open/Easy Close, плъзгащи се прозорци, затъмнени стъкла (65 %) от B-колоната"
       },
       "group": "body"
     },
@@ -224,11 +298,15 @@
       "key": "seats",
       "label": {
         "de": "Sitze",
-        "en": "Seats"
+        "en": "Seats",
+        "tr": "Koltuklar",
+        "bg": "Седалки"
       },
       "value": {
         "de": "7 (2-2-3)",
-        "en": "7 (2-2-3)"
+        "en": "7 (2-2-3)",
+        "tr": "7 (2-2-3)",
+        "bg": "7 (2-2-3)"
       },
       "group": "interior"
     },
@@ -236,11 +314,15 @@
       "key": "interiorEquipment",
       "label": {
         "de": "Innenraum",
-        "en": "Interior"
+        "en": "Interior",
+        "tr": "İç mekân",
+        "bg": "Интериор"
       },
       "value": {
         "de": "Family-Paket (Multifunktions-Tischkonsole, Schubladen unter den Sitzen), Armlehnen vorne, elektrische Lendenwirbelstütze, Klapptische, Stoff „Bi-Color Bright Dots“",
-        "en": "Family package (multifunction table console, drawers under the seats), front armrests, electric lumbar support, folding tables, “Bi-Color Bright Dots” fabric"
+        "en": "Family package (multifunction table console, drawers under the seats), front armrests, electric lumbar support, folding tables, “Bi-Color Bright Dots” fabric",
+        "tr": "Family paketi (çok işlevli masa konsolu, koltuk altı çekmeceler), ön kolçaklar, elektrikli bel desteği, katlanır masalar, “Bi-Color Bright Dots” kumaş",
+        "bg": "Family пакет (многофункционална конзола-маса, чекмеджета под седалките), предни подлакътници, електрическа лумбална опора, сгъваеми масички, текстил „Bi-Color Bright Dots“"
       },
       "group": "interior"
     },
@@ -248,11 +330,15 @@
       "key": "assistants",
       "label": {
         "de": "Assistenzsysteme",
-        "en": "Assistance systems"
+        "en": "Assistance systems",
+        "tr": "Sürüş destek sistemleri",
+        "bg": "Асистиращи системи"
       },
       "value": {
         "de": "Travel & Emergency Assist, adaptive Geschwindigkeitsregelung ACC Stop&Go, Lane Assist, Side Assist, Ausstiegsassistent, Türöffnungswarnung, Car2X, Parksensoren vorn und hinten, Rückfahrkamera",
-        "en": "Travel & Emergency Assist, adaptive cruise control ACC stop&go, Lane Assist, Side Assist, exit assist, door-opening warning, Car2X, front and rear parking sensors, rear camera"
+        "en": "Travel & Emergency Assist, adaptive cruise control ACC stop&go, Lane Assist, Side Assist, exit assist, door-opening warning, Car2X, front and rear parking sensors, rear camera",
+        "tr": "Travel & Emergency Assist, ACC Stop&Go adaptif hız sabitleyici, Lane Assist, Side Assist, çıkış asistanı, kapı açma uyarısı, Car2X, ön ve arka park sensörleri, geri görüş kamerası",
+        "bg": "Travel & Emergency Assist, адаптивен круиз контрол ACC Stop&Go, Lane Assist, Side Assist, асистент при излизане, предупреждение при отваряне на врата, Car2X, предни и задни парктроници, камера за задно виждане"
       },
       "group": "equipment"
     },
@@ -260,11 +346,15 @@
       "key": "lights",
       "label": {
         "de": "Licht",
-        "en": "Lights"
+        "en": "Lights",
+        "tr": "Aydınlatma",
+        "bg": "Осветление"
       },
       "value": {
         "de": "IQ.Light Matrix-LED-Scheinwerfer, dunkle LED-Rückleuchten",
-        "en": "IQ.Light matrix LED headlights, dark LED tail lights"
+        "en": "IQ.Light matrix LED headlights, dark LED tail lights",
+        "tr": "IQ.Light Matrix LED farlar, koyu LED stop lambaları",
+        "bg": "IQ.Light Matrix LED фарове, тъмни LED стопове"
       },
       "group": "equipment"
     },
@@ -272,11 +362,15 @@
       "key": "multimedia",
       "label": {
         "de": "Multimedia",
-        "en": "Multimedia"
+        "en": "Multimedia",
+        "tr": "Multimedya",
+        "bg": "Мултимедия"
       },
       "value": {
         "de": "Digital Cockpit 10,25 Zoll, Discover Media Navigation, kabelloses App-Connect (CarPlay/Android Auto), DAB+, 8 Lautsprecher, USB-C vorn und hinten",
-        "en": "Digital cockpit 10.25\", Discover Media navigation, wireless App-Connect (CarPlay/Android Auto), DAB+, 8 speakers, USB-C front and rear"
+        "en": "Digital cockpit 10.25\", Discover Media navigation, wireless App-Connect (CarPlay/Android Auto), DAB+, 8 speakers, USB-C front and rear",
+        "tr": "10,25 inç Digital Cockpit, Discover Media navigasyon, kablosuz App-Connect (CarPlay/Android Auto), DAB+, 8 hoparlör, ön ve arkada USB-C",
+        "bg": "Digital Cockpit 10,25 инча, навигация Discover Media, безжичен App-Connect (CarPlay/Android Auto), DAB+, 8 говорителя, USB-C отпред и отзад"
       },
       "group": "equipment"
     },
@@ -284,11 +378,15 @@
       "key": "comfort",
       "label": {
         "de": "Komfort",
-        "en": "Comfort"
+        "en": "Comfort",
+        "tr": "Konfor",
+        "bg": "Комфорт"
       },
       "value": {
         "de": "Standheizung mit Fernbedienung, beheizbare Frontscheibe, Sitzheizung vorn, Climatronic, Keyless Advanced, 4 Schlüssel",
-        "en": "Parking heater with remote, heated windscreen, heated front seats, Climatronic, Keyless Advanced, 4 keys"
+        "en": "Parking heater with remote, heated windscreen, heated front seats, Climatronic, Keyless Advanced, 4 keys",
+        "tr": "Uzaktan kumandalı park ısıtıcı, ısıtmalı ön cam, ön koltuk ısıtma, Climatronic, Keyless Advanced, 4 anahtar",
+        "bg": "Автономно отопление с дистанционно управление, отопляемо предно стъкло, отопление на предните седалки, Climatronic, Keyless Advanced, 4 ключа"
       },
       "group": "equipment"
     },
@@ -296,11 +394,15 @@
       "key": "chassis",
       "label": {
         "de": "Fahrwerk",
-        "en": "Chassis"
+        "en": "Chassis",
+        "tr": "Süspansiyon",
+        "bg": "Окачване"
       },
       "value": {
         "de": "Dynamisch tiefergelegtes Fahrwerk, Fahrmodi, vollwertiges Reserverad",
-        "en": "Dynamic lowered suspension, driving modes, full-size spare wheel"
+        "en": "Dynamic lowered suspension, driving modes, full-size spare wheel",
+        "tr": "Dinamik alçaltılmış süspansiyon, sürüş modları, tam boy yedek lastik",
+        "bg": "Динамично занижено окачване, режими на шофиране, пълноразмерна резервна гума"
       },
       "group": "equipment"
     },
@@ -308,11 +410,15 @@
       "key": "safety",
       "label": {
         "de": "Sicherheit und Anhängerkupplung",
-        "en": "Safety and tow bar"
+        "en": "Safety and tow bar",
+        "tr": "Güvenlik ve çeki demiri",
+        "bg": "Безопасност и теглич"
       },
       "value": {
         "de": "PreCrash, Anhängerkupplung mit elektrischer Entriegelung",
-        "en": "PreCrash, tow bar with electric release"
+        "en": "PreCrash, tow bar with electric release",
+        "tr": "PreCrash, elektrikli kilit açmalı çeki demiri",
+        "bg": "PreCrash, теглич с електрическо освобождаване"
       },
       "group": "equipment"
     },
@@ -320,11 +426,15 @@
       "key": "year",
       "label": {
         "de": "Erstzulassung",
-        "en": "First registration"
+        "en": "First registration",
+        "tr": "İlk tescil",
+        "bg": "Първа регистрация"
       },
       "value": {
         "de": "07/2023",
-        "en": "07/2023"
+        "en": "07/2023",
+        "tr": "07/2023",
+        "bg": "07/2023"
       },
       "group": "condition"
     },
@@ -332,11 +442,15 @@
       "key": "mileage",
       "label": {
         "de": "Kilometerstand",
-        "en": "Mileage"
+        "en": "Mileage",
+        "tr": "Kilometre",
+        "bg": "Пробег"
       },
       "value": {
         "de": "ca. 37.500 km",
-        "en": "approx. 37,500 km"
+        "en": "approx. 37,500 km",
+        "tr": "yakl. 37.500 km",
+        "bg": "прибл. 37 500 км"
       },
       "group": "condition"
     },
@@ -344,11 +458,15 @@
       "key": "condition",
       "label": {
         "de": "Zustand",
-        "en": "Condition"
+        "en": "Condition",
+        "tr": "Durum",
+        "bg": "Състояние"
       },
       "value": {
         "de": "Technisch gut; leichte Gebrauchsspuren (Schrammen, kleine Kratzer), nichts Gravierendes gemeldet",
-        "en": "Technically good; minor signs of use (scuffs, small scratches), nothing serious reported"
+        "en": "Technically good; minor signs of use (scuffs, small scratches), nothing serious reported",
+        "tr": "Teknik açıdan iyi; hafif kullanım izleri (sıyrıklar, küçük çizikler), ciddi bir durum bildirilmedi",
+        "bg": "Технически в добро състояние; леки следи от употреба (охлузвания, малки драскотини), без сериозни забележки"
       },
       "group": "condition"
     },
@@ -356,11 +474,15 @@
       "key": "service",
       "label": {
         "de": "Wartung",
-        "en": "Servicing"
+        "en": "Servicing",
+        "tr": "Bakım",
+        "bg": "Обслужване"
       },
       "value": {
         "de": "Ausschließlich in VW-Servicebetrieben",
-        "en": "Only at VW service centres"
+        "en": "Only at VW service centres",
+        "tr": "Yalnızca VW yetkili servislerinde",
+        "bg": "Единствено във VW сервизи"
       },
       "group": "condition"
     },
@@ -368,11 +490,15 @@
       "key": "inspection",
       "label": {
         "de": "Pickerl",
-        "en": "Periodic inspection (Pickerl)"
+        "en": "Periodic inspection (Pickerl)",
+        "tr": "Muayene (Pickerl)",
+        "bg": "Технически преглед (Pickerl)"
       },
       "value": {
         "de": "Bestanden 07/2026, nächste Überprüfung 07/2028",
-        "en": "Passed 07/2026, next due 07/2028"
+        "en": "Passed 07/2026, next due 07/2028",
+        "tr": "07/2026’da geçti, bir sonraki muayene 07/2028",
+        "bg": "Преминат 07/2026, следващ преглед 07/2028"
       },
       "group": "condition"
     },
@@ -380,11 +506,15 @@
       "key": "owners",
       "label": {
         "de": "Besitzer",
-        "en": "Owners"
+        "en": "Owners",
+        "tr": "Sahipler",
+        "bg": "Собственици"
       },
       "value": {
         "de": "2 bisher (der Verkäufer ist der zweite)",
-        "en": "2 so far (the seller is the second)"
+        "en": "2 so far (the seller is the second)",
+        "tr": "Şimdiye kadar 2 (satıcı ikinci sahip)",
+        "bg": "Досега 2 (продавачът е вторият)"
       },
       "group": "condition"
     },
@@ -392,11 +522,15 @@
       "key": "damage",
       "label": {
         "de": "Schadensereignis",
-        "en": "Damage event"
+        "en": "Damage event",
+        "tr": "Hasar olayı",
+        "bg": "Щетно събитие"
       },
       "value": {
         "de": "23.06.2025: Schiebetür ersetzt (Reparaturrechnung vom 28.07.2025, bei ca. 25.000 km)",
-        "en": "23.06.2025: sliding door replaced (repair invoice dated 28.07.2025, at approx. 25,000 km)"
+        "en": "23.06.2025: sliding door replaced (repair invoice dated 28.07.2025, at approx. 25,000 km)",
+        "tr": "23.06.2025: Sürgülü kapı değiştirildi (onarım faturası 28.07.2025, yakl. 25.000 km’de)",
+        "bg": "23.06.2025 г.: сменена плъзгаща се врата (фактура за ремонт от 28.07.2025 г., при прибл. 25 000 км)"
       },
       "group": "condition"
     }
@@ -412,11 +546,15 @@
         "cutout": "Hero-cutout.webp",
         "alt": {
           "de": "Dreiviertelansicht von vorn: der graue Multivan an einem Bordstein auf nasser Pflasterstraße, Schiebetür offen, Scheinwerfer und Kühlergrill",
-          "en": "Front three-quarter view of the grey Multivan at a kerb on a wet cobbled street, sliding door open, headlight and grille"
+          "en": "Front three-quarter view of the grey Multivan at a kerb on a wet cobbled street, sliding door open, headlight and grille",
+          "tr": "Önden üç çeyrek görünüm: gri Multivan, ıslak arnavut kaldırımlı bir sokakta kaldırım kenarında, sürgülü kapı açık; farlar ve ön ızgara",
+          "bg": "Изглед три четвърти отпред: сивият Multivan до бордюра на мокра павирана улица, плъзгащата се врата е отворена, фарове и решетка"
         },
         "caption": {
           "de": "Dreiviertelansicht von vorn",
-          "en": "Front three-quarter view"
+          "en": "Front three-quarter view",
+          "tr": "Önden üç çeyrek görünüm",
+          "bg": "Изглед отпред под ъгъл"
         },
         "focus": {
           "x": 0.6,
@@ -435,17 +573,23 @@
             "y": 0.4,
             "label": {
               "de": "Schiebetür offen",
-              "en": "Sliding door open"
+              "en": "Sliding door open",
+              "tr": "Sürgülü kapı açık",
+              "bg": "Отворена плъзгаща се врата"
             },
             "facts": [
               {
                 "label": {
                   "de": "Türen",
-                  "en": "Doors"
+                  "en": "Doors",
+                  "tr": "Kapılar",
+                  "bg": "Врати"
                 },
                 "value": {
                   "de": "5 (zwei Schiebetüren mit Soft-Close, elektrische Heckklappe)",
-                  "en": "5 (two sliding doors with soft-close, electric tailgate)"
+                  "en": "5 (two sliding doors with soft-close, electric tailgate)",
+                  "tr": "5 (Soft-Close’lu iki sürgülü kapı, elektrikli bagaj kapağı)",
+                  "bg": "5 (две плъзгащи се врати със Soft-Close, електрически заден капак)"
                 }
               }
             ]
@@ -456,17 +600,23 @@
             "y": 0.55,
             "label": {
               "de": "Scheinwerfer",
-              "en": "Headlights"
+              "en": "Headlights",
+              "tr": "Farlar",
+              "bg": "Фарове"
             },
             "facts": [
               {
                 "label": {
                   "de": "Licht",
-                  "en": "Lights"
+                  "en": "Lights",
+                  "tr": "Aydınlatma",
+                  "bg": "Осветление"
                 },
                 "value": {
                   "de": "IQ.Light Matrix-LED-Scheinwerfer, dunkle LED-Rückleuchten",
-                  "en": "IQ.Light matrix LED headlights, dark LED tail lights"
+                  "en": "IQ.Light matrix LED headlights, dark LED tail lights",
+                  "tr": "IQ.Light Matrix LED farlar, koyu LED stop lambaları",
+                  "bg": "IQ.Light Matrix LED фарове, тъмни LED стопове"
                 }
               }
             ]
@@ -480,11 +630,15 @@
         "cutout": "Front-cutout.webp",
         "alt": {
           "de": "Frontansicht des grauen Multivan an einem Bordstein auf nasser Straße: VW-Emblem, Scheinwerfer und Kühlergrill",
-          "en": "Front view of the grey Multivan at a kerb on a wet street: VW emblem, headlights and grille"
+          "en": "Front view of the grey Multivan at a kerb on a wet street: VW emblem, headlights and grille",
+          "tr": "Gri Multivan’ın ıslak bir sokakta kaldırım kenarında önden görünümü: VW amblemi, farlar ve ön ızgara",
+          "bg": "Изглед отпред на сивия Multivan до бордюра на мокра улица: емблема на VW, фарове и решетка"
         },
         "caption": {
           "de": "Frontansicht",
-          "en": "Front view"
+          "en": "Front view",
+          "tr": "Ön görünüm",
+          "bg": "Изглед отпред"
         },
         "tags": [
           "exterior"
@@ -499,17 +653,23 @@
             "y": 0.46,
             "label": {
               "de": "Scheinwerfer",
-              "en": "Headlights"
+              "en": "Headlights",
+              "tr": "Farlar",
+              "bg": "Фарове"
             },
             "facts": [
               {
                 "label": {
                   "de": "Licht",
-                  "en": "Lights"
+                  "en": "Lights",
+                  "tr": "Aydınlatma",
+                  "bg": "Осветление"
                 },
                 "value": {
                   "de": "IQ.Light Matrix-LED-Scheinwerfer, dunkle LED-Rückleuchten",
-                  "en": "IQ.Light matrix LED headlights, dark LED tail lights"
+                  "en": "IQ.Light matrix LED headlights, dark LED tail lights",
+                  "tr": "IQ.Light Matrix LED farlar, koyu LED stop lambaları",
+                  "bg": "IQ.Light Matrix LED фарове, тъмни LED стопове"
                 }
               }
             ]
@@ -523,11 +683,15 @@
         "cutout": "Side-cutout.webp",
         "alt": {
           "de": "Seitenansicht des Multivan von links mit Schiebetür und Leichtmetallrädern",
-          "en": "Left side view of the Multivan with the sliding door and alloy wheels"
+          "en": "Left side view of the Multivan with the sliding door and alloy wheels",
+          "tr": "Multivan’ın soldan yan görünümü; sürgülü kapı ve alaşım jantlar",
+          "bg": "Страничен изглед отляво на Multivan с плъзгаща се врата и алуминиеви джанти"
         },
         "caption": {
           "de": "Seitenansicht",
-          "en": "Side view"
+          "en": "Side view",
+          "tr": "Yan görünüm",
+          "bg": "Страничен изглед"
         },
         "tags": [
           "exterior"
@@ -542,27 +706,37 @@
             "y": 0.52,
             "label": {
               "de": "Schiebetür",
-              "en": "Sliding door"
+              "en": "Sliding door",
+              "tr": "Sürgülü kapı",
+              "bg": "Плъзгаща се врата"
             },
             "facts": [
               {
                 "label": {
                   "de": "Türen",
-                  "en": "Doors"
+                  "en": "Doors",
+                  "tr": "Kapılar",
+                  "bg": "Врати"
                 },
                 "value": {
                   "de": "5 (zwei Schiebetüren mit Soft-Close, elektrische Heckklappe)",
-                  "en": "5 (two sliding doors with soft-close, electric tailgate)"
+                  "en": "5 (two sliding doors with soft-close, electric tailgate)",
+                  "tr": "5 (Soft-Close’lu iki sürgülü kapı, elektrikli bagaj kapağı)",
+                  "bg": "5 (две плъзгащи се врати със Soft-Close, електрически заден капак)"
                 }
               },
               {
                 "label": {
                   "de": "Schadensereignis",
-                  "en": "Damage event"
+                  "en": "Damage event",
+                  "tr": "Hasar olayı",
+                  "bg": "Щетно събитие"
                 },
                 "value": {
                   "de": "23.06.2025: Schiebetür ersetzt (Reparaturrechnung vom 28.07.2025, bei ca. 25.000 km)",
-                  "en": "23.06.2025: sliding door replaced (repair invoice dated 28.07.2025, at approx. 25,000 km)"
+                  "en": "23.06.2025: sliding door replaced (repair invoice dated 28.07.2025, at approx. 25,000 km)",
+                  "tr": "23.06.2025: Sürgülü kapı değiştirildi (onarım faturası 28.07.2025, yakl. 25.000 km’de)",
+                  "bg": "23.06.2025 г.: сменена плъзгаща се врата (фактура за ремонт от 28.07.2025 г., при прибл. 25 000 км)"
                 }
               }
             ]
@@ -573,17 +747,23 @@
             "y": 0.66,
             "label": {
               "de": "Räder",
-              "en": "Wheels"
+              "en": "Wheels",
+              "tr": "Tekerlekler",
+              "bg": "Колела"
             },
             "facts": [
               {
                 "label": {
                   "de": "Bereifung",
-                  "en": "Tyres"
+                  "en": "Tyres",
+                  "tr": "Lastikler",
+                  "bg": "Гуми"
                 },
                 "value": {
                   "de": "235/55 R17 auf 17-Zoll-Leichtmetallrädern „Dundrod“, zusätzlich ein Satz Sommerreifen",
-                  "en": "235/55 R17 on 17-inch “Dundrod” alloy wheels, plus a set of summer tyres"
+                  "en": "235/55 R17 on 17-inch “Dundrod” alloy wheels, plus a set of summer tyres",
+                  "tr": "17 inç “Dundrod” alaşım jantlarda 235/55 R17, ayrıca bir set yazlık lastik",
+                  "bg": "235/55 R17 на 17-инчови алуминиеви джанти „Dundrod“, плюс допълнителен комплект летни гуми"
                 }
               }
             ]
@@ -599,11 +779,15 @@
         "file": "Back.jpg",
         "alt": {
           "de": "Heck des Multivan mit geschlossener Heckklappe und dem Schriftzug Multivan",
-          "en": "Rear of the Multivan with the tailgate closed and the Multivan lettering"
+          "en": "Rear of the Multivan with the tailgate closed and the Multivan lettering",
+          "tr": "Multivan’ın arkadan görünümü: kapalı bagaj kapağı ve Multivan yazısı",
+          "bg": "Задна част на Multivan със затворен заден капак и надпис Multivan"
         },
         "caption": {
           "de": "Heckansicht",
-          "en": "Rear view"
+          "en": "Rear view",
+          "tr": "Arka görünüm",
+          "bg": "Изглед отзад"
         },
         "tags": [
           "exterior"
@@ -618,27 +802,37 @@
             "y": 0.62,
             "label": {
               "de": "Heckklappe",
-              "en": "Tailgate"
+              "en": "Tailgate",
+              "tr": "Bagaj kapağı",
+              "bg": "Заден капак"
             },
             "facts": [
               {
                 "label": {
                   "de": "Türen",
-                  "en": "Doors"
+                  "en": "Doors",
+                  "tr": "Kapılar",
+                  "bg": "Врати"
                 },
                 "value": {
                   "de": "5 (zwei Schiebetüren mit Soft-Close, elektrische Heckklappe)",
-                  "en": "5 (two sliding doors with soft-close, electric tailgate)"
+                  "en": "5 (two sliding doors with soft-close, electric tailgate)",
+                  "tr": "5 (Soft-Close’lu iki sürgülü kapı, elektrikli bagaj kapağı)",
+                  "bg": "5 (две плъзгащи се врати със Soft-Close, електрически заден капак)"
                 }
               },
               {
                 "label": {
                   "de": "Sicherheit und Anhängerkupplung",
-                  "en": "Safety and tow bar"
+                  "en": "Safety and tow bar",
+                  "tr": "Güvenlik ve çeki demiri",
+                  "bg": "Безопасност и теглич"
                 },
                 "value": {
                   "de": "PreCrash, Anhängerkupplung mit elektrischer Entriegelung",
-                  "en": "PreCrash, tow bar with electric release"
+                  "en": "PreCrash, tow bar with electric release",
+                  "tr": "PreCrash, elektrikli kilit açmalı çeki demiri",
+                  "bg": "PreCrash, теглич с електрическо освобождаване"
                 }
               }
             ]
@@ -649,17 +843,23 @@
             "y": 0.48,
             "label": {
               "de": "Rückleuchten",
-              "en": "Tail lights"
+              "en": "Tail lights",
+              "tr": "Stop lambaları",
+              "bg": "Задни светлини"
             },
             "facts": [
               {
                 "label": {
                   "de": "Licht",
-                  "en": "Lights"
+                  "en": "Lights",
+                  "tr": "Aydınlatma",
+                  "bg": "Осветление"
                 },
                 "value": {
                   "de": "IQ.Light Matrix-LED-Scheinwerfer, dunkle LED-Rückleuchten",
-                  "en": "IQ.Light matrix LED headlights, dark LED tail lights"
+                  "en": "IQ.Light matrix LED headlights, dark LED tail lights",
+                  "tr": "IQ.Light Matrix LED farlar, koyu LED stop lambaları",
+                  "bg": "IQ.Light Matrix LED фарове, тъмни LED стопове"
                 }
               }
             ]
@@ -675,11 +875,15 @@
         "file": "Wheel-rim.jpg",
         "alt": {
           "de": "Nahaufnahme eines silbernen Leichtmetallrads mit Reifen",
-          "en": "Close-up of a silver alloy wheel with its tyre"
+          "en": "Close-up of a silver alloy wheel with its tyre",
+          "tr": "Lastikli gümüş renkli alaşım jantın yakın çekimi",
+          "bg": "Едър план на сребриста алуминиева джанта с гума"
         },
         "caption": {
           "de": "Leichtmetallrad",
-          "en": "Alloy wheel"
+          "en": "Alloy wheel",
+          "tr": "Alaşım jant",
+          "bg": "Алуминиева джанта"
         },
         "focus": {
           "x": 0.5,
@@ -699,17 +903,23 @@
             "y": 0.52,
             "label": {
               "de": "Bereifung",
-              "en": "Tyres"
+              "en": "Tyres",
+              "tr": "Lastikler",
+              "bg": "Гуми"
             },
             "facts": [
               {
                 "label": {
                   "de": "Bereifung",
-                  "en": "Tyres"
+                  "en": "Tyres",
+                  "tr": "Lastikler",
+                  "bg": "Гуми"
                 },
                 "value": {
                   "de": "235/55 R17 auf 17-Zoll-Leichtmetallrädern „Dundrod“, zusätzlich ein Satz Sommerreifen",
-                  "en": "235/55 R17 on 17-inch “Dundrod” alloy wheels, plus a set of summer tyres"
+                  "en": "235/55 R17 on 17-inch “Dundrod” alloy wheels, plus a set of summer tyres",
+                  "tr": "17 inç “Dundrod” alaşım jantlarda 235/55 R17, ayrıca bir set yazlık lastik",
+                  "bg": "235/55 R17 на 17-инчови алуминиеви джанти „Dundrod“, плюс допълнителен комплект летни гуми"
                 }
               }
             ]
@@ -722,11 +932,15 @@
         "file": "Interior.jpg",
         "alt": {
           "de": "Rücksitze in Grau und Beige mit Panorama-Glasdach darüber",
-          "en": "Rear seats in grey and beige with the panoramic glass roof above"
+          "en": "Rear seats in grey and beige with the panoramic glass roof above",
+          "tr": "Üzerinde panoramik cam tavan bulunan gri ve bej arka koltuklar",
+          "bg": "Задни седалки в сиво и бежово с панорамен стъклен покрив над тях"
         },
         "caption": {
           "de": "Rücksitze mit Panorama-Glasdach",
-          "en": "Rear seats under the panoramic glass roof"
+          "en": "Rear seats under the panoramic glass roof",
+          "tr": "Panoramik cam tavan altındaki arka koltuklar",
+          "bg": "Задни седалки под панорамния стъклен покрив"
         },
         "tags": [
           "interior",
@@ -739,27 +953,37 @@
             "y": 0.58,
             "label": {
               "de": "Sitze",
-              "en": "Seats"
+              "en": "Seats",
+              "tr": "Koltuklar",
+              "bg": "Седалки"
             },
             "facts": [
               {
                 "label": {
                   "de": "Sitze",
-                  "en": "Seats"
+                  "en": "Seats",
+                  "tr": "Koltuklar",
+                  "bg": "Седалки"
                 },
                 "value": {
                   "de": "7 (2-2-3)",
-                  "en": "7 (2-2-3)"
+                  "en": "7 (2-2-3)",
+                  "tr": "7 (2-2-3)",
+                  "bg": "7 (2-2-3)"
                 }
               },
               {
                 "label": {
                   "de": "Innenraum",
-                  "en": "Interior"
+                  "en": "Interior",
+                  "tr": "İç mekân",
+                  "bg": "Интериор"
                 },
                 "value": {
                   "de": "Family-Paket (Multifunktions-Tischkonsole, Schubladen unter den Sitzen), Armlehnen vorne, elektrische Lendenwirbelstütze, Klapptische, Stoff „Bi-Color Bright Dots“",
-                  "en": "Family package (multifunction table console, drawers under the seats), front armrests, electric lumbar support, folding tables, “Bi-Color Bright Dots” upholstery"
+                  "en": "Family package (multifunction table console, drawers under the seats), front armrests, electric lumbar support, folding tables, “Bi-Color Bright Dots” upholstery",
+                  "tr": "Family paketi (çok işlevli masa konsolu, koltuk altı çekmeceler), ön kolçaklar, elektrikli bel desteği, katlanır masalar, “Bi-Color Bright Dots” kumaş",
+                  "bg": "Family пакет (многофункционална конзола-маса, чекмеджета под седалките), предни подлакътници, електрическа лумбална опора, сгъваеми масички, текстил „Bi-Color Bright Dots“"
                 }
               }
             ]
@@ -773,17 +997,23 @@
             "y": 0.07,
             "label": {
               "de": "Panorama-Glasdach",
-              "en": "Panoramic glass roof"
+              "en": "Panoramic glass roof",
+              "tr": "Panoramik cam tavan",
+              "bg": "Панорамен стъклен покрив"
             },
             "facts": [
               {
                 "label": {
                   "de": "Karosserie und Fenster",
-                  "en": "Body and windows"
+                  "en": "Body and windows",
+                  "tr": "Kaporta ve camlar",
+                  "bg": "Каросерия и стъкла"
                 },
                 "value": {
                   "de": "Panorama-Glasdach, Easy Open/Easy Close, Schiebefenster, Privacy-Verglasung (65 %) ab B-Säule",
-                  "en": "Panoramic glass roof, Easy Open/Easy Close, sliding windows, privacy glass (65 %) from the B-pillar"
+                  "en": "Panoramic glass roof, Easy Open/Easy Close, sliding windows, privacy glass (65 %) from the B-pillar",
+                  "tr": "Panoramik cam tavan, Easy Open/Easy Close, sürgülü camlar, B sütunundan itibaren gizlilik camı (%65)",
+                  "bg": "Панорамен стъклен покрив, Easy Open/Easy Close, плъзгащи се прозорци, затъмнени стъкла (65 %) от B-колоната"
                 }
               }
             ]
@@ -796,11 +1026,15 @@
         "file": "Trunk.jpg",
         "alt": {
           "de": "Laderaum hinter den Rücksitzen, durch die geöffnete Heckklappe gesehen",
-          "en": "Luggage area behind the rear seats, seen through the open tailgate"
+          "en": "Luggage area behind the rear seats, seen through the open tailgate",
+          "tr": "Açık bagaj kapağından görünen, arka koltukların arkasındaki yük alanı",
+          "bg": "Товарно пространство зад задните седалки, видяно през отворения заден капак"
         },
         "caption": {
           "de": "Laderaum",
-          "en": "Luggage compartment"
+          "en": "Luggage compartment",
+          "tr": "Bagaj bölümü",
+          "bg": "Багажно отделение"
         },
         "tags": [
           "interior",
@@ -816,11 +1050,15 @@
         "file": "Steering-wheel-panel.jpg",
         "alt": {
           "de": "Cockpit von hinten gesehen: Lenkrad, mittlerer Touchscreen mit Uhr, Klimabedienung und Blick durch die regennasse Windschutzscheibe",
-          "en": "Cockpit seen from behind the front seats: steering wheel, central touchscreen showing a clock, climate controls and the view through the rain-covered windscreen"
+          "en": "Cockpit seen from behind the front seats: steering wheel, central touchscreen showing a clock, climate controls and the view through the rain-covered windscreen",
+          "tr": "Arkadan görünen kokpit: direksiyon simidi, saatli orta dokunmatik ekran, klima kontrolleri ve yağmur damlalı ön camdan görünüm",
+          "bg": "Кокпитът, погледнат отзад: волан, централен тъчскрийн с часовник, управление на климата и поглед през мокрото от дъжд предно стъкло"
         },
         "caption": {
           "de": "Cockpit",
-          "en": "Cockpit"
+          "en": "Cockpit",
+          "tr": "Kokpit",
+          "bg": "Кокпит"
         },
         "tags": [
           "interior",
@@ -833,17 +1071,23 @@
             "y": 0.58,
             "label": {
               "de": "Assistenzsysteme",
-              "en": "Driver assistance"
+              "en": "Driver assistance",
+              "tr": "Sürüş destek sistemleri",
+              "bg": "Асистиращи системи"
             },
             "facts": [
               {
                 "label": {
                   "de": "Assistenzsysteme",
-                  "en": "Driver assistance"
+                  "en": "Driver assistance",
+                  "tr": "Sürüş destek sistemleri",
+                  "bg": "Асистиращи системи"
                 },
                 "value": {
                   "de": "Travel & Emergency Assist, adaptive Geschwindigkeitsregelung ACC Stop&Go, Lane Assist, Side Assist, Ausstiegsassistent, Türöffnungswarnung, Car2X, Parksensoren vorn und hinten, Rückfahrkamera",
-                  "en": "Travel & Emergency Assist, adaptive cruise control ACC Stop&Go, Lane Assist, Side Assist, exit warning, door opening warning, Car2X, front and rear parking sensors, rear-view camera"
+                  "en": "Travel & Emergency Assist, adaptive cruise control ACC Stop&Go, Lane Assist, Side Assist, exit warning, door opening warning, Car2X, front and rear parking sensors, rear-view camera",
+                  "tr": "Travel & Emergency Assist, ACC Stop&Go adaptif hız sabitleyici, Lane Assist, Side Assist, çıkış asistanı, kapı açma uyarısı, Car2X, ön ve arka park sensörleri, geri görüş kamerası",
+                  "bg": "Travel & Emergency Assist, адаптивен круиз контрол ACC Stop&Go, Lane Assist, Side Assist, асистент при излизане, предупреждение при отваряне на врата, Car2X, предни и задни парктроници, камера за задно виждане"
                 }
               }
             ]
@@ -854,7 +1098,9 @@
             "y": 0.46,
             "label": {
               "de": "Infotainment",
-              "en": "Infotainment"
+              "en": "Infotainment",
+              "tr": "Multimedya sistemi",
+              "bg": "Мултимедия"
             },
             "specKeys": [
               "multimedia"
@@ -871,11 +1117,15 @@
         "file": "Interior-panel.jpg",
         "alt": {
           "de": "Armaturenbrett mit zentralem Touchscreen, Getriebewahlschalter und Klimabedienung",
-          "en": "Dashboard with the central touchscreen, gear selector and climate controls"
+          "en": "Dashboard with the central touchscreen, gear selector and climate controls",
+          "tr": "Ortada dokunmatik ekran, vites seçici ve klima kontrolleri bulunan gösterge paneli",
+          "bg": "Табло с централен тъчскрийн, селектор на скоростите и управление на климата"
         },
         "caption": {
           "de": "Armaturenbrett",
-          "en": "Dashboard"
+          "en": "Dashboard",
+          "tr": "Gösterge paneli",
+          "bg": "Табло"
         },
         "focus": {
           "x": 0.5,
@@ -893,17 +1143,23 @@
             "y": 0.3,
             "label": {
               "de": "Touchscreen",
-              "en": "Touchscreen"
+              "en": "Touchscreen",
+              "tr": "Dokunmatik ekran",
+              "bg": "Тъчскрийн"
             },
             "facts": [
               {
                 "label": {
                   "de": "Multimedia",
-                  "en": "Multimedia"
+                  "en": "Multimedia",
+                  "tr": "Multimedya",
+                  "bg": "Мултимедия"
                 },
                 "value": {
                   "de": "Digital Cockpit 10,25 Zoll, Discover Media Navigation, kabelloses App-Connect (CarPlay/Android Auto), DAB+, 8 Lautsprecher, USB-C vorn und hinten",
-                  "en": "10.25-inch Digital Cockpit, Discover Media navigation, wireless App-Connect (CarPlay/Android Auto), DAB+, 8 speakers, USB-C front and rear"
+                  "en": "10.25-inch Digital Cockpit, Discover Media navigation, wireless App-Connect (CarPlay/Android Auto), DAB+, 8 speakers, USB-C front and rear",
+                  "tr": "10,25 inç Digital Cockpit, Discover Media navigasyon, kablosuz App-Connect (CarPlay/Android Auto), DAB+, 8 hoparlör, ön ve arkada USB-C",
+                  "bg": "Digital Cockpit 10,25 инча, навигация Discover Media, безжичен App-Connect (CarPlay/Android Auto), DAB+, 8 говорителя, USB-C отпред и отзад"
                 }
               }
             ]
@@ -917,17 +1173,23 @@
             "y": 0.62,
             "label": {
               "de": "Klima und Komfort",
-              "en": "Climate and comfort"
+              "en": "Climate and comfort",
+              "tr": "Klima ve konfor",
+              "bg": "Климатик и комфорт"
             },
             "facts": [
               {
                 "label": {
                   "de": "Komfort",
-                  "en": "Comfort"
+                  "en": "Comfort",
+                  "tr": "Konfor",
+                  "bg": "Комфорт"
                 },
                 "value": {
                   "de": "Standheizung mit Fernbedienung, beheizbare Frontscheibe, Sitzheizung vorn, Climatronic, Keyless Advanced, 4 Schlüssel",
-                  "en": "Auxiliary heating with remote control, heated windscreen, heated front seats, Climatronic, Keyless Advanced, 4 keys"
+                  "en": "Auxiliary heating with remote control, heated windscreen, heated front seats, Climatronic, Keyless Advanced, 4 keys",
+                  "tr": "Uzaktan kumandalı park ısıtıcı, ısıtmalı ön cam, ön koltuk ısıtma, Climatronic, Keyless Advanced, 4 anahtar",
+                  "bg": "Автономно отопление с дистанционно управление, отопляемо предно стъкло, отопление на предните седалки, Climatronic, Keyless Advanced, 4 ключа"
                 }
               }
             ]
@@ -943,11 +1205,15 @@
         "file": "Side-door.jpg",
         "alt": {
           "de": "Geöffnete Fahrertür mit Türverkleidung, Fensterhebern und Außenspiegel",
-          "en": "Open driver door with the door panel, window switches and the mirror"
+          "en": "Open driver door with the door panel, window switches and the mirror",
+          "tr": "Kapı kaplaması, cam düğmeleri ve dış aynası görünen açık sürücü kapısı",
+          "bg": "Отворена шофьорска врата с кора, бутони за стъклата и външно огледало"
         },
         "caption": {
           "de": "Fahrertür",
-          "en": "Driver's door"
+          "en": "Driver's door",
+          "tr": "Sürücü kapısı",
+          "bg": "Врата на шофьора"
         },
         "focus": {
           "x": 0.5,
@@ -967,11 +1233,15 @@
         "file": "Driving_Panel.jpg",
         "alt": {
           "de": "Digitales Kombiinstrument mit Ganganzeige, Reichweite und Geschwindigkeit",
-          "en": "Digital instrument cluster showing the gear position, range and speed"
+          "en": "Digital instrument cluster showing the gear position, range and speed",
+          "tr": "Vites göstergesi, menzil ve hız bilgisi veren dijital gösterge paneli",
+          "bg": "Дигитално табло с индикатор за предавката, запас на хода и скорост"
         },
         "caption": {
           "de": "Digitales Kombiinstrument",
-          "en": "Digital instrument cluster"
+          "en": "Digital instrument cluster",
+          "tr": "Dijital gösterge paneli",
+          "bg": "Дигитално арматурно табло"
         },
         "tags": [
           "dashboard"
@@ -983,27 +1253,37 @@
             "y": 0.42,
             "label": {
               "de": "Digital Cockpit",
-              "en": "Digital Cockpit"
+              "en": "Digital Cockpit",
+              "tr": "Digital Cockpit",
+              "bg": "Digital Cockpit"
             },
             "facts": [
               {
                 "label": {
                   "de": "Multimedia",
-                  "en": "Multimedia"
+                  "en": "Multimedia",
+                  "tr": "Multimedya",
+                  "bg": "Мултимедия"
                 },
                 "value": {
                   "de": "Digital Cockpit 10,25 Zoll, Discover Media Navigation, kabelloses App-Connect (CarPlay/Android Auto), DAB+, 8 Lautsprecher, USB-C vorn und hinten",
-                  "en": "10.25-inch Digital Cockpit, Discover Media navigation, wireless App-Connect (CarPlay/Android Auto), DAB+, 8 speakers, USB-C front and rear"
+                  "en": "10.25-inch Digital Cockpit, Discover Media navigation, wireless App-Connect (CarPlay/Android Auto), DAB+, 8 speakers, USB-C front and rear",
+                  "tr": "10,25 inç Digital Cockpit, Discover Media navigasyon, kablosuz App-Connect (CarPlay/Android Auto), DAB+, 8 hoparlör, ön ve arkada USB-C",
+                  "bg": "Digital Cockpit 10,25 инча, навигация Discover Media, безжичен App-Connect (CarPlay/Android Auto), DAB+, 8 говорителя, USB-C отпред и отзад"
                 }
               },
               {
                 "label": {
                   "de": "Getriebe",
-                  "en": "Gearbox"
+                  "en": "Gearbox",
+                  "tr": "Şanzıman",
+                  "bg": "Скоростна кутия"
                 },
                 "value": {
                   "de": "7-Gang-DSG (Automatik)",
-                  "en": "7-speed DSG (automatic)"
+                  "en": "7-speed DSG (automatic)",
+                  "tr": "7 ileri DSG (otomatik)",
+                  "bg": "7-степенна DSG (автоматична)"
                 }
               }
             ]
@@ -1019,11 +1299,15 @@
         "file": "Steering-wheel-panel-zoomed.jpg",
         "alt": {
           "de": "Fahrerbereich mit Lenkrad, Touchscreen und Vordersitzen",
-          "en": "Driver area with the steering wheel, touchscreen and front seats"
+          "en": "Driver area with the steering wheel, touchscreen and front seats",
+          "tr": "Direksiyon, dokunmatik ekran ve ön koltuklarla sürücü bölümü",
+          "bg": "Шофьорско място с волан, сензорен екран и предни седалки"
         },
         "caption": {
           "de": "Fahrerbereich",
-          "en": "Driver's area"
+          "en": "Driver's area",
+          "tr": "Sürücü bölümü",
+          "bg": "Шофьорско място"
         },
         "tags": [
           "interior",
@@ -1036,7 +1320,9 @@
             "y": 0.55,
             "label": {
               "de": "Assistenzsysteme",
-              "en": "Driver assistance"
+              "en": "Driver assistance",
+              "tr": "Sürüş destek sistemleri",
+              "bg": "Асистиращи системи"
             },
             "specKeys": [
               "assistants"
@@ -1050,11 +1336,15 @@
         "file": "mileage.jpg",
         "alt": {
           "de": "Anzeige des Gesamtkilometerstands",
-          "en": "Display showing the total distance driven"
+          "en": "Display showing the total distance driven",
+          "tr": "Toplam kilometre göstergesi",
+          "bg": "Показание на общия пробег"
         },
         "caption": {
           "de": "Kilometerstand",
-          "en": "Odometer"
+          "en": "Odometer",
+          "tr": "Kilometre",
+          "bg": "Пробег"
         },
         "tags": [
           "dashboard",
@@ -1067,7 +1357,9 @@
             "y": 0.43,
             "label": {
               "de": "Kilometerstand",
-              "en": "Mileage"
+              "en": "Mileage",
+              "tr": "Kilometre",
+              "bg": "Пробег"
             },
             "specKeys": [
               "mileage"
@@ -1084,11 +1376,15 @@
         "file": "Handbrake-charging-ports.jpg",
         "alt": {
           "de": "Schalter für Parkbremse und Auto-Hold, zwei USB-C-Anschlüsse und ein Ablagefach",
-          "en": "Parking brake and auto-hold switches, two USB-C ports and a storage compartment"
+          "en": "Parking brake and auto-hold switches, two USB-C ports and a storage compartment",
+          "tr": "Park freni ve Auto Hold düğmeleri, iki USB-C girişi ve bir saklama gözü",
+          "bg": "Бутони за ръчната спирачка и Auto Hold, два USB-C порта и отделение за съхранение"
         },
         "caption": {
           "de": "Parkbremse, Auto-Hold und USB-C",
-          "en": "Parking brake, Auto Hold and USB-C"
+          "en": "Parking brake, Auto Hold and USB-C",
+          "tr": "Park freni, Auto Hold ve USB-C",
+          "bg": "Ръчна спирачка, Auto Hold и USB-C"
         },
         "tags": [
           "interior",
@@ -1105,17 +1401,23 @@
             "y": 0.26,
             "label": {
               "de": "USB-C",
-              "en": "USB-C"
+              "en": "USB-C",
+              "tr": "USB-C",
+              "bg": "USB-C"
             },
             "facts": [
               {
                 "label": {
                   "de": "Multimedia",
-                  "en": "Multimedia"
+                  "en": "Multimedia",
+                  "tr": "Multimedya",
+                  "bg": "Мултимедия"
                 },
                 "value": {
                   "de": "Digital Cockpit 10,25 Zoll, Discover Media Navigation, kabelloses App-Connect (CarPlay/Android Auto), DAB+, 8 Lautsprecher, USB-C vorn und hinten",
-                  "en": "10.25-inch Digital Cockpit, Discover Media navigation, wireless App-Connect (CarPlay/Android Auto), DAB+, 8 speakers, USB-C front and rear"
+                  "en": "10.25-inch Digital Cockpit, Discover Media navigation, wireless App-Connect (CarPlay/Android Auto), DAB+, 8 speakers, USB-C front and rear",
+                  "tr": "10,25 inç Digital Cockpit, Discover Media navigasyon, kablosuz App-Connect (CarPlay/Android Auto), DAB+, 8 hoparlör, ön ve arkada USB-C",
+                  "bg": "Digital Cockpit 10,25 инча, навигация Discover Media, безжичен App-Connect (CarPlay/Android Auto), DAB+, 8 говорителя, USB-C отпред и отзад"
                 }
               }
             ]
@@ -1133,61 +1435,85 @@
     {
       "q": {
         "de": "Besichtigung und Probefahrt",
-        "en": "Viewing and test drive"
+        "en": "Viewing and test drive",
+        "tr": "Yerinde inceleme ve test sürüşü",
+        "bg": "Оглед и тест драйв"
       },
       "a": {
         "de": "Besichtigungen sind Montag bis Samstag von 10:00 bis 18:00 Uhr möglich und dauern etwa 30 Minuten. Eine Probefahrt ist nur gemeinsam mit einem der Eigentümer möglich; bitte bringen Sie Führerschein und Ausweis mit. Die Adresse nennen wir auf Anfrage.",
-        "en": "Viewings are possible Monday to Saturday from 10:00 to 18:00 and take about 30 minutes. A test drive is only possible together with one of the owners; please bring your driving licence and an ID. We give the address on request."
+        "en": "Viewings are possible Monday to Saturday from 10:00 to 18:00 and take about 30 minutes. A test drive is only possible together with one of the owners; please bring your driving licence and an ID. We give the address on request.",
+        "tr": "Yerinde incelemeler Pazartesi–Cumartesi günleri 10:00–18:00 saatleri arasında mümkündür ve yaklaşık 30 dakika sürer. Test sürüşü yalnızca sahiplerden biriyle birlikte yapılabilir; lütfen ehliyetinizi ve kimliğinizi yanınızda getirin. Adresi talep üzerine paylaşırız.",
+        "bg": "Огледи са възможни от понеделник до събота от 10:00 до 18:00 ч. и продължават около 30 минути. Тест драйв е възможен само заедно с един от собствениците; моля, носете шофьорска книжка и документ за самоличност. Адреса съобщаваме при запитване."
       }
     },
     {
       "q": {
         "de": "Ist das Fahrzeug geleast?",
-        "en": "Is the car leased?"
+        "en": "Is the car leased?",
+        "tr": "Araç leasing ile mi alınmış?",
+        "bg": "Автомобилът на лизинг ли е?"
       },
       "a": {
         "de": "Das Fahrzeug ist geleast. Der Verkäufer beendet den Leasingvertrag beim Kauf direkt, sodass Sie die Fahrzeugpapiere frei von Belastungen erhalten.",
-        "en": "The car is leased. The seller closes the lease directly at purchase, so you receive the vehicle papers free of encumbrance."
+        "en": "The car is leased. The seller closes the lease directly at purchase, so you receive the vehicle papers free of encumbrance.",
+        "tr": "Araç leasinglidir. Satıcı, satın alma sırasında leasing sözleşmesini doğrudan sonlandırır; böylece araç belgelerini her türlü yükten arı olarak teslim alırsınız.",
+        "bg": "Автомобилът е на лизинг. Продавачът прекратява лизинговия договор директно при покупката, така че получавате документите на автомобила без тежести."
       }
     },
     {
       "q": {
         "de": "Finanzierung oder Inzahlungnahme?",
-        "en": "Financing or trade-in?"
+        "en": "Financing or trade-in?",
+        "tr": "Finansman veya takas?",
+        "bg": "Финансиране или изкупуване на стар автомобил?"
       },
       "a": {
         "de": "Wir bieten weder Finanzierung noch Leasing noch die Inzahlungnahme eines Fahrzeugs an.",
-        "en": "We do not offer financing, leasing or the trade-in of a vehicle."
+        "en": "We do not offer financing, leasing or the trade-in of a vehicle.",
+        "tr": "Ne finansman, ne leasing, ne de araç takası sunuyoruz.",
+        "bg": "Не предлагаме нито финансиране, нито лизинг, нито приемане на автомобил в замяна."
       }
     },
     {
       "q": {
         "de": "Ist der Preis verhandelbar?",
-        "en": "Is the price negotiable?"
+        "en": "Is the price negotiable?",
+        "tr": "Fiyat pazarlığa açık mı?",
+        "bg": "Цената договаряема ли е?"
       },
       "a": {
         "de": "Ein kleiner Verhandlungsspielraum ist möglich. Die Entscheidung treffen die Eigentümer.",
-        "en": "A small negotiation is possible. The owners decide."
+        "en": "A small negotiation is possible. The owners decide.",
+        "tr": "Küçük bir pazarlık payı mümkündür. Kararı sahipler verir.",
+        "bg": "Има малко пространство за договаряне. Решението се взема от собствениците."
       }
     },
     {
       "q": {
         "de": "Wie ist der Zustand, gibt es Vorschäden?",
-        "en": "What is the condition, is there a damage history?"
+        "en": "What is the condition, is there a damage history?",
+        "tr": "Aracın durumu nasıl, önceden hasar var mı?",
+        "bg": "В какво състояние е автомобилът, има ли предишни щети?"
       },
       "a": {
         "de": "Das Fahrzeug ist technisch in gutem Zustand und zeigt leichte Gebrauchsspuren (Schrammen, kleine Kratzer). Am 23.06.2025 gab es ein Schadensereignis, bei dem die Schiebetür ersetzt wurde (Reparaturrechnung vom 28.07.2025). Weitere Informationen geben wir auf Anfrage.",
-        "en": "The car is technically in good condition and shows minor signs of use (scuffs, small scratches). On 23.06.2025 there was a damage event in which the sliding door was replaced (repair invoice dated 28.07.2025). We give further information on request."
+        "en": "The car is technically in good condition and shows minor signs of use (scuffs, small scratches). On 23.06.2025 there was a damage event in which the sliding door was replaced (repair invoice dated 28.07.2025). We give further information on request.",
+        "tr": "Araç teknik açıdan iyi durumdadır ve hafif kullanım izleri (sıyrıklar, küçük çizikler) taşır. 23.06.2025 tarihinde sürgülü kapının değiştirildiği bir hasar olayı yaşanmıştır (onarım faturası 28.07.2025). Daha fazla bilgiyi talep üzerine veririz.",
+        "bg": "Автомобилът е технически в добро състояние и има леки следи от употреба (охлузвания, малки драскотини). На 23.06.2025 г. е имало щетно събитие, при което е сменена плъзгащата се врата (фактура за ремонт от 28.07.2025 г.). Допълнителна информация предоставяме при запитване."
       }
     },
     {
       "q": {
         "de": "Was gehört zum Fahrzeug?",
-        "en": "What comes with the car?"
+        "en": "What comes with the car?",
+        "tr": "Araçla birlikte neler geliyor?",
+        "bg": "Какво се включва към автомобила?"
       },
       "a": {
         "de": "Zum Fahrzeug gehören ein zusätzlicher Satz Sommerreifen, ein vollwertiges Reserverad und vier Schlüssel. Die Ausstattung finden Sie unter Technische Daten.",
-        "en": "The car comes with an additional set of summer tyres, a full-size spare wheel and four keys. You find the equipment under Specifications."
+        "en": "The car comes with an additional set of summer tyres, a full-size spare wheel and four keys. You find the equipment under Specifications.",
+        "tr": "Araçla birlikte ek bir set yazlık lastik, tam boy yedek lastik ve dört anahtar verilir. Donanımı “Teknik özellikler” bölümünde bulabilirsiniz.",
+        "bg": "Към автомобила се предоставят допълнителен комплект летни гуми, пълноразмерна резервна гума и четири ключа. Оборудването ще намерите в раздел „Технически данни“."
       }
     }
   ],
@@ -1206,7 +1532,9 @@
         "id": "calm",
         "title": {
           "de": "Ruhig",
-          "en": "Calm"
+          "en": "Calm",
+          "tr": "Sakin",
+          "bg": "Спокойна"
         },
         "file": "audio/calm.mp3",
         "license": "TODO: source and licence"
@@ -1215,7 +1543,9 @@
         "id": "background",
         "title": {
           "de": "Hintergrund",
-          "en": "Background"
+          "en": "Background",
+          "tr": "Arka plan",
+          "bg": "Фон"
         },
         "file": "audio/background.mp3",
         "license": "TODO: source and licence"
@@ -1224,7 +1554,9 @@
         "id": "piano",
         "title": {
           "de": "Klavier",
-          "en": "Piano"
+          "en": "Piano",
+          "tr": "Piyano",
+          "bg": "Пиано"
         },
         "file": "audio/piano.mp3",
         "license": "TODO: source and licence"
@@ -1233,7 +1565,9 @@
         "id": "memories",
         "title": {
           "de": "Erinnerungen",
-          "en": "Memories"
+          "en": "Memories",
+          "tr": "Anılar",
+          "bg": "Спомени"
         },
         "file": "audio/memories.mp3",
         "license": "TODO: source and licence"

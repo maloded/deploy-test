@@ -74,8 +74,13 @@ export const sellerAgentSchema = z
         bubble: localizedSchema.optional(),
         /** The icon in the start button: the glowing "orb" (default), the status "dot" or a car "wheel" that turns while the agent speaks. */
         buttonIcon: z.enum(BUTTON_ICONS).default("orb"),
-        /** The job line under the name ("Sales advisor"); the line ends with the names of the languages the seller offers. */
+        /** The job line under the name ("Sales advisor"); the line ends with the languages she speaks (below). */
         role: localizedSchema.optional(),
+        /**
+         * The languages the assistant SPEAKS (ISO 639-1 codes, any language, not only the page languages: she may speak Russian on a page that has none). The line under
+         * her name ends with them. Without it the line lists the page languages the seller offers, which is only right while she speaks all of them.
+         */
+        languages: z.array(z.string().regex(/^[a-z]{2}$/, "a two-letter language code, for example de")).min(1).max(8).optional(),
         /**
          * An example call, per language, shown as a transcript on the large card while no call runs: lines of { speaker: "agent" | "caller", text }.
          * Without it the card has no transcript block. Only the default language is required (the others fall back to it).
@@ -194,22 +199,22 @@ export type SellerFieldDescriptor = {
 };
 
 export const SELLER_FIELDS = [
-  { key: "schemaVersion", label: { en: "Schema version", de: "Schemaversion" }, required: true, type: "version" },
-  { key: "displayName", label: { en: "Brand shown on the page", de: "Marke auf der Seite" }, required: true, type: "text" },
-  { key: "logo", label: { en: "Logo (SVG file next to seller.json)", de: "Logo (SVG-Datei neben seller.json)" }, required: false, type: "file" },
-  { key: "legalName", label: { en: "Legal name", de: "Rechtlicher Name" }, required: false, type: "localized" },
-  { key: "city", label: { en: "City (shown in the footer)", de: "Ort (in der Fußzeile)" }, required: false, type: "localized" },
-  { key: "legalNote", label: { en: "Legal note in the footer", de: "Rechtlicher Hinweis in der Fußzeile" }, required: false, type: "localized" },
-  { key: "contact", label: { en: "Contact (email, phone, website)", de: "Kontakt (E-Mail, Telefon, Website)" }, required: true, type: "contact" },
-  { key: "languages", label: { en: "Languages", de: "Sprachen" }, required: true, type: "languages" },
-  { key: "defaultLanguage", label: { en: "Default language", de: "Standardsprache" }, required: true, type: "language" },
-  { key: "theme", label: { en: "Default theme", de: "Standard-Theme" }, required: true, type: "theme" },
-  { key: "consentText", label: { en: "Consent text of the contact form", de: "Einwilligungstext des Kontaktformulars" }, required: true, type: "localized" },
-  { key: "viewing", label: { en: "Viewing settings (default)", de: "Besichtigungseinstellungen (Standard)" }, required: false, type: "viewing" },
-  { key: "timezone", label: { en: "Time zone (IANA, for example Europe/Vienna)", de: "Zeitzone (IANA, zum Beispiel Europe/Vienna)" }, required: false, type: "timezone" },
-  { key: "contactWindows", label: { en: "Contact windows (override of the defaults)", de: "Erreichbarkeitsfenster (überschreibt die Standardwerte)" }, required: false, type: "contactWindows" },
-  { key: "developer", label: { en: "Developed-by credit in the footer (name, link, icon)", de: "Entwickelt-von-Hinweis in der Fußzeile (Name, Link, Symbol)" }, required: false, type: "developer" },
-  { key: "agent", label: { en: "Voice assistant widget (id, variant, placement, theme, avatar)", de: "Sprachassistent-Widget (ID, Variante, Platzierung, Theme, Avatar)" }, required: false, type: "agent" },
-  { key: "privacyUrl", label: { en: "Privacy page (placeholder)", de: "Datenschutzseite (Platzhalter)" }, required: false, type: "link" },
-  { key: "imprintUrl", label: { en: "Imprint page (placeholder)", de: "Impressum (Platzhalter)" }, required: false, type: "link" },
+  { key: "schemaVersion", label: { en: "Schema version", de: "Schemaversion", tr: "Şema sürümü", bg: "Версия на схемата" }, required: true, type: "version" },
+  { key: "displayName", label: { en: "Brand shown on the page", de: "Marke auf der Seite", tr: "Sayfada gösterilen marka", bg: "Марка, показвана на страницата" }, required: true, type: "text" },
+  { key: "logo", label: { en: "Logo (SVG file next to seller.json)", de: "Logo (SVG-Datei neben seller.json)", tr: "Logo (seller.json yanındaki SVG dosyası)", bg: "Лого (SVG файл до seller.json)" }, required: false, type: "file" },
+  { key: "legalName", label: { en: "Legal name", de: "Rechtlicher Name", tr: "Yasal ad", bg: "Юридическо наименование" }, required: false, type: "localized" },
+  { key: "city", label: { en: "City (shown in the footer)", de: "Ort (in der Fußzeile)", tr: "Şehir (alt bilgide gösterilir)", bg: "Град (показва се в долния колонтитул)" }, required: false, type: "localized" },
+  { key: "legalNote", label: { en: "Legal note in the footer", de: "Rechtlicher Hinweis in der Fußzeile", tr: "Alt bilgideki yasal not", bg: "Правна бележка в долния колонтитул" }, required: false, type: "localized" },
+  { key: "contact", label: { en: "Contact (email, phone, website)", de: "Kontakt (E-Mail, Telefon, Website)", tr: "İletişim (e-posta, telefon, web sitesi)", bg: "Контакт (имейл, телефон, уебсайт)" }, required: true, type: "contact" },
+  { key: "languages", label: { en: "Languages", de: "Sprachen", tr: "Diller", bg: "Езици" }, required: true, type: "languages" },
+  { key: "defaultLanguage", label: { en: "Default language", de: "Standardsprache", tr: "Varsayılan dil", bg: "Език по подразбиране" }, required: true, type: "language" },
+  { key: "theme", label: { en: "Default theme", de: "Standard-Theme", tr: "Varsayılan tema", bg: "Тема по подразбиране" }, required: true, type: "theme" },
+  { key: "consentText", label: { en: "Consent text of the contact form", de: "Einwilligungstext des Kontaktformulars", tr: "İletişim formunun onay metni", bg: "Текст на съгласието в контактната форма" }, required: true, type: "localized" },
+  { key: "viewing", label: { en: "Viewing settings (default)", de: "Besichtigungseinstellungen (Standard)", tr: "Randevu ayarları (varsayılan)", bg: "Настройки за оглед (по подразбиране)" }, required: false, type: "viewing" },
+  { key: "timezone", label: { en: "Time zone (IANA, for example Europe/Vienna)", de: "Zeitzone (IANA, zum Beispiel Europe/Vienna)", tr: "Saat dilimi (IANA, örneğin Europe/Vienna)", bg: "Часова зона (IANA, например Europe/Vienna)" }, required: false, type: "timezone" },
+  { key: "contactWindows", label: { en: "Contact windows (override of the defaults)", de: "Erreichbarkeitsfenster (überschreibt die Standardwerte)", tr: "Ulaşılabilirlik pencereleri (varsayılanları geçersiz kılar)", bg: "Периоди за връзка (заменят стандартните)" }, required: false, type: "contactWindows" },
+  { key: "developer", label: { en: "Developed-by credit in the footer (name, link, icon)", de: "Entwickelt-von-Hinweis in der Fußzeile (Name, Link, Symbol)", tr: "Alt bilgide “Geliştiren” notu (ad, bağlantı, simge)", bg: "Бележка „Разработено от“ в долния колонтитул (име, връзка, икона)" }, required: false, type: "developer" },
+  { key: "agent", label: { en: "Voice assistant widget (id, variant, placement, theme, avatar)", de: "Sprachassistent-Widget (ID, Variante, Platzierung, Theme, Avatar)", tr: "Sesli asistan bileşeni (kimlik, varyant, yerleşim, tema, avatar)", bg: "Гласов асистент – уиджет (идентификатор, вариант, позиция, тема, аватар)" }, required: false, type: "agent" },
+  { key: "privacyUrl", label: { en: "Privacy page (placeholder)", de: "Datenschutzseite (Platzhalter)", tr: "Gizlilik sayfası (yer tutucu)", bg: "Страница за поверителност (заместител)" }, required: false, type: "link" },
+  { key: "imprintUrl", label: { en: "Imprint page (placeholder)", de: "Impressum (Platzhalter)", tr: "Künye sayfası (yer tutucu)", bg: "Страница с правна информация (заместител)" }, required: false, type: "link" },
 ] as const satisfies readonly SellerFieldDescriptor[];

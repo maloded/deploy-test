@@ -5,7 +5,7 @@ import path from "node:path";
 
 const root = process.cwd();
 
-// theme -> [{ pkg, weights }]. Latin only: de and en need nothing else. For a language with another subset see "Add a language" in PROJECT.md.
+// theme -> [{ pkg, weights }], copied for each subset in SUBSETS: latin (de, en), latin-ext (tr: ğ ş İ) and cyrillic (bg). See "Add a language" in PROJECT.md.
 const FONTS = {
   "light-editorial": [
     { pkg: "source-serif-4", weights: [300] },
@@ -17,20 +17,24 @@ const FONTS = {
   ],
 };
 
+const SUBSETS = ["latin", "latin-ext", "cyrillic"];
+
 const missing = [];
 for (const [theme, families] of Object.entries(FONTS)) {
   const out = path.join(root, "public", "fonts", theme);
   fs.mkdirSync(out, { recursive: true });
   for (const { pkg, weights } of families) {
     for (const weight of weights) {
-      const name = `${pkg}-latin-${weight}-normal.woff2`;
-      const from = path.join(root, "node_modules", "@fontsource", pkg, "files", name);
-      if (!fs.existsSync(from)) {
-        missing.push(from);
-        continue;
+      for (const subset of SUBSETS) {
+        const name = `${pkg}-${subset}-${weight}-normal.woff2`;
+        const from = path.join(root, "node_modules", "@fontsource", pkg, "files", name);
+        if (!fs.existsSync(from)) {
+          missing.push(from);
+          continue;
+        }
+        fs.copyFileSync(from, path.join(out, name));
+        console.log(`${theme}: ${name}`);
       }
-      fs.copyFileSync(from, path.join(out, name));
-      console.log(`${theme}: ${name}`);
     }
   }
 }

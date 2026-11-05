@@ -111,7 +111,7 @@ describe("the running line (CSS contract)", () => {
   it("on wide screens it hangs over the column (absolute, no height of its own in the column) in a lead-in band made tall enough for it", () => {
     expect(css).toMatch(/\.sofia-intro\s*\{\s*position:\s*absolute;\s*inset:\s*auto 0 calc\(100% \+ var\(--space-2\)\)/);
     expect(css).toMatch(/\.hero\[data-card\] \.hero__lead-in\s*\{[^}]*min-height:\s*3\.4rem/);
-    expect(css).toMatch(/\.hero__aside \.sofia-intro__heading\s*\{\s*font-size:\s*1\.1rem/);
+    expect(css).toMatch(/\.hero__aside \.sofia-intro__heading\s*\{\s*font-size:\s*calc\(1\.1rem \* var\(--intro-scale, 1\)\);\s*overflow: hidden;\s*text-overflow: ellipsis;\s*white-space: nowrap;/); // one line, scaled down by IntroHeading to fit
   });
 
   it("the tracks have no percentage min-width: it made the rail as wide as ONE track, so the -50% loop moved half a track and jumped", () => {

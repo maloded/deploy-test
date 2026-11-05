@@ -1,7 +1,7 @@
 // How the avatar card decides what to show. Pure functions (no DOM), so every row of the degradation table is a unit test.
 import { AVATAR_SLOTS, type AvatarSlot, type LoopFiles, type ResolvedAvatar } from "./avatar-manifest";
 import type { CardState } from "./agent-state";
-import { languageEntry, type Language } from "./languages";
+import { LANGUAGE_REGISTRY, type Language } from "./languages";
 import { pick } from "./i18n";
 import { ui, uiFmt } from "./ui-strings";
 
@@ -61,9 +61,21 @@ export const motionAllowed = ({ reducedMotion, saveData }: { reducedMotion: bool
  * The line under the name on the card: the seller's role in the page language, then the own names of the languages the seller offers
  * ("Verkaufsberaterin · Deutsch, English"; with `codes` the languages are their codes, "Verkaufsberaterin · DE, EN", for a card too narrow for one line). Without a role it is the languages only; with neither it is empty (no line).
  */
+/** A spoken language's own name: the registry's ("Deutsch"), else the browser's own-language name with a capital ("Русский"), else the code. */
+export function spokenName(code: string): string {
+  const entry = LANGUAGE_REGISTRY.find((l) => l.code === code);
+  if (entry) return entry.name;
+  try {
+    const name = new Intl.DisplayNames([code], { type: "language" }).of(code);
+    return name ? name.charAt(0).toLocaleUpperCase(code) + name.slice(1) : code;
+  } catch {
+    return code;
+  }
+}
+
 export function roleLine(avatar: Pick<ResolvedAvatar, "role" | "languages">, lang: Language, codes = false): string {
   const role = avatar.role ? pick(avatar.role, lang) : "";
-  const names = avatar.languages.map((l) => (codes ? l.toUpperCase() : languageEntry(l).name)).join(", ");
+  const names = avatar.languages.map((l) => (codes ? l.toUpperCase() : spokenName(l))).join(", ");
   return [role, names].filter(Boolean).join(" \u00b7 ");
 }
 

@@ -1,0 +1,369 @@
+file,path,language,text,source,status
+seller.json,city.tr,tr,Viyana,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+seller.json,city.bg,bg,Виена,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+seller.json,legalNote.tr,tr,Bu sayfadaki bilgiler bağlayıcı değildir ve bağlayıcı bir teklif oluşturmaz.,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+seller.json,legalNote.bg,bg,Информацията на тази страница не е обвързваща и не представлява обвързваща оферта.,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+seller.json,consentText.tr,tr,Good Point’in talebime yanıt vermek ve bu konuda benimle iletişime geçmek amacıyla bilgilerimi işlemesini kabul ediyorum. Bilgiler yalnızca bu amaçla saklanır. Ayrıntılar için gizlilik bildirimine bakın.,AI draft (this task),AI draft - needs native review and legal review
+seller.json,consentText.bg,bg,"Съгласен/съгласна съм Good Point да обработва данните ми, за да отговори на запитването ми и да се свърже с мен във връзка с него. Данните се съхраняват само за тази цел. Повече информация – в известието за поверителност.",AI draft (this task),AI draft - needs native review and legal review
+seller.json,agent.avatar.tagline.tr,tr,Size daha fazlasını anlatmaktan ya da yardımcı olmaktan memnuniyet duyarım.,AI draft (this task),AI draft - needs native review
+seller.json,agent.avatar.tagline.bg,bg,С удоволствие ще Ви разкажа повече или ще Ви помогна.,AI draft (this task),AI draft - needs native review
+seller.json,agent.avatar.badge.tr,tr,Yapay zekâ asistanı,AI draft (this task),AI draft - needs native review
+seller.json,agent.avatar.badge.bg,bg,ИИ асистент,AI draft (this task),AI draft - needs native review
+seller.json,agent.avatar.endLabel.tr,tr,Görüşmeyi bitir,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+seller.json,agent.avatar.endLabel.bg,bg,Прекрати разговора,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+seller.json,agent.avatar.role.tr,tr,Satış danışmanı,AI draft (this task),AI draft - needs native review
+seller.json,agent.avatar.role.bg,bg,Консултант,AI draft (this task),AI draft - needs native review
+seller.json,agent.avatar.example.tr[0].text,tr,Multivan’ı bu hafta görebilir miyim?,draft,AI draft - needs native review
+seller.json,agent.avatar.example.tr[1].text,tr,Elbette. Size en uygun zaman ne zaman?,draft,AI draft - needs native review
+seller.json,agent.avatar.example.tr[2].text,tr,Perşembe öğleden sonra.,draft,AI draft - needs native review
+seller.json,agent.avatar.example.tr[3].text,tr,Talebinizi Good Point’e iletiyorum. Bir onay alacaksınız.,draft,AI draft - needs native review
+seller.json,agent.avatar.example.bg[0].text,bg,Мога ли да разгледам Multivan тази седмица?,draft,AI draft - needs native review
+seller.json,agent.avatar.example.bg[1].text,bg,С удоволствие. Кога Ви е най-удобно?,draft,AI draft - needs native review
+seller.json,agent.avatar.example.bg[2].text,bg,В четвъртък следобед.,draft,AI draft - needs native review
+seller.json,agent.avatar.example.bg[3].text,bg,Ще предам запитването Ви на Good Point. Ще получите потвърждение.,draft,AI draft - needs native review
+seller.json,agent.avatar.intro.heading.tr,tr,Okumak yerine konuşun,AI draft (this task),AI draft - needs native review
+seller.json,agent.avatar.intro.heading.bg,bg,"Вместо да четете – говорете",AI draft (this task),AI draft - needs native review
+seller.json,agent.avatar.intro.items[0].tr,tr,Araçla ilgili sorular,AI draft (this task),AI draft - needs native review
+seller.json,agent.avatar.intro.items[0].bg,bg,Въпроси за автомобила,AI draft (this task),AI draft - needs native review
+seller.json,agent.avatar.intro.items[1].tr,tr,Test sürüşü planlayın,AI draft (this task),AI draft - needs native review
+seller.json,agent.avatar.intro.items[1].bg,bg,Запазете тест драйв,AI draft (this task),AI draft - needs native review
+seller.json,agent.avatar.intro.items[2].tr,tr,Fiyat teklifi,AI draft (this task),AI draft - needs native review
+seller.json,agent.avatar.intro.items[2].bg,bg,Ценова оферта,AI draft (this task),AI draft - needs native review
+seller.json,agent.avatar.intro.items[3].tr,tr,Fotoğrafları göster,AI draft (this task),AI draft - needs native review
+seller.json,agent.avatar.intro.items[3].bg,bg,Покажи снимките,AI draft (this task),AI draft - needs native review
+seller.json,agent.avatar.intro.items[4].tr,tr,Geri arama,AI draft (this task),AI draft - needs native review
+seller.json,agent.avatar.intro.items[4].bg,bg,Обратно обаждане,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,title.tr,tr,Volkswagen Multivan (T7) Business 2.0 TDI,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,title.bg,bg,Volkswagen Multivan (T7) Business 2.0 TDI,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,tagline.tr,tr,"DSG otomatik şanzımanlı, bakımlı yedi koltuklu araç; araç belgeleri her türlü yükten arı.","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,tagline.bg,bg,"Поддържан седемместен автомобил с автоматична DSG кутия, документите на автомобила са без тежести.","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,price.note.tr,tr,KDV dahil,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,price.note.bg,bg,с ДДС,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,hero.eyebrow[0].tr,tr,Viyana,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,hero.eyebrow[0].bg,bg,Виена,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,hero.headline.tr,tr,VW Multivan 2.0 TDI,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,hero.headline.bg,bg,VW Multivan 2.0 TDI,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,hero.description.tr,tr,"Yedi koltuklu, İndiyum Gri Volkswagen Multivan (T7); dizel motor ve 7 ileri DSG şanzıman. Teknik olarak iyi durumda, yalnızca VW yetkili servislerinde bakım gördü. Durum ve geçmiş, 2025’teki bir hasar olayı dâhil, Teknik veriler bölümünde yer almaktadır.",AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,hero.description.bg,bg,"Volkswagen Multivan (T7) в цвят Индиум сив със седем места, дизелов двигател и 7-степенна DSG. Технически в добро състояние, обслужван само във VW сервизи. Състоянието и историята, включително щета от 2025 г., са описани в раздел „Технически данни“.",AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,hero.trust[0].tr,tr,Yalnızca VW yetkili servislerinde bakım gördü,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,hero.trust[0].bg,bg,Обслужван единствено във VW сервизи,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,hero.trust[1].tr,tr,Muayene (Pickerl) 07/2028’e kadar geçerli,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,hero.trust[1].bg,bg,Технически преглед (Pickerl) валиден до 07/2028,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,hero.trust[2].tr,tr,Ek bir set yazlık lastik,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,hero.trust[2].bg,bg,Допълнителен комплект летни гуми,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,hero.priceLabel.tr,tr,Satış fiyatı,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,hero.priceLabel.bg,bg,Продажна цена,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,hero.shortCta.tr,tr,Randevu,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,hero.shortCta.bg,bg,Оглед,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,specs[0].label.tr,tr,Güç,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[0].label.bg,bg,Мощност,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[0].value.tr,tr,150 PS (110 kW),"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[0].value.bg,bg,150 к.с. (110 kW),"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[1].label.tr,tr,Yakıt,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[1].label.bg,bg,Гориво,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[1].value.tr,tr,"Dizel (2,0 l)","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[1].value.bg,bg,"Дизел (2,0 l)","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[2].label.tr,tr,Emisyon standardı,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[2].label.bg,bg,Екологична норма,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[2].value.tr,tr,Euro 6,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,specs[2].value.bg,bg,Euro 6,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,specs[3].label.tr,tr,Şanzıman,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[3].label.bg,bg,Скоростна кутия,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[3].value.tr,tr,7 ileri DSG (otomatik),"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[3].value.bg,bg,7-степенна DSG (автоматична),"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[4].label.tr,tr,Çekiş,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[4].label.bg,bg,Задвижване,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[4].value.tr,tr,Önden çekiş,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[4].value.bg,bg,Предно задвижване,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[5].label.tr,tr,Yakıt tüketimi (WLTP),"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[5].label.bg,bg,Разход на гориво (WLTP),"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[5].value.tr,tr,"6,6 l/100 km","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[5].value.bg,bg,"6,6 l/100 км","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[6].label.tr,tr,CO₂ emisyonu (WLTP),"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[6].label.bg,bg,CO₂ емисии (WLTP),"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[6].value.tr,tr,174 g/km,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[6].value.bg,bg,174 g/км,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[7].label.tr,tr,Renk,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[7].label.bg,bg,Цвят,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[7].value.tr,tr,İndiyum Gri Metalik,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[7].value.bg,bg,Индиум сив металик,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[8].label.tr,tr,Kapılar,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[8].label.bg,bg,Врати,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[8].value.tr,tr,"5 (Soft-Close’lu iki sürgülü kapı, elektrikli bagaj kapağı)","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[8].value.bg,bg,"5 (две плъзгащи се врати със Soft-Close, електрически заден капак)","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[9].label.tr,tr,Ölçüler (U × G × Y),"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[9].label.bg,bg,Размери (Д × Ш × В),"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[9].value.tr,tr,4.973 × 1.941 × 1.887 mm,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[9].value.bg,bg,4973 × 1941 × 1887 mm,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[10].label.tr,tr,Çekme kapasitesi,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[10].label.bg,bg,Допустимо тегло на ремаркето,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[10].value.tr,tr,"frenli 2.000 kg’a, frensiz 750 kg’a kadar","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[10].value.bg,bg,"до 2000 kg със спирачки, 750 kg без спирачки","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[11].label.tr,tr,Lastikler,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[11].label.bg,bg,Гуми,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[11].value.tr,tr,"17 inç “Dundrod” alaşım jantlarda 235/55 R17, ayrıca bir set yazlık lastik","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[11].value.bg,bg,"235/55 R17 на 17-инчови алуминиеви джанти „Dundrod“, плюс допълнителен комплект летни гуми","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[12].label.tr,tr,Kaporta ve camlar,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[12].label.bg,bg,Каросерия и стъкла,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[12].value.tr,tr,"Panoramik cam tavan, Easy Open/Easy Close, sürgülü camlar, B sütunundan itibaren gizlilik camı (%65)","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[12].value.bg,bg,"Панорамен стъклен покрив, Easy Open/Easy Close, плъзгащи се прозорци, затъмнени стъкла (65 %) от B-колоната","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[13].label.tr,tr,Koltuklar,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[13].label.bg,bg,Седалки,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[13].value.tr,tr,7 (2-2-3),AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,specs[13].value.bg,bg,7 (2-2-3),AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,specs[14].label.tr,tr,İç mekân,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[14].label.bg,bg,Интериор,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[14].value.tr,tr,"Family paketi (çok işlevli masa konsolu, koltuk altı çekmeceler), ön kolçaklar, elektrikli bel desteği, katlanır masalar, “Bi-Color Bright Dots” kumaş","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[14].value.bg,bg,"Family пакет (многофункционална конзола-маса, чекмеджета под седалките), предни подлакътници, електрическа лумбална опора, сгъваеми масички, текстил „Bi-Color Bright Dots“","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[15].label.tr,tr,Sürüş destek sistemleri,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[15].label.bg,bg,Асистиращи системи,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[15].value.tr,tr,"Travel & Emergency Assist, ACC Stop&Go adaptif hız sabitleyici, Lane Assist, Side Assist, çıkış asistanı, kapı açma uyarısı, Car2X, ön ve arka park sensörleri, geri görüş kamerası","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[15].value.bg,bg,"Travel & Emergency Assist, адаптивен круиз контрол ACC Stop&Go, Lane Assist, Side Assist, асистент при излизане, предупреждение при отваряне на врата, Car2X, предни и задни парктроници, камера за задно виждане","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[16].label.tr,tr,Aydınlatma,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[16].label.bg,bg,Осветление,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[16].value.tr,tr,"IQ.Light Matrix LED farlar, koyu LED stop lambaları","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[16].value.bg,bg,"IQ.Light Matrix LED фарове, тъмни LED стопове","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[17].label.tr,tr,Multimedya,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[17].label.bg,bg,Мултимедия,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[17].value.tr,tr,"10,25 inç Digital Cockpit, Discover Media navigasyon, kablosuz App-Connect (CarPlay/Android Auto), DAB+, 8 hoparlör, ön ve arkada USB-C","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[17].value.bg,bg,"Digital Cockpit 10,25 инча, навигация Discover Media, безжичен App-Connect (CarPlay/Android Auto), DAB+, 8 говорителя, USB-C отпред и отзад","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[18].label.tr,tr,Konfor,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[18].label.bg,bg,Комфорт,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[18].value.tr,tr,"Uzaktan kumandalı park ısıtıcı, ısıtmalı ön cam, ön koltuk ısıtma, Climatronic, Keyless Advanced, 4 anahtar","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[18].value.bg,bg,"Автономно отопление с дистанционно управление, отопляемо предно стъкло, отопление на предните седалки, Climatronic, Keyless Advanced, 4 ключа","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[19].label.tr,tr,Süspansiyon,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[19].label.bg,bg,Окачване,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[19].value.tr,tr,"Dinamik alçaltılmış süspansiyon, sürüş modları, tam boy yedek lastik","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[19].value.bg,bg,"Динамично занижено окачване, режими на шофиране, пълноразмерна резервна гума","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[20].label.tr,tr,Güvenlik ve çeki demiri,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[20].label.bg,bg,Безопасност и теглич,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[20].value.tr,tr,"PreCrash, elektrikli kilit açmalı çeki demiri","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[20].value.bg,bg,"PreCrash, теглич с електрическо освобождаване","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[21].label.tr,tr,İlk tescil,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[21].label.bg,bg,Първа регистрация,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[21].value.tr,tr,07/2023,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,specs[21].value.bg,bg,07/2023,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,specs[22].label.tr,tr,Kilometre,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[22].label.bg,bg,Пробег,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[22].value.tr,tr,yakl. 37.500 km,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[22].value.bg,bg,прибл. 37 500 км,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[23].label.tr,tr,Durum,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[23].label.bg,bg,Състояние,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[23].value.tr,tr,"Teknik açıdan iyi; hafif kullanım izleri (sıyrıklar, küçük çizikler), ciddi bir durum bildirilmedi","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[23].value.bg,bg,"Технически в добро състояние; леки следи от употреба (охлузвания, малки драскотини), без сериозни забележки","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[24].label.tr,tr,Bakım,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[24].label.bg,bg,Обслужване,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[24].value.tr,tr,Yalnızca VW yetkili servislerinde,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[24].value.bg,bg,Единствено във VW сервизи,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[25].label.tr,tr,Muayene (Pickerl),"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[25].label.bg,bg,Технически преглед (Pickerl),"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[25].value.tr,tr,"07/2026’da geçti, bir sonraki muayene 07/2028","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[25].value.bg,bg,"Преминат 07/2026, следващ преглед 07/2028","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[26].label.tr,tr,Sahipler,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[26].label.bg,bg,Собственици,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[26].value.tr,tr,Şimdiye kadar 2 (satıcı ikinci sahip),"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[26].value.bg,bg,Досега 2 (продавачът е вторият),"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[27].label.tr,tr,Hasar olayı,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[27].label.bg,bg,Щетно събитие,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[27].value.tr,tr,"23.06.2025: Sürgülü kapı değiştirildi (onarım faturası 28.07.2025, yakl. 25.000 km’de)","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,specs[27].value.bg,bg,"23.06.2025 г.: сменена плъзгаща се врата (фактура за ремонт от 28.07.2025 г., при прибл. 25 000 км)","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[0].alt.tr,tr,"Önden üç çeyrek görünüm: gri Multivan, ıslak arnavut kaldırımlı bir sokakta kaldırım kenarında, sürgülü kapı açık; farlar ve ön ızgara","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[0].alt.bg,bg,"Изглед три четвърти отпред: сивият Multivan до бордюра на мокра павирана улица, плъзгащата се врата е отворена, фарове и решетка","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[0].caption.tr,tr,Önden üç çeyrek görünüm,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[0].caption.bg,bg,Изглед отпред под ъгъл,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[0].hotspots[0].label.tr,tr,Sürgülü kapı açık,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[0].hotspots[0].label.bg,bg,Отворена плъзгаща се врата,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[0].hotspots[0].facts[0].label.tr,tr,Kapılar,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[0].hotspots[0].facts[0].label.bg,bg,Врати,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[0].hotspots[0].facts[0].value.tr,tr,"5 (Soft-Close’lu iki sürgülü kapı, elektrikli bagaj kapağı)","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[0].hotspots[0].facts[0].value.bg,bg,"5 (две плъзгащи се врати със Soft-Close, електрически заден капак)","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[0].hotspots[1].label.tr,tr,Farlar,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[0].hotspots[1].label.bg,bg,Фарове,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[0].hotspots[1].facts[0].label.tr,tr,Aydınlatma,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[0].hotspots[1].facts[0].label.bg,bg,Осветление,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[0].hotspots[1].facts[0].value.tr,tr,"IQ.Light Matrix LED farlar, koyu LED stop lambaları","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[0].hotspots[1].facts[0].value.bg,bg,"IQ.Light Matrix LED фарове, тъмни LED стопове","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[1].alt.tr,tr,"Gri Multivan’ın ıslak bir sokakta kaldırım kenarında önden görünümü: VW amblemi, farlar ve ön ızgara","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[1].alt.bg,bg,"Изглед отпред на сивия Multivan до бордюра на мокра улица: емблема на VW, фарове и решетка","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[1].caption.tr,tr,Ön görünüm,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[1].caption.bg,bg,Изглед отпред,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[1].hotspots[0].label.tr,tr,Farlar,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[1].hotspots[0].label.bg,bg,Фарове,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[1].hotspots[0].facts[0].label.tr,tr,Aydınlatma,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[1].hotspots[0].facts[0].label.bg,bg,Осветление,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[1].hotspots[0].facts[0].value.tr,tr,"IQ.Light Matrix LED farlar, koyu LED stop lambaları","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[1].hotspots[0].facts[0].value.bg,bg,"IQ.Light Matrix LED фарове, тъмни LED стопове","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[2].alt.tr,tr,Multivan’ın soldan yan görünümü; sürgülü kapı ve alaşım jantlar,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[2].alt.bg,bg,Страничен изглед отляво на Multivan с плъзгаща се врата и алуминиеви джанти,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[2].caption.tr,tr,Yan görünüm,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[2].caption.bg,bg,Страничен изглед,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[2].hotspots[0].label.tr,tr,Sürgülü kapı,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[2].hotspots[0].label.bg,bg,Плъзгаща се врата,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[2].hotspots[0].facts[0].label.tr,tr,Kapılar,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[2].hotspots[0].facts[0].label.bg,bg,Врати,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[2].hotspots[0].facts[0].value.tr,tr,"5 (Soft-Close’lu iki sürgülü kapı, elektrikli bagaj kapağı)","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[2].hotspots[0].facts[0].value.bg,bg,"5 (две плъзгащи се врати със Soft-Close, електрически заден капак)","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[2].hotspots[0].facts[1].label.tr,tr,Hasar olayı,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[2].hotspots[0].facts[1].label.bg,bg,Щетно събитие,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[2].hotspots[0].facts[1].value.tr,tr,"23.06.2025: Sürgülü kapı değiştirildi (onarım faturası 28.07.2025, yakl. 25.000 km’de)","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[2].hotspots[0].facts[1].value.bg,bg,"23.06.2025 г.: сменена плъзгаща се врата (фактура за ремонт от 28.07.2025 г., при прибл. 25 000 км)","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[2].hotspots[1].label.tr,tr,Tekerlekler,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[2].hotspots[1].label.bg,bg,Колела,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[2].hotspots[1].facts[0].label.tr,tr,Lastikler,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[2].hotspots[1].facts[0].label.bg,bg,Гуми,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[2].hotspots[1].facts[0].value.tr,tr,"17 inç “Dundrod” alaşım jantlarda 235/55 R17, ayrıca bir set yazlık lastik","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[2].hotspots[1].facts[0].value.bg,bg,"235/55 R17 на 17-инчови алуминиеви джанти „Dundrod“, плюс допълнителен комплект летни гуми","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[3].alt.tr,tr,Multivan’ın arkadan görünümü: kapalı bagaj kapağı ve Multivan yazısı,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[3].alt.bg,bg,Задна част на Multivan със затворен заден капак и надпис Multivan,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[3].caption.tr,tr,Arka görünüm,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[3].caption.bg,bg,Изглед отзад,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[3].hotspots[0].label.tr,tr,Bagaj kapağı,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[3].hotspots[0].label.bg,bg,Заден капак,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[3].hotspots[0].facts[0].label.tr,tr,Kapılar,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[3].hotspots[0].facts[0].label.bg,bg,Врати,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[3].hotspots[0].facts[0].value.tr,tr,"5 (Soft-Close’lu iki sürgülü kapı, elektrikli bagaj kapağı)","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[3].hotspots[0].facts[0].value.bg,bg,"5 (две плъзгащи се врати със Soft-Close, електрически заден капак)","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[3].hotspots[0].facts[1].label.tr,tr,Güvenlik ve çeki demiri,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[3].hotspots[0].facts[1].label.bg,bg,Безопасност и теглич,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[3].hotspots[0].facts[1].value.tr,tr,"PreCrash, elektrikli kilit açmalı çeki demiri","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[3].hotspots[0].facts[1].value.bg,bg,"PreCrash, теглич с електрическо освобождаване","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[3].hotspots[1].label.tr,tr,Stop lambaları,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[3].hotspots[1].label.bg,bg,Задни светлини,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[3].hotspots[1].facts[0].label.tr,tr,Aydınlatma,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[3].hotspots[1].facts[0].label.bg,bg,Осветление,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[3].hotspots[1].facts[0].value.tr,tr,"IQ.Light Matrix LED farlar, koyu LED stop lambaları","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[3].hotspots[1].facts[0].value.bg,bg,"IQ.Light Matrix LED фарове, тъмни LED стопове","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[4].alt.tr,tr,Lastikli gümüş renkli alaşım jantın yakın çekimi,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[4].alt.bg,bg,Едър план на сребриста алуминиева джанта с гума,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[4].caption.tr,tr,Alaşım jant,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[4].caption.bg,bg,Алуминиева джанта,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[4].hotspots[0].label.tr,tr,Lastikler,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[4].hotspots[0].label.bg,bg,Гуми,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[4].hotspots[0].facts[0].label.tr,tr,Lastikler,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[4].hotspots[0].facts[0].label.bg,bg,Гуми,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[4].hotspots[0].facts[0].value.tr,tr,"17 inç “Dundrod” alaşım jantlarda 235/55 R17, ayrıca bir set yazlık lastik","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[4].hotspots[0].facts[0].value.bg,bg,"235/55 R17 на 17-инчови алуминиеви джанти „Dundrod“, плюс допълнителен комплект летни гуми","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[5].alt.tr,tr,Üzerinde panoramik cam tavan bulunan gri ve bej arka koltuklar,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[5].alt.bg,bg,Задни седалки в сиво и бежово с панорамен стъклен покрив над тях,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[5].caption.tr,tr,Panoramik cam tavan altındaki arka koltuklar,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[5].caption.bg,bg,Задни седалки под панорамния стъклен покрив,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[5].hotspots[0].label.tr,tr,Koltuklar,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[5].hotspots[0].label.bg,bg,Седалки,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[5].hotspots[0].facts[0].label.tr,tr,Koltuklar,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[5].hotspots[0].facts[0].label.bg,bg,Седалки,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[5].hotspots[0].facts[0].value.tr,tr,7 (2-2-3),AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[5].hotspots[0].facts[0].value.bg,bg,7 (2-2-3),AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[5].hotspots[0].facts[1].label.tr,tr,İç mekân,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[5].hotspots[0].facts[1].label.bg,bg,Интериор,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[5].hotspots[0].facts[1].value.tr,tr,"Family paketi (çok işlevli masa konsolu, koltuk altı çekmeceler), ön kolçaklar, elektrikli bel desteği, katlanır masalar, “Bi-Color Bright Dots” kumaş","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[5].hotspots[0].facts[1].value.bg,bg,"Family пакет (многофункционална конзола-маса, чекмеджета под седалките), предни подлакътници, електрическа лумбална опора, сгъваеми масички, текстил „Bi-Color Bright Dots“","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[5].hotspots[1].label.tr,tr,Panoramik cam tavan,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[5].hotspots[1].label.bg,bg,Панорамен стъклен покрив,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[5].hotspots[1].facts[0].label.tr,tr,Kaporta ve camlar,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[5].hotspots[1].facts[0].label.bg,bg,Каросерия и стъкла,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[5].hotspots[1].facts[0].value.tr,tr,"Panoramik cam tavan, Easy Open/Easy Close, sürgülü camlar, B sütunundan itibaren gizlilik camı (%65)","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[5].hotspots[1].facts[0].value.bg,bg,"Панорамен стъклен покрив, Easy Open/Easy Close, плъзгащи се прозорци, затъмнени стъкла (65 %) от B-колоната","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[6].alt.tr,tr,"Açık bagaj kapağından görünen, arka koltukların arkasındaki yük alanı","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[6].alt.bg,bg,"Товарно пространство зад задните седалки, видяно през отворения заден капак","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[6].caption.tr,tr,Bagaj bölümü,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[6].caption.bg,bg,Багажно отделение,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[7].alt.tr,tr,"Arkadan görünen kokpit: direksiyon simidi, saatli orta dokunmatik ekran, klima kontrolleri ve yağmur damlalı ön camdan görünüm","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[7].alt.bg,bg,"Кокпитът, погледнат отзад: волан, централен тъчскрийн с часовник, управление на климата и поглед през мокрото от дъжд предно стъкло","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[7].caption.tr,tr,Kokpit,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[7].caption.bg,bg,Кокпит,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[7].hotspots[0].label.tr,tr,Sürüş destek sistemleri,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[7].hotspots[0].label.bg,bg,Асистиращи системи,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[7].hotspots[0].facts[0].label.tr,tr,Sürüş destek sistemleri,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[7].hotspots[0].facts[0].label.bg,bg,Асистиращи системи,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[7].hotspots[0].facts[0].value.tr,tr,"Travel & Emergency Assist, ACC Stop&Go adaptif hız sabitleyici, Lane Assist, Side Assist, çıkış asistanı, kapı açma uyarısı, Car2X, ön ve arka park sensörleri, geri görüş kamerası","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[7].hotspots[0].facts[0].value.bg,bg,"Travel & Emergency Assist, адаптивен круиз контрол ACC Stop&Go, Lane Assist, Side Assist, асистент при излизане, предупреждение при отваряне на врата, Car2X, предни и задни парктроници, камера за задно виждане","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[7].hotspots[1].label.tr,tr,Multimedya sistemi,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[7].hotspots[1].label.bg,bg,Мултимедия,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[8].alt.tr,tr,"Ortada dokunmatik ekran, vites seçici ve klima kontrolleri bulunan gösterge paneli","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[8].alt.bg,bg,"Табло с централен тъчскрийн, селектор на скоростите и управление на климата","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[8].caption.tr,tr,Gösterge paneli,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[8].caption.bg,bg,Табло,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[8].hotspots[0].label.tr,tr,Dokunmatik ekran,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[8].hotspots[0].label.bg,bg,Тъчскрийн,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[8].hotspots[0].facts[0].label.tr,tr,Multimedya,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[8].hotspots[0].facts[0].label.bg,bg,Мултимедия,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[8].hotspots[0].facts[0].value.tr,tr,"10,25 inç Digital Cockpit, Discover Media navigasyon, kablosuz App-Connect (CarPlay/Android Auto), DAB+, 8 hoparlör, ön ve arkada USB-C","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[8].hotspots[0].facts[0].value.bg,bg,"Digital Cockpit 10,25 инча, навигация Discover Media, безжичен App-Connect (CarPlay/Android Auto), DAB+, 8 говорителя, USB-C отпред и отзад","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[8].hotspots[1].label.tr,tr,Klima ve konfor,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[8].hotspots[1].label.bg,bg,Климатик и комфорт,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[8].hotspots[1].facts[0].label.tr,tr,Konfor,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[8].hotspots[1].facts[0].label.bg,bg,Комфорт,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[8].hotspots[1].facts[0].value.tr,tr,"Uzaktan kumandalı park ısıtıcı, ısıtmalı ön cam, ön koltuk ısıtma, Climatronic, Keyless Advanced, 4 anahtar","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[8].hotspots[1].facts[0].value.bg,bg,"Автономно отопление с дистанционно управление, отопляемо предно стъкло, отопление на предните седалки, Climatronic, Keyless Advanced, 4 ключа","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[9].alt.tr,tr,"Kapı kaplaması, cam düğmeleri ve dış aynası görünen açık sürücü kapısı","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[9].alt.bg,bg,"Отворена шофьорска врата с кора, бутони за стъклата и външно огледало","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[9].caption.tr,tr,Sürücü kapısı,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[9].caption.bg,bg,Врата на шофьора,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[10].alt.tr,tr,"Vites göstergesi, menzil ve hız bilgisi veren dijital gösterge paneli","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[10].alt.bg,bg,"Дигитално табло с индикатор за предавката, запас на хода и скорост","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[10].caption.tr,tr,Dijital gösterge paneli,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[10].caption.bg,bg,Дигитално арматурно табло,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[10].hotspots[0].label.tr,tr,Digital Cockpit,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[10].hotspots[0].label.bg,bg,Digital Cockpit,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[10].hotspots[0].facts[0].label.tr,tr,Multimedya,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[10].hotspots[0].facts[0].label.bg,bg,Мултимедия,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[10].hotspots[0].facts[0].value.tr,tr,"10,25 inç Digital Cockpit, Discover Media navigasyon, kablosuz App-Connect (CarPlay/Android Auto), DAB+, 8 hoparlör, ön ve arkada USB-C","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[10].hotspots[0].facts[0].value.bg,bg,"Digital Cockpit 10,25 инча, навигация Discover Media, безжичен App-Connect (CarPlay/Android Auto), DAB+, 8 говорителя, USB-C отпред и отзад","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[10].hotspots[0].facts[1].label.tr,tr,Şanzıman,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[10].hotspots[0].facts[1].label.bg,bg,Скоростна кутия,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[10].hotspots[0].facts[1].value.tr,tr,7 ileri DSG (otomatik),"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[10].hotspots[0].facts[1].value.bg,bg,7-степенна DSG (автоматична),"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[11].alt.tr,tr,"Direksiyon, dokunmatik ekran ve ön koltuklarla sürücü bölümü",AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[11].alt.bg,bg,"Шофьорско място с волан, сензорен екран и предни седалки",AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[11].caption.tr,tr,Sürücü bölümü,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[11].caption.bg,bg,Шофьорско място,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[11].hotspots[0].label.tr,tr,Sürüş destek sistemleri,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[11].hotspots[0].label.bg,bg,Асистиращи системи,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[12].alt.tr,tr,Toplam kilometre göstergesi,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[12].alt.bg,bg,Показание на общия пробег,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[12].caption.tr,tr,Kilometre,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[12].caption.bg,bg,Пробег,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[12].hotspots[0].label.tr,tr,Kilometre,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[12].hotspots[0].label.bg,bg,Пробег,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[13].alt.tr,tr,"Park freni ve Auto Hold düğmeleri, iki USB-C girişi ve bir saklama gözü","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[13].alt.bg,bg,"Бутони за ръчната спирачка и Auto Hold, два USB-C порта и отделение за съхранение","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[13].caption.tr,tr,"Park freni, Auto Hold ve USB-C",AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[13].caption.bg,bg,"Ръчна спирачка, Auto Hold и USB-C",AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[13].hotspots[0].label.tr,tr,USB-C,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[13].hotspots[0].label.bg,bg,USB-C,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,media.gallery[13].hotspots[0].facts[0].label.tr,tr,Multimedya,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[13].hotspots[0].facts[0].label.bg,bg,Мултимедия,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[13].hotspots[0].facts[0].value.tr,tr,"10,25 inç Digital Cockpit, Discover Media navigasyon, kablosuz App-Connect (CarPlay/Android Auto), DAB+, 8 hoparlör, ön ve arkada USB-C","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,media.gallery[13].hotspots[0].facts[0].value.bg,bg,"Digital Cockpit 10,25 инча, навигация Discover Media, безжичен App-Connect (CarPlay/Android Auto), DAB+, 8 говорителя, USB-C отпред и отзад","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[0].q.tr,tr,Yerinde inceleme ve test sürüşü,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[0].q.bg,bg,Оглед и тест драйв,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[0].a.tr,tr,Yerinde incelemeler Pazartesi–Cumartesi günleri 10:00–18:00 saatleri arasında mümkündür ve yaklaşık 30 dakika sürer. Test sürüşü yalnızca sahiplerden biriyle birlikte yapılabilir; lütfen ehliyetinizi ve kimliğinizi yanınızda getirin. Adresi talep üzerine paylaşırız.,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[0].a.bg,bg,"Огледи са възможни от понеделник до събота от 10:00 до 18:00 ч. и продължават около 30 минути. Тест драйв е възможен само заедно с един от собствениците; моля, носете шофьорска книжка и документ за самоличност. Адреса съобщаваме при запитване.","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[1].q.tr,tr,Araç leasing ile mi alınmış?,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[1].q.bg,bg,Автомобилът на лизинг ли е?,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[1].a.tr,tr,"Araç leasinglidir. Satıcı, satın alma sırasında leasing sözleşmesini doğrudan sonlandırır; böylece araç belgelerini her türlü yükten arı olarak teslim alırsınız.","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[1].a.bg,bg,"Автомобилът е на лизинг. Продавачът прекратява лизинговия договор директно при покупката, така че получавате документите на автомобила без тежести.","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[2].q.tr,tr,Finansman veya takas?,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[2].q.bg,bg,Финансиране или изкупуване на стар автомобил?,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[2].a.tr,tr,"Ne finansman, ne leasing, ne de araç takası sunuyoruz.","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[2].a.bg,bg,"Не предлагаме нито финансиране, нито лизинг, нито приемане на автомобил в замяна.","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[3].q.tr,tr,Fiyat pazarlığa açık mı?,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[3].q.bg,bg,Цената договаряема ли е?,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[3].a.tr,tr,Küçük bir pazarlık payı mümkündür. Kararı sahipler verir.,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[3].a.bg,bg,Има малко пространство за договаряне. Решението се взема от собствениците.,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[4].q.tr,tr,"Aracın durumu nasıl, önceden hasar var mı?","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[4].q.bg,bg,"В какво състояние е автомобилът, има ли предишни щети?","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[4].a.tr,tr,"Araç teknik açıdan iyi durumdadır ve hafif kullanım izleri (sıyrıklar, küçük çizikler) taşır. 23.06.2025 tarihinde sürgülü kapının değiştirildiği bir hasar olayı yaşanmıştır (onarım faturası 28.07.2025). Daha fazla bilgiyi talep üzerine veririz.","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[4].a.bg,bg,"Автомобилът е технически в добро състояние и има леки следи от употреба (охлузвания, малки драскотини). На 23.06.2025 г. е имало щетно събитие, при което е сменена плъзгащата се врата (фактура за ремонт от 28.07.2025 г.). Допълнителна информация предоставяме при запитване.","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[5].q.tr,tr,Araçla birlikte neler geliyor?,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[5].q.bg,bg,Какво се включва към автомобила?,"reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[5].a.tr,tr,"Araçla birlikte ek bir set yazlık lastik, tam boy yedek lastik ve dört anahtar verilir. Donanımı “Teknik özellikler” bölümünde bulabilirsiniz.","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,faq[5].a.bg,bg,"Към автомобила се предоставят допълнителен комплект летни гуми, пълноразмерна резервна гума и четири ключа. Оборудването ще намерите в раздел „Технически данни“.","reference (Gleb's site), machine-assisted draft",AI draft - needs native review
+vw-multivan/product.json,music.tracks[0].title.tr,tr,Sakin,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,music.tracks[0].title.bg,bg,Спокойна,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,music.tracks[1].title.tr,tr,Arka plan,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,music.tracks[1].title.bg,bg,Фон,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,music.tracks[2].title.tr,tr,Piyano,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,music.tracks[2].title.bg,bg,Пиано,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,music.tracks[3].title.tr,tr,Anılar,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,music.tracks[3].title.bg,bg,Спомени,AI draft (this task),AI draft - needs native review

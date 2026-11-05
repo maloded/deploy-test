@@ -7,6 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it } from "vitest";
 import { Header } from "@/components/Header";
 import { LANGUAGE_MENU_FROM, LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { LANGUAGE_REGISTRY } from "@/lib/languages";
 import { buildSite } from "@/lib/site";
 import { ui } from "@/lib/ui-strings";
 import { FIXTURE_DIR, fixtures } from "./helpers";
@@ -127,21 +128,42 @@ describe("how many languages decide the control (a fake registry of 1, 2 and 4)"
     expect(out).toContain('<a href="/bb" lang="bb" hrefLang="bb" aria-current="true" aria-label="Бебе">BB</a>');
   });
 
-  it("4 languages: one dropdown that shows the current language's own name, in a nav, with a real link to every language", () => {
-    const out = html(<LanguageSwitcher languages={codes(4)} current="cc" label="Language" registry={fake(4)} />);
-    expect(out).toContain('<nav class="lang-switch lang-switch--menu" aria-label="Language">');
-    expect(out).toContain('<summary class="lang-menu__current" aria-label="Language: Çeçe"><span lang="cc">Çeçe</span></summary>');
+  it("4 languages: one compact button with the current CODE, and a dropdown with a real link to every language", () => {
+    const out = html(<LanguageSwitcher languages={codes(4)} current="cc" label="Language" choose="Choose language" registry={fake(4)} />);
+    expect(out).toContain('<nav class="lang-switch lang-switch--menu" aria-label="Choose language">');
+    expect(out).toMatch(/<summary class="lang-menu__current" aria-label="Choose language: Çeçe"><svg class="lang-menu__globe"[^>]*>[\s\S]*?<\/svg><span class="lang-menu__current-code" lang="cc">CC<\/span><\/summary>/);
     expect(out).not.toMatch(/<select/);
-    const links = [...out.matchAll(/<a href="([^"]+)" lang="(\w+)" hrefLang="(\w+)"( aria-current="true")?>([^<]+)<\/a>/g)].map((m) => ({ href: m[1], lang: m[2], hreflang: m[3], current: Boolean(m[4]), name: m[5] }));
+    const links = [...out.matchAll(/<a href="([^"]+)" lang="(\w+)" hrefLang="(\w+)"( aria-current="true")?><span class="lang-menu__code" aria-hidden="true">(\w+)<\/span>(?:<img[^>]*>)?<span class="lang-menu__name">([^<]+)<\/span>/g)].map((m) => ({ href: m[1], lang: m[2], hreflang: m[3], current: Boolean(m[4]), code: m[5], name: m[6] }));
     expect(links.map((l) => l.href)).toEqual(["/aa", "/bb", "/cc", "/dd"]); // plain links: they work with no script, and the list is in the page's own order
     expect(links.every((l) => l.lang === l.hreflang)).toBe(true);
     expect(links.filter((l) => l.current).map((l) => l.lang)).toEqual(["cc"]);
     expect(links.map((l) => l.name)).toEqual(["Aaland", "Бебе", "Çeçe", "Dëdé"]); // native names
+    expect(links.map((l) => l.code)).toEqual(["AA", "BB", "CC", "DD"]); // the code in the pill
+    expect(out.match(/lang-menu__check/g)).toHaveLength(4); // the check mark is in every row; CSS shows it for aria-current only
+  });
+
+  it("has no flags anywhere: the language menu shows codes and names only", () => {
+    const out = html(<LanguageSwitcher languages={codes(4)} current="aa" label="L" registry={fake(4)} />);
+    expect(out).not.toMatch(/<img|flag/i);
+    expect(fs.existsSync("public/flags")).toBe(false);
+    expect(Object.keys(LANGUAGE_REGISTRY[0]).sort()).toEqual(["code", "currencyAfter", "fontSubsets", "locale", "name"]);
+  });
+
+  it("the page's header: the button says the current code and the label is 'Sprache wählen' / 'Choose language'", () => {
+    const four = (lang: "de" | "en") => {
+      const s = two(lang);
+      return { ...s, product: { ...s.product, languages: ["de", "en", "tr", "bg"] as never } };
+    };
+    const de = html(<Header site={four("de")} />);
+    expect(de).toContain('aria-label="Sprache wählen"');
+    expect(de).toContain('aria-label="Sprache wählen: Deutsch"');
+    expect(de).toContain('class="lang-menu__current-code" lang="de">DE</span>');
+    expect(html(<Header site={four("en")} />)).toContain('aria-label="Choose language: English"');
   });
 
   it("3 languages already make a dropdown; an unknown code falls back to the code itself", () => {
     expect(html(<LanguageSwitcher languages={codes(3)} current="aa" label="L" registry={fake(3)} />)).toContain("<details");
-    expect(html(<LanguageSwitcher languages={["aa", "zz", "bb"]} current="aa" label="L" registry={fake(2)} />)).toContain(">zz</a>");
+    expect(html(<LanguageSwitcher languages={["aa", "zz", "bb"]} current="aa" label="L" registry={fake(2)} />)).toContain('<span class="lang-menu__name">zz</span>');
   });
 
   it("the header's real two-language page keeps the two text links", () => {
@@ -177,7 +199,7 @@ describe("the dropdown, in a browser-like DOM", () => {
     const { summary } = mountMenu("dd");
     expect(box.querySelector("nav")!.getAttribute("aria-label")).toBe("Sprache");
     expect(summary.getAttribute("aria-label")).toBe("Sprache: Dëdé");
-    expect(summary.textContent).toContain("Dëdé"); // the visible text is part of the accessible name
+    expect(summary.textContent).toBe("DD"); // the visible text is the code; the label carries the name
     expect(box.querySelectorAll("ul > li > a")).toHaveLength(4);
     expect(box.querySelectorAll("a[aria-current='true']")).toHaveLength(1);
   });
@@ -188,6 +210,29 @@ describe("the dropdown, in a browser-like DOM", () => {
     const link = menu.querySelector("a") as HTMLElement;
     link.focus();
     act(() => void link.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+    expect(menu.open).toBe(false);
+    expect(document.activeElement).toBe(summary);
+  });
+
+  it("ArrowDown on the button opens the list on the current row; arrows, Home and End move between rows and wrap", () => {
+    const { menu, summary } = mountMenu("cc");
+    const rows = () => [...menu.querySelectorAll("a")] as HTMLElement[];
+    const key = (el: Element, k: string) => act(() => void el.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true })));
+    summary.focus();
+    key(summary, "ArrowDown");
+    expect(menu.open).toBe(true);
+    expect(document.activeElement).toBe(rows()[2]); // the current language
+    key(rows()[2], "ArrowDown");
+    expect(document.activeElement).toBe(rows()[3]);
+    key(rows()[3], "ArrowDown");
+    expect(document.activeElement).toBe(rows()[0]); // wraps
+    key(rows()[0], "ArrowUp");
+    expect(document.activeElement).toBe(rows()[3]);
+    key(rows()[3], "Home");
+    expect(document.activeElement).toBe(rows()[0]);
+    key(rows()[0], "End");
+    expect(document.activeElement).toBe(rows()[3]);
+    key(rows()[3], "Escape");
     expect(menu.open).toBe(false);
     expect(document.activeElement).toBe(summary);
   });
@@ -225,5 +270,12 @@ describe("the header controls' styles: theme variables, control-sized targets", 
     }
     expect(block(".lang-menu__list")).toMatch(/z-index: 30/); // above the hero below it
     expect(block(".lang-menu__list")).toMatch(/background: var\(--bg\)/);
+    // rounded with the theme's tokens, clipped, a 1px border and a soft shadow; the rows' radius is half of it
+    expect(block(".lang-menu__list")).toMatch(/border-radius: var\(--radius-menu, var\(--radius\)\)/);
+    expect(block(".lang-menu__list")).toMatch(/overflow: hidden/);
+    expect(block(".lang-menu__list")).toMatch(/border: 1px solid var\(--border\)/);
+    expect(block(".lang-menu__list")).toMatch(/box-shadow: [^;]*color-mix/);
+    expect(block(".lang-menu__list a")).toMatch(/border-radius: calc\(var\(--radius-menu, var\(--radius\)\) \/ 2\)/);
+    expect(block(".lang-menu__list")).toMatch(/padding: var\(--space-1\)/);
   });
 });

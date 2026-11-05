@@ -42,6 +42,7 @@ export const OPTIONAL_VARS = [
   "--radius-dialog",
   "--radius-control",
   "--radius-media",
+  "--radius-menu",
   "--avatar-card-shadow",
   "--avatar-edge",
   "--call-ring-1",

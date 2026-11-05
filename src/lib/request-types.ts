@@ -3,10 +3,10 @@
 import type { Language } from "./languages.ts";
 
 export const REQUEST_TYPES = {
-  viewing: { label: { en: "Viewing", de: "Besichtigung" }, slots: true },
-  test_drive: { label: { en: "Test drive", de: "Probefahrt" }, slots: true },
-  question: { label: { en: "Question", de: "Frage" }, slots: false },
-  offer: { label: { en: "Make an offer", de: "Angebot machen" }, slots: false },
+  viewing: { label: { en: "Viewing", de: "Besichtigung", tr: "Yerinde inceleme", bg: "Оглед" }, slots: true },
+  test_drive: { label: { en: "Test drive", de: "Probefahrt", tr: "Test sürüşü", bg: "Тест драйв" }, slots: true },
+  question: { label: { en: "Question", de: "Frage", tr: "Soru", bg: "Въпрос" }, slots: false },
+  offer: { label: { en: "Make an offer", de: "Angebot machen", tr: "Teklif verin", bg: "Направете оферта" }, slots: false },
 } as const satisfies Record<string, { label: Record<Language, string>; slots: boolean }>;
 
 export type RequestType = keyof typeof REQUEST_TYPES;

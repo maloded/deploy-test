@@ -105,6 +105,7 @@ describe("optional theme variables", () => {
       "--radius-dialog",
       "--radius-control",
       "--radius-media",
+      "--radius-menu",
       "--avatar-card-shadow",
       "--avatar-edge",
       "--call-ring-1",

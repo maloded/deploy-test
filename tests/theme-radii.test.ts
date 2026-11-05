@@ -72,3 +72,16 @@ describe("--radius-dialog and --radius-control", () => {
     for (const r of others) expect(r.body, r.selector).not.toMatch(/--radius-(dialog|control)/);
   });
 });
+
+describe("--radius-menu", () => {
+  it("is an optional theme variable, 0.75rem in both themes, used only by the language menu (panel with the fallback var(--radius), rows at half of it)", () => {
+    expect(OPTIONAL_VARS).toContain("--radius-menu");
+    for (const theme of listThemes()) {
+      const text = fs.readFileSync(path.join(process.cwd(), "public", "themes", `${theme}.css`), "utf8");
+      expect(declaredVars(text, theme), theme).toContain("--radius-menu");
+      expect(text, theme).toMatch(/--radius-menu:\s*0\.75rem/);
+    }
+    expect(using("--radius-menu").map((r) => r.selector)).toEqual([".lang-menu__list", ".lang-menu__list a"]);
+    expect(css.match(/var\(--radius-menu[^)]*\)+/g)).toEqual(["var(--radius-menu, var(--radius))", "var(--radius-menu, var(--radius))"]);
+  });
+});

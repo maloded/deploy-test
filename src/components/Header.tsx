@@ -31,7 +31,7 @@ export function Header({ site, agent }: { site: Site; agent?: SellerAgent | null
           <span className="site-header__name">{site.seller.displayName}</span>
         </span>
         <div className="site-header__end">
-          {languages.length > 1 && <LanguageSwitcher languages={languages} current={lang} label={ui("lang.switch", lang)} />}
+          {languages.length > 1 && <LanguageSwitcher languages={languages} current={lang} label={ui("lang.switch", lang)} choose={ui("lang.choose", lang)} />}
           {(pair || music) && (
             <div className="header-tools">
               {pair && <ThemeToggle lang={lang} theme={site.theme} pair={pair} />}
