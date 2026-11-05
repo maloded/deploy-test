@@ -1,9 +1,10 @@
 import { pick } from "@/lib/i18n";
 import { startTrackId } from "@/lib/music";
 import { themePair } from "@/lib/theme-pref";
-import { ui } from "@/lib/ui-strings";
+import { ui, uiFmt } from "@/lib/ui-strings";
 import type { SellerAgent } from "@/lib/seller";
 import { AgentWidget } from "./AgentWidget";
+import { BrandLink } from "./BrandLink";
 import type { Site } from "./blocks";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { MusicPlayer } from "./MusicPlayer";
@@ -25,11 +26,11 @@ export function Header({ site, agent }: { site: Site; agent?: SellerAgent | null
   return (
     <header className={agent ? "site-header site-header--agent" : "site-header"}>
       <div className="site-header__inner container">
-        <span className="site-header__brand">
+        <BrandLink href={`/${lang}`} label={uiFmt("brand.top", lang, { name: site.seller.displayName })}>
           {/* the seller's logo (checked, inline so it takes the theme's text colour); decorative, the name stays next to it */}
           {site.logo && <span className="site-header__logo" aria-hidden="true" dangerouslySetInnerHTML={{ __html: site.logo }} />}
           <span className="site-header__name">{site.seller.displayName}</span>
-        </span>
+        </BrandLink>
         <div className="site-header__end">
           {languages.length > 1 && <LanguageSwitcher languages={languages} current={lang} label={ui("lang.switch", lang)} choose={ui("lang.choose", lang)} />}
           {(pair || music) && (

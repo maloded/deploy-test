@@ -1,3 +1,4 @@
+import { goToTop } from "./go-top";
 import { canonicalRequestType } from "./request-types";
 import type { Language } from "./schema";
 
@@ -72,19 +73,6 @@ export type ContactOpenOptions = {
   /** The kind of request to open: a request type's id ("testdrive" and "test_drive" both), or "contact" for a viewing / the first offered type. One the product does not offer opens the default type. */
   type?: string;
 };
-
-/**
- * #top: smooth scroll to the top (instant with prefers-reduced-motion), then focus on the page's main landmark so the next Tab
- * starts at the content, without scrolling again. When a dialog is open (the contact form) focus stays
- * where it is: a modal dialog owns it. Never a page load, never the root redirect.
- */
-function goToTop(): void {
-  window.scrollTo({ top: 0, behavior: scrollBehavior() });
-  if (document.querySelector("dialog[open]")) return;
-  document.querySelector<HTMLElement>("main")?.focus({ preventScroll: true });
-}
-/** Smooth scrolling unless the visitor asked for less motion. */
-const scrollBehavior = (): ScrollBehavior => (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth");
 
 /**
  * A gallery address (#gallery-<category>, #gallery-<n>, #photo-<id>, #spot-<id>) through the gallery's own showAddress: it slides to the

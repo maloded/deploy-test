@@ -89,11 +89,11 @@ describe("anchors and deep links do not depend on the path", () => {
     expect(src).not.toMatch(/location\.pathname|router\./);
   });
 
-  it("buttons and anchors are bare #fragments (they stay on the current /<lang> page); only the switcher links to /<lang>", () => {
+  it("buttons and anchors are bare #fragments (they stay on the current /<lang> page); only the switcher and the logo (to the top) link to /<lang>", () => {
     const out = html(<Header site={site("de")} />) + html(<Hero site={site("de")} />);
     const hrefs = [...out.matchAll(/href="([^"]*)"/g)].map((m) => m[1]);
     expect(hrefs.length).toBeGreaterThan(0);
     for (const h of hrefs) expect(h.startsWith("#") || /^\/(de|en)$/.test(h), h).toBe(true);
-    expect(hrefs.filter((h) => !h.startsWith("#")).sort()).toEqual(["/de", "/en"]);
+    expect(hrefs.filter((h) => !h.startsWith("#")).sort()).toEqual(["/de", "/de", "/en"]); // the logo (the current page, with script it scrolls to the top) and the switcher's two
   });
 });

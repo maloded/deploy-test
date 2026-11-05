@@ -188,6 +188,7 @@ const STRINGS = {
   "contact.success.title": { en: "Thank you", de: "Vielen Dank", tr: "Teşekkür ederiz", bg: "Благодарим Ви" },
   "contact.success.text": { en: "Your request has been sent. We will get back to you.", de: "Ihre Anfrage wurde gesendet. Wir melden uns bei Ihnen.", tr: "Talebiniz gönderildi. Size geri döneceğiz.", bg: "Запитването Ви е изпратено. Ще се свържем с Вас." },
   "lang.choose": { en: "Choose language", de: "Sprache wählen", tr: "Dil seçin", bg: "Изберете език" },
+  "brand.top": { en: "{name} – Back to top", de: "{name} – Zum Seitenanfang", tr: "{name} – Sayfanın başına dön", bg: "{name} – Към началото на страницата" },
   "lang.switch": { en: "Language", de: "Sprache", tr: "Dil", bg: "Език" },
   "footer.agentCredit": { en: "AI sales assistant by", de: "KI-Verkaufsberaterin von", tr: "Yapay zekâ satış danışmanı", bg: "ИИ търговски консултант от" },
   "footer.developedBy": { en: "Developed by", de: "Entwickelt von", tr: "Geliştiren:", bg: "Разработено от" },

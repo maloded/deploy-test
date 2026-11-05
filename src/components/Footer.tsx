@@ -1,8 +1,9 @@
 import { pick } from "@/lib/i18n";
-import { ui } from "@/lib/ui-strings";
+import { ui, uiFmt } from "@/lib/ui-strings";
 import { indexingAllowed } from "@/lib/indexing";
 import { currentVersion, versionLine, versionOnly } from "@/lib/version";
 import { renderBlock, type Site } from "./blocks";
+import { BrandLink } from "./BrandLink";
 
 /**
  * The footer: the seller's brand and city, the contact block (heading, a link per request type the page offers, the e-mail, and the contact dialog), the agent's credit,
@@ -76,10 +77,10 @@ export function Footer({ site }: { site: Site }) {
         <div className="site-footer__top">
           <div className="site-footer__brand">
             {/* the header's own markup and classes: the same mark and wordmark in the theme's colours */}
-            <span className="site-header__brand">
+            <BrandLink href={`/${lang}`} label={uiFmt("brand.top", lang, { name: seller.displayName })}>
               {site.logo && <span className="site-header__logo" aria-hidden="true" dangerouslySetInnerHTML={{ __html: site.logo }} />}
               <span className="site-header__name">{seller.displayName}</span>
-            </span>
+            </BrandLink>
             {city && <p className="site-footer__city">{city}</p>}
           </div>
           {renderBlock("contact", site)}

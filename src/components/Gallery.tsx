@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { resolveGalleryHash, usedCategories, categoryHash, photoHash, spotHash, type GalleryCategory } from "@/lib/gallery-model";
 import { createGalleryStore, type GalleryEvent } from "@/lib/gallery-store";
 import type { Language } from "@/lib/schema";
@@ -355,8 +355,10 @@ export function Gallery({ slides, lang, autoplaySeconds, categoryLabels = DEFAUL
                   loading="lazy"
                   style={{ objectPosition: s.position }}
                 />
-                {s.spots.map((spot) => {
+                {s.spots.map((spot, n) => {
                   const at = spotPlacement(spot, s, box, parseFocus(s.position));
+                  // the tooltip opens towards the middle of the photo: right of a marker near the left edge, left of one near the right edge, under one near the top
+                  const edge = at.left < 24 ? "start" : at.left > 76 ? "end" : undefined;
                   const isOpen = i === current && st.spotId === spot.id;
                   return (
                     <button
@@ -364,13 +366,21 @@ export function Gallery({ slides, lang, autoplaySeconds, categoryLabels = DEFAUL
                       type="button"
                       className="gallery__spot"
                       data-spot={spot.id}
-                      style={{ left: `${at.left}%`, top: `${at.top}%` }}
+                      data-edge={edge}
+                      data-low={at.top < 22 ? "" : undefined}
+                      style={{ left: `${at.left}%`, top: `${at.top}%`, "--spot-delay": `${(n * 1.9).toFixed(1)}s` } as CSSProperties}
                       aria-label={uiFmt("gallery.spot.open", lang, { label: spot.label })}
                       aria-expanded={isOpen}
                       aria-controls={isOpen ? "gallery-spot-card" : undefined}
                       tabIndex={i === current ? 0 : -1}
                       onClick={() => visitor(isOpen ? { type: "closeSpot" } : { type: "spot", index: i, spotId: spot.id })}
-                    />
+                    >
+                      {/* the centre (a dot at rest, a "+" on hover and focus, a "×" while open) and the title's tooltip; both are looks, the name is the label above */}
+                      <span className="gallery__spot-mark" aria-hidden="true" />
+                      <span className="gallery__spot-tip" aria-hidden="true">
+                        {spot.label}
+                      </span>
+                    </button>
                   );
                 })}
               </li>
