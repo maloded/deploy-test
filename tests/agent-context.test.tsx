@@ -9,6 +9,7 @@ import { getFormSnapshot, resetFormSnapshotForTests, updateFormSnapshot } from "
 import { buildSite } from "@/lib/site";
 import { FIXTURE_DIR, fixtures } from "./helpers";
 import { fakeWidget } from "./fake-widget";
+import { chooseChannel, chooseWindow } from "./form-ui";
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 vi.mock("hanc-webrtc-widgets", () => ({}));
@@ -143,8 +144,8 @@ describe("page_context answer: the phases", () => {
     await mount();
     openAndFill();
     type(field("phone"), "+43 1 000 000");
-    type(field("channel"), "phone");
-    type(field("contactWindow"), "morning"); // was the free-text best time; now the code of a contact window
+    chooseChannel(box!, "phone");
+    chooseWindow(box!, "morning"); // the code of a contact window
     type(field("message"), MESSAGE);
     check(field("consent"));
     for (const dialogOpen of [true, false]) {

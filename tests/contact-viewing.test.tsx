@@ -8,6 +8,7 @@ import ProductLayout from "@/components/ProductLayout";
 import { UI_KEYS, ui, uiEntry } from "@/lib/ui-strings";
 import { buildSite } from "@/lib/site";
 import { examples, FIXTURE_DIR, fixtures } from "./helpers";
+import { chooseType, dayButton, pickedSlots, pickSlot, selectedType, tabTypes, timeButton } from "./form-ui";
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -37,9 +38,6 @@ afterEach(() => {
 
 const form = () => box!.querySelector("dialog form.contact__form") as HTMLFormElement;
 const field = (name: string) => form().querySelector(`[name=${name}]`) as HTMLInputElement;
-const slotRows = () => [...form().querySelectorAll(".contact__slot")] as HTMLElement[];
-const dateInput = (i: number) => slotRows()[i].querySelector("input[type=date]") as HTMLInputElement;
-const timeSelect = (i: number) => slotRows()[i].querySelector("select") as HTMLSelectElement;
 function type(el: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement, value: string) {
   const proto = el instanceof HTMLSelectElement ? HTMLSelectElement.prototype : el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
   act(() => {
@@ -60,35 +58,38 @@ const fillPerson = () => {
   type(field("message"), "A question about the house"); // a question needs it on the web
   click(field("consent"));
 };
-const chooseViewing = () => type(field("requestType"), "viewing");
+const chooseViewing = () => chooseType(box!, "viewing");
 const sent = (f: ReturnType<typeof reply>) => JSON.parse((f.mock.calls as any)[0][1].body);
 
 describe("request types in the form", () => {
-  it("with viewing settings (the house): viewing, question and offer, default question, and no slot fields yet", () => {
+  it("with viewing settings (the house): tabs for viewing, question and offer, the question chosen, and no slot fields yet", () => {
     mount(house("en"));
-    const select = field("requestType") as unknown as HTMLSelectElement;
-    expect([...select.options].map((o) => o.value)).toEqual(["viewing", "question", "offer"]);
-    expect(select.value).toBe("question");
+    expect(tabTypes(box!)).toEqual(["viewing", "question", "offer"]);
+    expect(selectedType(box!)).toBe("question");
     expect(form().querySelector(".contact__slots")).toBeNull();
   });
 
   it("without viewing settings (the car fixture): no viewing, no test drive, and never any slot field", () => {
     mount(car("en"));
-    expect([...(field("requestType") as unknown as HTMLSelectElement).options].map((o) => o.value)).toEqual(["question", "offer"]);
+    expect(tabTypes(box!)).toEqual(["question", "offer"]);
     for (const t of ["question", "offer"]) {
-      type(field("requestType"), t);
-      expect(form().querySelector(".contact__slots, input[type=date]")).toBeNull();
+      chooseType(box!, t);
+      expect(form().querySelector(".contact__slots, .contact__days")).toBeNull();
     }
   });
 
   it("labels the types in German", () => {
     mount(house("de"));
-    expect([...(field("requestType") as unknown as HTMLSelectElement).options].map((o) => o.textContent)).toEqual(["Besichtigung", "Frage", "Angebot machen"]);
+    expect([...box!.querySelectorAll("dialog [role=tab]")].map((t) => t.textContent)).toEqual(["Besichtigung", "Frage", "Angebot machen"]);
   });
 });
 
 describe("the slots", () => {
-  it("appear for a viewing: the address and notes read only, then one row with a date and a time", () => {
+  /** The days the strip shows, as YYYY-MM-DD. */
+  const days = () => [...form().querySelectorAll<HTMLElement>(".contact__day")].map((d) => d.dataset.day);
+  const times = () => [...form().querySelectorAll<HTMLElement>(".contact__time")].map((t) => t.dataset.time);
+
+  it("appear for a viewing: the address and notes read only, three numbered places, the days and the times", () => {
     mount(house("en"));
     chooseViewing();
     const box = form().querySelector(".contact__slots")!;
@@ -97,8 +98,9 @@ describe("the slots", () => {
     expect(info.textContent).toContain("Example Street 1");
     expect(info.textContent).toContain("example.invalid");
     expect(info.textContent).toContain("Please bring a photo ID. (fake example)");
-    expect(info.querySelector("input, select, textarea")).toBeNull(); // read only
-    expect(slotRows()).toHaveLength(1);
+    expect(info.querySelector("input, select, textarea, button")).toBeNull(); // read only
+    expect(box.querySelectorAll(".contact__pick")).toHaveLength(3);
+    expect(box.querySelectorAll(".contact__pick.is-empty")).toHaveLength(3);
     expect(box.textContent).toContain("Available: Tuesday, Thursday, Saturday, 10:00 to 16:00.");
     expect(box.textContent).toContain("Europe/Vienna");
   });
@@ -112,58 +114,67 @@ describe("the slots", () => {
     expect(form().querySelector(".contact__slots")!.textContent).toContain("Möglich: Dienstag, Donnerstag, Samstag, 10:00 bis 16:00 Uhr.");
   });
 
-  it("limit the date to tomorrow..60 days in the SELLER's calendar and offer the times of the day", () => {
+  it("offer a short strip of the days with visits from tomorrow on, in the SELLER's calendar, and the times of the day", () => {
     mount(house("en"));
     chooseViewing();
-    expect(dateInput(0).min).toBe("2026-06-11");
-    expect(dateInput(0).max).toBe("2026-08-09");
-    expect([...timeSelect(0).options].map((o) => o.value)).toEqual(["", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00"]);
+    expect(days()).toHaveLength(14);
+    expect(days()[0]).toBe("2026-06-11"); // tomorrow, a Thursday
+    expect(days().slice(0, 4)).toEqual(["2026-06-11", "2026-06-13", "2026-06-16", "2026-06-18"]); // Thu, Sat, Tue, Thu: only the days with visits
+    for (const d of days()) expect(["Tue", "Thu", "Sat"]).toContain(new Date(`${d}T12:00:00Z`).toUTCString().slice(0, 3));
+    expect(days().every((d) => d! <= "2026-08-09")).toBe(true); // the 60-day horizon
+    expect(times()).toEqual(["10:00", "11:00", "12:00", "13:00", "14:00", "15:00"]);
   });
 
   it("follow the seller's midnight, not the visitor's clock", () => {
-    vi.setSystemTime(new Date("2026-06-10T22:01:00Z")); // already the 11th in Vienna
+    vi.setSystemTime(new Date("2026-06-10T22:01:00Z")); // already the 11th in Vienna: tomorrow is the 12th, a Friday
     mount(house("en"));
     chooseViewing();
-    expect(dateInput(0).min).toBe("2026-06-12");
-    expect(dateInput(0).max).toBe("2026-08-10");
+    expect(days()[0]).toBe("2026-06-13"); // the first day with visits after it
+    expect(dayButton(box!, "2026-06-11")).toBeNull(); // today in Vienna: not offered
+    expect(dayButton(box!, "2026-06-10")).toBeNull();
   });
 
-  it("can grow to three rows and shrink again; the add button goes away at three", () => {
+  it("pick up to three times: the places fill in order of time, a time pressed again is taken away, the fourth is not offered", () => {
     mount(house("en"));
     chooseViewing();
-    const add = () => form().querySelector(".contact__slot-add");
-    click(add()!);
-    click(add()!);
-    expect(slotRows()).toHaveLength(3);
-    expect(add()).toBeNull();
-    click(form().querySelector(".contact__slot-remove")!);
-    expect(slotRows()).toHaveLength(2);
-    expect(add()).toBeTruthy();
+    pickSlot(box!, "2026-06-13", "15:00");
+    pickSlot(box!, "2026-06-11", "10:00");
+    expect(pickedSlots(box!)).toEqual(["Thu 11/06 · 10:00", "Sat 13/06 · 15:00"]); // sorted by time
+    expect(form().querySelector(".contact__pick.is-empty")).not.toBeNull();
+    pickSlot(box!, "2026-06-16", "11:00");
+    expect(pickedSlots(box!)).toHaveLength(3);
+    expect(form().querySelector(".contact__pick.is-empty")).toBeNull();
+    expect(timeButton(box!, "12:00")!.disabled).toBe(true); // full: the others cannot be added
+    expect(timeButton(box!, "11:00")!.disabled).toBe(false); // the picked one on this day can be taken away
+    click(timeButton(box!, "11:00")!);
+    expect(pickedSlots(box!)).toHaveLength(2);
+    expect(timeButton(box!, "12:00")!.disabled).toBe(false);
+    click(form().querySelector(".contact__pick-remove")!);
+    expect(pickedSlots(box!)).toHaveLength(1);
+    expect(dayButton(box!, "2026-06-16")!.querySelector(".contact__dot")).toBeNull(); // the dot on a day marks a picked time
+    expect(dayButton(box!, "2026-06-13")!.querySelector(".contact__dot")).not.toBeNull();
   });
 
   it("disappear again when another type is chosen, and are not sent", async () => {
     const f = reply(200);
     mount(house("en"));
     chooseViewing();
-    type(dateInput(0), "2026-06-11");
-    type(timeSelect(0), "10:00");
-    type(field("requestType"), "offer");
+    pickSlot(box!, "2026-06-11", "10:00");
+    chooseType(box!, "offer");
     expect(form().querySelector(".contact__slots")).toBeNull();
     type(field("phone"), "+00 000 000 000"); // an offer needs phone and e-mail, and an amount inside the product's range
-    type(field("amount"), "500.000");
+    type(field("amount"), "500,000"); // English: a comma separates the thousands
     fillPerson();
     await submit();
     expect(sent(f)).not.toHaveProperty("preferredSlots");
     expect(sent(f).requestType).toBe("offer");
   });
 
-  it("give every control a label and no repeated id", () => {
+  it("give every control a label and no repeated id; the groups are named", () => {
     mount(house("en"));
     chooseViewing();
-    click(form().querySelector(".contact__slot-add")!);
-    for (const el of form().querySelectorAll(".contact__slots input, .contact__slots select")) {
-      expect(form().querySelector(`label[for="${el.id}"]`), el.id).toBeTruthy();
-    }
+    for (const el of form().querySelectorAll("input, textarea")) if ((el as HTMLInputElement).type !== "hidden" && !el.closest(".contact__hp")) expect(form().querySelector(`label[for="${el.id}"]`), el.id || (el as HTMLInputElement).name).toBeTruthy();
+    for (const group of form().querySelectorAll(".contact__days, .contact__times")) expect(group.getAttribute("aria-label")).toBeTruthy();
     const ids = [...box!.querySelectorAll("[id]")].map((e) => e.id);
     expect(ids.filter((id, i) => ids.indexOf(id) !== i)).toEqual([]);
   });
@@ -174,11 +185,8 @@ describe("sending a viewing request", () => {
     const f = reply(200);
     mount(house("en"));
     chooseViewing();
-    type(dateInput(0), "2026-06-11");
-    type(timeSelect(0), "10:00");
-    click(form().querySelector(".contact__slot-add")!);
-    type(dateInput(1), "2026-06-13");
-    type(timeSelect(1), "15:00");
+    pickSlot(box!, "2026-06-11", "10:00");
+    pickSlot(box!, "2026-06-13", "15:00");
     fillPerson();
     await submit();
     expect(sent(f)).toMatchObject({ requestType: "viewing", preferredSlots: [{ date: "2026-06-11", time: "10:00" }, { date: "2026-06-13", time: "15:00" }] });
@@ -187,13 +195,11 @@ describe("sending a viewing request", () => {
     expect(text).not.toMatch(/booked|gebucht/i);
   });
 
-  it("ignores a blank row, and says the same in German", async () => {
+  it("says the same in German", async () => {
     const f = reply(200);
     mount(house("de"));
     chooseViewing();
-    type(dateInput(0), "2026-06-11");
-    type(timeSelect(0), "12:00");
-    click(form().querySelector(".contact__slot-add")!); // stays blank
+    pickSlot(box!, "2026-06-11", "12:00");
     fillPerson();
     await submit();
     expect(sent(f).preferredSlots).toEqual([{ date: "2026-06-11", time: "12:00" }]);
@@ -208,7 +214,18 @@ describe("sending a viewing request", () => {
     expect(box!.querySelector(".contact__success")!.textContent).toContain(ui("contact.success.text", "en"));
   });
 
-  it("needs at least one slot: the summary says so and nothing is sent", async () => {
+  it("an offer gets the text that the owner will look at it personally", async () => {
+    reply(200);
+    mount(house("en"));
+    chooseType(box!, "offer");
+    type(field("phone"), "+00 000 000 000");
+    type(field("amount"), "500,000"); // English: a comma separates the thousands
+    fillPerson();
+    await submit();
+    expect(box!.querySelector(".contact__success")!.textContent).toContain(ui("contact.success.offer", "en"));
+  });
+
+  it("needs at least one slot: the summary says so, nothing is sent, and its link takes the focus to the first day", async () => {
     const f = reply(200);
     mount(house("en"));
     chooseViewing();
@@ -216,66 +233,29 @@ describe("sending a viewing request", () => {
     await submit();
     expect(f).not.toHaveBeenCalled();
     expect(form().querySelector(".contact__summary")!.textContent).toContain("Please give at least one preferred time.");
-    click(form().querySelector(".contact__summary a[href]")!); // the first slot's date
-    expect(document.activeElement).toBe(dateInput(0));
-  });
-
-  it.each([
-    ["a half-filled row", "2026-06-11", "", "Please choose a date and a time."],
-    ["a day that is not allowed", "2026-06-12", "10:00", "This day is not available. Available days: Tuesday, Thursday, Saturday."],
-    ["today", "2026-06-10", "10:00", "Please choose a day from tomorrow on."],
-    ["a day beyond the horizon", "2026-08-11", "10:00", "Please choose a day within the next 60 days."],
-  ])("shows the problem of the row for %s and sends nothing", async (_label, date, time, message) => {
-    const f = reply(200);
-    mount(house("en"));
-    chooseViewing();
-    type(dateInput(0), date);
-    if (time) type(timeSelect(0), time);
-    fillPerson();
-    await submit();
-    expect(f).not.toHaveBeenCalled();
-    const error = slotRows()[0].querySelector(".contact__error")!;
-    expect(error.textContent).toBe(message);
-    expect(dateInput(0).getAttribute("aria-describedby")).toBe(error.id);
-    expect(dateInput(0).getAttribute("aria-invalid")).toBe("true");
-    expect(document.activeElement).toBe(form().querySelector(".contact__summary"));
-  });
-
-  it("refuses the same time twice", async () => {
-    reply(200);
-    mount(house("en"));
-    chooseViewing();
-    click(form().querySelector(".contact__slot-add")!);
-    for (const i of [0, 1]) {
-      type(dateInput(i), "2026-06-11");
-      type(timeSelect(i), "10:00");
-    }
-    fillPerson();
-    await submit();
-    expect(slotRows()[1].querySelector(".contact__error")!.textContent).toBe("Please choose a different time for each entry.");
+    click(form().querySelector(".contact__summary a[href]")!);
+    expect(document.activeElement).toBe(form().querySelector(".contact__day"));
   });
 
   it("shows the server's refusal of the slots without claiming success", async () => {
     reply(400, { ok: false, error: "invalid", errors: { preferredSlots: "invalid" } });
     mount(house("en"));
     chooseViewing();
-    type(dateInput(0), "2026-06-11");
-    type(timeSelect(0), "10:00");
+    pickSlot(box!, "2026-06-11", "10:00");
     fillPerson();
     await submit();
     expect(box!.querySelector(".contact__success")).toBeNull();
     expect(form().querySelector(".contact__summary")!.textContent).toContain("Please check the preferred times.");
   });
 
-  it("keeps the slots typed after an error (a 503) and never reports a booking", async () => {
+  it("keeps the slots picked after an error (a 503) and never reports a booking", async () => {
     reply(503, { ok: false });
     mount(house("en"));
     chooseViewing();
-    type(dateInput(0), "2026-06-11");
-    type(timeSelect(0), "10:00");
+    pickSlot(box!, "2026-06-11", "10:00");
     fillPerson();
     await submit();
-    expect(dateInput(0).value).toBe("2026-06-11");
+    expect(pickedSlots(box!)).toEqual(["Thu 11/06 · 10:00"]);
     expect(box!.querySelector(".contact__success")).toBeNull();
   });
 });
@@ -293,6 +273,6 @@ describe("the strings", () => {
 
   it("the static page has no slot field (the form is not in the HTML at all)", () => {
     const out = renderToStaticMarkup(<ProductLayout site={house("en")} />);
-    expect(out).not.toMatch(/type="date"|contact__slot/);
+    expect(out).not.toMatch(/type="date"|contact__day|contact__time/);
   });
 });

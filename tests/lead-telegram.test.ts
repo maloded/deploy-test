@@ -79,6 +79,46 @@ describe("Telegram as the store", () => {
     expect(logged).toEqual([]);
   });
 
+  it("the message the handler sends has the reference's blocks: header with the source, the contact block with a dash for what is not given, the question, the consent line and the time", async () => {
+    const t = fake(tgOk);
+    await post(env({ LEADS_STORE: "telegram", ...TG }), t.f);
+    const context = readLeadContext({ CONTENT_DIR: EXAMPLES_DIR, CONTENT_PRODUCT: WATCH });
+    const text = t.telegram()[0].text!;
+    const blocks = text.split("\n\n");
+    expect(blocks).toHaveLength(4); // header, contact, the question, consent and time
+    expect(blocks[0].split("\n")[2]).toBe(`${OWNER_LABELS.source[ownerLang]}: ${OWNER_LABELS.sourceForm[ownerLang]}`);
+    expect(blocks[1]).toContain(`${OWNER_LABELS.phone[ownerLang]}: –`); // the visitor gave an e-mail only
+    expect(blocks[1]).toContain(`${OWNER_LABELS.email[ownerLang]}: ${MAIL}`);
+    expect(blocks[1]).toContain(`${OWNER_LABELS.channel[ownerLang]}: ${OWNER_LABELS.channelNone[ownerLang]}`);
+    expect(blocks[2]).toBe(`${OWNER_LABELS.question[ownerLang]}:\n${NOTE}`);
+    expect(blocks[3]).toContain(`${OWNER_LABELS.consent[ownerLang]}: ${OWNER_LABELS.consentVersion[ownerLang]} unversioned \u00b7 SHA-256 ${context.consent.en.slice(0, 12)}`); // the page language of the body is en
+    expect(blocks[3]).toContain(`${OWNER_LABELS.time[ownerLang]}: `);
+    expect(text).not.toContain(context.consent.en); // the whole hash is not sent
+  });
+
+  it("an offer: the amount, the product's asking price and the difference, from the product (the watch costs 8,900 EUR)", async () => {
+    const t = fake(tgOk);
+    await post(env({ LEADS_STORE: "telegram", ...TG }), t.f, { ...BODY, requestType: "offer", phone: "+00 000 000 000", amount: 8000, message: undefined });
+    const text = t.telegram()[0].text!;
+    const lines = text.split("\n");
+    const at = lines.findIndex((l) => l.startsWith(`${OWNER_LABELS.offer[ownerLang]}:`));
+    expect(at).toBeGreaterThan(0);
+    expect(lines[at]).toMatch(/8[.,]000/);
+    expect(lines[at + 1]).toMatch(/8[.,]900/); // the asking price
+    expect(lines[at + 2]).toMatch(/10[.,]1/); // the difference as a share of the price: 900 of 8,900
+    expect(text).not.toContain("undefined");
+  });
+
+  it("an offer the agent took without an amount: the source says agent, the amount is left to the call, the asking price is still there", async () => {
+    const t = fake(tgOk);
+    await post(env({ LEADS_STORE: "telegram", ...TG }), t.f, { ...BODY, requestType: "offer", phone: "+00 000 000 000", source: "agent", message: undefined });
+    const text = t.telegram()[0].text!;
+    expect(text).not.toContain(OWNER_LABELS.sourceForm[ownerLang]);
+    expect(text).toMatch(/8[.,]900/);
+    expect(text).not.toContain(`${OWNER_LABELS.offer[ownerLang]}: `);
+    expect(text).not.toContain(OWNER_LABELS.difference[ownerLang]);
+  });
+
   it.each([
     ["a 500", () => tgStatus(500), "5xx"],
     ["a 401", () => tgStatus(401), "4xx"],

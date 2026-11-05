@@ -8,6 +8,7 @@ import type { ContactElement } from "@/components/ContactSection";
 import { getFormSnapshot, resetFormSnapshotForTests, SNAPSHOT_MESSAGE_MAX, updateFormSnapshot } from "@/lib/form-snapshot";
 import { buildSite } from "@/lib/site";
 import { FIXTURE_DIR, fixtures } from "./helpers";
+import { chooseChannel, chooseWindow } from "./form-ui";
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -64,8 +65,8 @@ describe("form snapshot store", () => {
     expect(getFormSnapshot()).toMatchObject({ name: "Test Person", valid: false, consentGiven: false });
     type(field("email"), "person@example.invalid");
     type(field("phone"), "+43 1 000 000");
-    type(field("channel"), "phone");
-    type(field("contactWindow"), "morning"); // the best-time text field became a contact window select
+    chooseChannel(box!, "phone");
+    chooseWindow(box!, "morning");
     type(field("message"), "A question"); // a question is required on the web
     check(field("consent"));
     expect(getFormSnapshot()).toMatchObject({ email: "person@example.invalid", phone: "+43 1 000 000", preferredChannel: "phone", contactWindow: "morning", consentGiven: true, valid: true, requestType: "question" });

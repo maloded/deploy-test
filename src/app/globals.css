@@ -2758,8 +2758,125 @@ html[data-hero-pending] .hero {
   font-size: 0.875rem;
 }
 
-.contact__field--type {
+/* the request types as segmented tabs: one control, the chosen type filled in the accent; below 40em they wrap into rows */
+.contact__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
   margin-top: var(--space-3);
+  padding: var(--space-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.contact__tab {
+  flex: 1 1 auto;
+  min-height: 2.75rem;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.contact__tab:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.contact__tab[aria-selected="true"] {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.contact__tab:focus-visible,
+.contact__chip:focus-visible,
+.contact__day:focus-visible,
+.contact__time:focus-visible,
+.contact__pick-remove:focus-visible {
+  outline: 3px solid var(--accent-line, var(--accent));
+  outline-offset: 2px;
+}
+
+.contact__panel {
+  min-width: 0;
+}
+
+/* a phone: the four types in two even columns */
+@media (width < 40em) {
+  .contact__tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* a long label (BG, TR) wraps inside its cell instead of running out of it */
+  .contact__tab {
+    padding-inline: var(--space-2);
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.2;
+  }
+}
+
+/* choices as chips (the preferred channel, the contact window): a pressed chip is filled in the accent, one that cannot be used yet is dimmed and says why when pressed */
+.contact__chipset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.contact__chipset legend {
+  padding: 0;
+  margin-bottom: var(--space-1);
+  font-size: 0.95rem;
+}
+
+.contact__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.contact__chip,
+.contact__day,
+.contact__time {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.contact__chip {
+  min-height: 2.75rem;
+  border-radius: var(--radius);
+  padding: var(--space-1) var(--space-3);
+  font-size: 0.95rem;
+}
+
+.contact__chip:hover:not(.is-off),
+.contact__day:hover,
+.contact__time:hover:not(:disabled) {
+  border-color: var(--accent-line, var(--accent));
+}
+
+.contact__chip[aria-pressed="true"],
+.contact__day[aria-pressed="true"],
+.contact__time[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.contact__chip.is-off {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .contact__slots {
@@ -2791,45 +2908,139 @@ html[data-hero-pending] .hero {
   margin: 0;
 }
 
-/* narrow dialog: date, time and the remove button stack; side by side from 40em */
-.contact__slot {
+/* the picked times: three numbered places, filled as times are chosen; one column on a phone */
+.contact__picked {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-2) var(--space-3);
-  align-items: end;
-  margin-top: var(--space-4);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--border);
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+  padding: 0;
+  list-style: none;
 }
 
 @media (min-width: 40em) {
-  .contact__slot {
-    grid-template-columns: 1fr 1fr auto;
-    margin-top: var(--space-3);
-    padding-top: 0;
-    border-top: 0;
+  .contact__picked {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-.contact__slot .contact__error {
+.contact__pick {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 3rem;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--accent-line, var(--accent));
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+}
+
+.contact__pick b {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: 0.75rem;
+}
+
+.contact__pick span {
+  min-width: 0;
+}
+
+.contact__pick.is-empty {
+  border: 1px dashed var(--border);
+  color: var(--muted);
+}
+
+.contact__pick.is-empty b {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--border);
+  color: var(--muted);
+}
+
+.contact__pick-remove {
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+
+.contact__pick .contact__error {
   grid-column: 1 / -1;
 }
 
-.contact__slot-remove {
-  justify-self: start;
-  width: 2.75rem;
-  height: 2.75rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: transparent;
-  color: var(--text);
-  font-size: 1.25rem;
-  cursor: pointer;
+/* a short strip of the days with visits (it scrolls sideways on a narrow screen), then the times of the day shown */
+.contact__days {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  padding-bottom: var(--space-2);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
 }
 
-.contact__slot-add {
-  margin-top: var(--space-3);
-  cursor: pointer;
+.contact__day {
+  position: relative;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  min-width: 3.75rem;
+  padding: var(--space-2);
+  border-radius: var(--radius);
+  scroll-snap-align: start;
+  line-height: 1.15;
+}
+
+.contact__day small {
+  font-size: 0.75rem;
+}
+
+.contact__day b {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+}
+
+.contact__dot {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.contact__day[aria-pressed="true"] .contact__dot {
+  background: var(--accent-contrast);
+}
+
+.contact__times {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(4.6rem, 1fr));
+  gap: var(--space-2);
+}
+
+.contact__time {
+  min-height: 2.75rem;
+  border-radius: var(--radius);
+  font-variant-numeric: tabular-nums;
+}
+
+.contact__time:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .contact__grid {
@@ -2903,6 +3114,29 @@ html[data-hero-pending] .hero {
   color: var(--muted);
 }
 
+.contact__hint[hidden] {
+  display: none;
+}
+
+/* the amount: the currency's sign sits at the end of the field, inside it */
+.contact__amount-box {
+  position: relative;
+}
+
+.contact__amount-box input {
+  padding-right: calc(var(--space-3) + 1.5rem);
+}
+
+.contact__amount-unit {
+  position: absolute;
+  inset-block: 0;
+  right: var(--space-3);
+  display: flex;
+  align-items: center;
+  color: var(--muted);
+  pointer-events: none;
+}
+
 .contact__field [aria-invalid="true"],
 .contact__consent [aria-invalid="true"] {
   border: 2px solid var(--accent-line, var(--accent));
@@ -2964,6 +3198,24 @@ html[data-hero-pending] .hero {
   font-style: italic;
 }
 
+/* the send button stays in view at the bottom of the dialog while the form scrolls; the dialog is in the top layer, so the call bar of a phone never covers it */
+.contact__actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  padding: var(--space-3) 0 var(--space-4);
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.contact__actions .contact__prototype {
+  margin-bottom: var(--space-2);
+}
+
+.contact__actions .button {
+  width: 100%;
+}
+
 .contact__form button[type="submit"] {
   cursor: pointer;
 }
@@ -2974,7 +3226,7 @@ html[data-hero-pending] .hero {
 }
 
 .contact__success {
-  margin-top: var(--space-4);
+  margin: var(--space-4) 0;
   padding: var(--space-4);
   border: 1px solid var(--accent-line, var(--accent));
   border-radius: var(--radius);
@@ -2986,13 +3238,26 @@ html[data-hero-pending] .hero {
   font-size: 1.5rem;
 }
 
-.contact__success .button {
+.contact__number {
+  margin: var(--space-2) 0 0;
+  color: var(--muted);
+}
+
+.contact__number b {
+  color: var(--accent-line, var(--accent));
+  letter-spacing: 0.04em;
+}
+
+.contact__success-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
   margin-top: var(--space-3);
 }
 
 .contact-dialog {
   width: min(40rem, calc(100vw - 2 * var(--space-3)));
-  max-height: calc(100dvh - 2 * var(--space-3)); /* never taller than the window; margin: auto centres it */
+  max-height: min(calc(100dvh - 2 * var(--space-3)), calc(var(--contact-vv, 100dvh) - 2 * var(--space-2))); /* never taller than the window (or than what an on-screen keyboard leaves of it); margin: auto centres it */
   margin: auto;
   padding: 0;
   overflow: hidden; /* clips the content to the rounded box; only .contact-dialog__body scrolls */
@@ -3029,7 +3294,7 @@ html[data-hero-pending] .hero {
 .contact-dialog__body {
   flex: 1 1 auto;
   min-height: 0;
-  padding: 0 var(--space-4) var(--space-4);
+  padding: 0 var(--space-4);
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;

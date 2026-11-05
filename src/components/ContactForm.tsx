@@ -1,22 +1,23 @@
 "use client";
 
-import { useEffect, useRef, type FormEvent } from "react";
+import { useEffect, useRef, type FormEvent, type KeyboardEvent } from "react";
 import { windowLabel, zoneHint, type ContactWindow } from "@/lib/contact-windows";
-import { CHANNELS, LIMITS, type LeadField } from "@/lib/lead";
+import { channelAvailable, CHANNELS, LIMITS, type LeadField } from "@/lib/lead";
 import { pick } from "@/lib/i18n";
 import { localeOf } from "@/lib/languages";
-import type { OfferBounds } from "@/lib/offer-amount";
+import { amountProblem, differenceText, formatAmountInput, parseAmount, type OfferBounds } from "@/lib/offer-amount";
 import { needsSlots, REQUEST_TYPES, type RequestType } from "@/lib/request-types";
-import { bookingWindow, DAYS, MAX_SLOTS, timeSlots } from "@/lib/viewing";
+import { bookableDays, DAYS, MAX_SLOTS, slotProblem, timeSlots } from "@/lib/viewing";
 import type { Language } from "@/lib/schema";
 import { ui, uiFmt, type UiKey } from "@/lib/ui-strings";
 import type { ContactModel } from "./contact-model";
 
-const errorText = (field: string, code: string, lang: Language, money: (n: number) => string, offer: OfferBounds | null) =>
+/** The range goes into the message only for an amount that is a number outside it; anything else the field says is the general one. */
+const errorText = (field: string, code: string, lang: Language, money: (n: number) => string, offer: OfferBounds | null, outOfRange: boolean) =>
   field === "preferredSlots"
     ? ui(code === "required" ? "contact.error.slotRequired" : "contact.error.slots", lang)
     : code === "amount"
-      ? offer
+      ? offer && outOfRange
         ? uiFmt("contact.error.amount", lang, { min: money(offer.min), max: money(offer.max) })
         : ui("contact.error.invalid", lang)
       : uiFmt(`contact.error.${code}` as UiKey, lang, { max: LIMITS.message });
@@ -56,6 +57,7 @@ export function ContactForm({
   consentText,
   privacyUrl,
   onDone,
+  onAgain,
 }: {
   model: ContactModel;
   idBase: string;
@@ -74,15 +76,17 @@ export function ContactForm({
   consentText: string;
   /** The seller's privacy page; no link at all when the seller has none. */
   privacyUrl?: string;
-  /** Called by the success panel's button (the dialog closes). */
+  /** Called by the success panel's "close" button (the dialog closes). */
   onDone: () => void;
+  /** Called by the success panel's "another request" button, after the model has started the new request (focus goes to its first field). */
+  onAgain: () => void;
 }) {
   const { values, errors, status, failure } = model;
   const summaryRef = useRef<HTMLDivElement>(null);
   const doneRef = useRef<HTMLButtonElement>(null);
   const id = (name: string) => `${idBase}-${name}`;
   /** The element a summary link focuses: the first date for the preferred times. */
-  const fieldId = (name: LeadField) => (name === "preferredSlots" ? id("slot-0-date") : id(name));
+  const fieldId = (name: LeadField) => (name === "preferredSlots" ? id("day-0") : id(name));
 
   // after a submit that failed, the summary takes focus; after a success, the panel's button (in the dialog) does
   const attention = model.attention;
@@ -108,12 +112,30 @@ export function ContactForm({
     }
   };
   const isOffer = values.requestType === "offer";
+  /** The currency's sign ("€") for the end of the amount field; its code where Intl has none. */
+  const currencySign = (() => {
+    try {
+      return new Intl.NumberFormat(localeOf(lang), { style: "currency", currency }).formatToParts(0).find((p) => p.type === "currency")?.value ?? currency;
+    } catch {
+      return currency;
+    }
+  })();
   const agent = model.agent;
   const range = model.offer;
+  const price = model.price;
+  const amount = parseAmount(values.amount, localeOf(lang));
+  const outOfRange = Number.isFinite(amount) && amountProblem(amount, range) === "range";
+  // the live difference to the asking price (only for a fixed price): nothing while the amount is no number or empty
+  const diffLine =
+    isOffer && price !== null && Number.isFinite(amount) && amount > 0
+      ? amount === price
+        ? ui("contact.amount.same", lang)
+        : uiFmt("contact.amount.diff", lang, { diff: differenceText(amount, price, currency, localeOf(lang)) })
+      : null;
   const fieldError = (name: LeadField) =>
     errors[name] ? (
       <p className="contact__error" id={id(`${name}-error`)}>
-        {errorText(name, errors[name]!, lang, money, range)}
+        {errorText(name, errors[name]!, lang, money, range, outOfRange)}
       </p>
     ) : null;
   const common = (name: Exclude<LeadField, "consent" | "channel" | "requestType" | "preferredSlots" | "contactWindow">) => ({
@@ -132,15 +154,46 @@ export function ContactForm({
   /** What to bring: the test drive's own note where there is one, else the general one. */
   const notes = values.requestType === "testdrive" ? (viewing?.testDriveNotes ?? viewing?.notes) : viewing?.notes;
 
+  const locale = localeOf(lang);
+  /** The channel the visitor pressed that needs an e-mail address or a phone number first, until it has one. */
+  const channelNeed = model.channelHint !== null && !channelAvailable(model.channelHint === "email" ? "email" : "phone", values) ? model.channelHint : null;
+  const dayPart = (ymd: string, options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale, { timeZone: "UTC", ...options }).format(new Date(`${ymd}T12:00:00Z`));
+  const slotText = (slot: { date: string; time: string }) => `${dayPart(slot.date, { weekday: "short", day: "2-digit", month: "2-digit" })} · ${slot.time}`;
+  /** The picker: the next days with visits (a short strip), the day shown, the times of the day. */
+  const days = withSlots && viewing ? bookableDays(viewing, 14) : [];
+  const day = days.includes(model.slotDay) ? model.slotDay : (days[0] ?? "");
+  const times = withSlots && viewing ? timeSlots(viewing) : [];
+  const tabs = useRef<Record<string, HTMLButtonElement | null>>({});
+  /** Tablist keys: the arrows (and Home and End) move to the neighbouring request type, which is chosen at once, and keep the focus on its tab. */
+  const onTabKeys = (e: KeyboardEvent) => {
+    const at = requestTypes.indexOf(values.requestType);
+    const next = e.key === "ArrowRight" || e.key === "ArrowDown" ? requestTypes[(at + 1) % requestTypes.length] : e.key === "ArrowLeft" || e.key === "ArrowUp" ? requestTypes[(at - 1 + requestTypes.length) % requestTypes.length] : e.key === "Home" ? requestTypes[0] : e.key === "End" ? requestTypes[requestTypes.length - 1] : null;
+    if (next === null) return;
+    e.preventDefault();
+    model.set("requestType", next);
+    tabs.current[next]?.focus();
+  };
+
   if (status === "success") {
-    const viewed = model.sentType !== null && needsSlots(model.sentType);
+    const sent = model.sentType;
+    const text = sent !== null && needsSlots(sent) ? "contact.success.viewing" : sent === "offer" ? "contact.success.offer" : "contact.success.text";
     return (
       <div className="contact__success" role="status">
         <h3 className="contact__success-title">{ui("contact.success.title", lang)}</h3>
-        <p>{ui(viewed ? "contact.success.viewing" : "contact.success.text", lang)}</p>
-        <button ref={doneRef} type="button" className="button" onClick={onDone}>
-          {ui("contact.close", lang)}
-        </button>
+        <p>{ui(text, lang)}</p>
+        {model.requestNumber && (
+          <p className="contact__number">
+            {ui("contact.success.number", lang)} <b>#{model.requestNumber}</b>
+          </p>
+        )}
+        <div className="contact__success-actions">
+          <button type="button" className="button button--outline" onClick={onAgain}>
+            {ui("contact.again", lang)}
+          </button>
+          <button ref={doneRef} type="button" className="button" onClick={onDone}>
+            {ui("contact.close", lang)}
+          </button>
+        </div>
       </div>
     );
   }
@@ -178,7 +231,7 @@ export function ContactForm({
                     >
                       {ui(`contact.${name}` as UiKey, lang)}
                     </a>
-                    <span>: {errorText(name, errors[name]!, lang, money, range)}</span>
+                    <span>: {errorText(name, errors[name]!, lang, money, range, outOfRange)}</span>
                   </li>
                 ))}
               </ul>
@@ -191,25 +244,33 @@ export function ContactForm({
         {ui("contact.reassurance", lang)} {ui("contact.requiredNote", lang)}
       </p>
 
-      <div className="contact__field contact__field--type">
-        {label("requestType", "contact.requestType", true)}
-        <select
-          id={id("requestType")}
-          name="requestType"
-          value={values.requestType}
-          aria-invalid={errors.requestType ? true : undefined}
-          aria-describedby={describe("requestType")}
-          onChange={(e) => model.set("requestType", e.target.value)}
-        >
-          {requestTypes.map((t) => (
-            <option key={t} value={t}>
+      <div className="contact__tabs" role="tablist" aria-label={ui("contact.requestType", lang)} onKeyDown={onTabKeys}>
+        {requestTypes.map((t) => {
+          const selected = values.requestType === t;
+          return (
+            <button
+              key={t}
+              ref={(el) => {
+                tabs.current[t] = el;
+              }}
+              type="button"
+              role="tab"
+              id={id(`tab-${t}`)}
+              data-type={t}
+              className="contact__tab"
+              aria-selected={selected}
+              aria-controls={id("panel")}
+              tabIndex={selected ? 0 : -1}
+              onClick={() => model.set("requestType", t)}
+            >
               {REQUEST_TYPES[t].label[lang]}
-            </option>
-          ))}
-        </select>
-        {fieldError("requestType")}
+            </button>
+          );
+        })}
       </div>
+      {fieldError("requestType")}
 
+      <div role="tabpanel" id={id("panel")} aria-labelledby={id(`tab-${values.requestType}`)} className="contact__panel">
       {withSlots && viewing && (
         <fieldset className="contact__slots" aria-describedby={id("slots-hint")}>
           <legend>
@@ -232,54 +293,52 @@ export function ContactForm({
             {uiFmt("contact.slots.available", lang, { days: dayNames(viewing.days, lang), from: viewing.from, to: viewing.to })}{" "}
             {uiFmt("contact.slots.zone", lang, { zone: viewing.timezone })}
           </p>
-          {values.slots.map((slot, i) => {
-            const window = bookingWindow(viewing);
-            const err = model.slotErrors[i];
-            const errId = id(`slot-${i}-error`);
-            return (
-              <div className="contact__slot" key={i}>
-                <div className="contact__field">
-                  <label htmlFor={id(`slot-${i}-date`)}>{uiFmt("contact.slots.date", lang, { n: i + 1 })}</label>
-                  <input
-                    type="date"
-                    id={id(`slot-${i}-date`)}
-                    min={window.min}
-                    max={window.max}
-                    value={slot.date}
-                    aria-invalid={err ? true : undefined}
-                    aria-describedby={err ? errId : undefined}
-                    onChange={(e) => model.setSlot(i, "date", e.target.value)}
-                  />
-                </div>
-                <div className="contact__field">
-                  <label htmlFor={id(`slot-${i}-time`)}>{uiFmt("contact.slots.time", lang, { n: i + 1 })}</label>
-                  <select id={id(`slot-${i}-time`)} value={slot.time} aria-invalid={err ? true : undefined} aria-describedby={err ? errId : undefined} onChange={(e) => model.setSlot(i, "time", e.target.value)}>
-                    <option value="">{ui("contact.slots.select", lang)}</option>
-                    {timeSlots(viewing).map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {values.slots.length > 1 && (
-                  <button type="button" className="contact__slot-remove" aria-label={uiFmt("contact.slots.remove", lang, { n: i + 1 })} onClick={() => model.removeSlot(i)}>
+          <ol className="contact__picked" aria-live="polite">
+            {Array.from({ length: MAX_SLOTS }, (_, i) => {
+              const slot = values.slots[i];
+              const err = model.slotErrors[i];
+              return slot ? (
+                <li className="contact__pick" key={i}>
+                  <b>{i + 1}</b>
+                  <span>{slotText(slot)}</span>
+                  <button type="button" className="contact__pick-remove" aria-label={uiFmt("contact.slots.remove", lang, { n: i + 1 })} onClick={() => model.removeSlot(i)}>
                     <span aria-hidden="true">×</span>
                   </button>
-                )}
-                {err && (
-                  <p className="contact__error" id={errId}>
-                    {uiFmt(`contact.error.slot.${err}` as UiKey, lang, { days: dayNames(viewing.days, lang), max: 60 })}
-                  </p>
-                )}
-              </div>
-            );
-          })}
-          {values.slots.length < MAX_SLOTS && (
-            <button type="button" className="button button--outline button--small contact__slot-add" onClick={model.addSlot}>
-              {ui("contact.slots.add", lang)}
-            </button>
-          )}
+                  {err && (
+                    <em className="contact__error" id={id(`slot-${i}-error`)}>
+                      {uiFmt(`contact.error.slot.${err}` as UiKey, lang, { days: dayNames(viewing.days, lang), max: 60 })}
+                    </em>
+                  )}
+                </li>
+              ) : (
+                <li className="contact__pick is-empty" key={i}>
+                  <b>{i + 1}</b>
+                  <span>{ui("contact.slots.pick", lang)}</span>
+                </li>
+              );
+            })}
+          </ol>
+          <div className="contact__days" role="group" aria-label={ui("contact.slots.day", lang)}>
+            {days.map((d, i) => (
+              <button key={d} id={id(`day-${i}`)} type="button" className="contact__day" aria-pressed={d === day} data-day={d} onClick={() => model.setSlotDay(d)}>
+                <small>{dayPart(d, { weekday: "short" })}</small>
+                <b>{dayPart(d, { day: "numeric" })}</b>
+                <small>{dayPart(d, { month: "short" })}</small>
+                {values.slots.some((x) => x.date === d) && <i className="contact__dot" aria-hidden="true" />}
+              </button>
+            ))}
+          </div>
+          <div className="contact__times" role="group" aria-label={ui("contact.slots.times", lang)}>
+            {times.map((t) => {
+              const picked = values.slots.some((x) => x.date === day && x.time === t);
+              const off = !picked && (values.slots.length >= MAX_SLOTS || slotProblem({ date: day, time: t }, viewing) !== null);
+              return (
+                <button key={t} type="button" className="contact__time" aria-pressed={picked} disabled={off} data-time={t} onClick={() => model.toggleSlot({ date: day, time: t })}>
+                  {t}
+                </button>
+              );
+            })}
+          </div>
           {fieldError("preferredSlots")}
         </fieldset>
       )}
@@ -287,9 +346,16 @@ export function ContactForm({
       {isOffer && (
         <div className="contact__field">
           {label("amount", "contact.amount", !agent)}
-          <input type="text" inputMode="decimal" autoComplete="off" required={!agent} maxLength={20} {...common("amount")} aria-describedby={describe("amount", id("amount-hint"))} />
-          <p className="contact__hint" id={id("amount-hint")}>
-            {range ? uiFmt("contact.amount.hint", lang, { min: money(range.min), max: money(range.max) }) : currency} {agent && ui("contact.agentOptional", lang)}
+          <div className="contact__amount-box">
+            <input type="text" inputMode="decimal" autoComplete="off" required={!agent} maxLength={20} {...common("amount")} onBlur={() => {
+                // the value as the page language writes it ("50.000", "50,000"); a blur that changes nothing is not an edit (it would undo the state of a send)
+                const shown = formatAmountInput(values.amount, locale);
+                if (values.amount.trim() !== "" && shown !== values.amount) model.set("amount", shown);
+              }} aria-describedby={describe("amount", id("amount-hint"))} />
+            <span className="contact__amount-unit" aria-hidden="true">{currencySign}</span>
+          </div>
+          <p className="contact__hint" id={id("amount-hint")} aria-live="polite" hidden={!diffLine && !agent}>
+            {diffLine} {agent && ui("contact.agentOptional", lang)}
           </p>
           {fieldError("amount")}
         </div>
@@ -311,33 +377,43 @@ export function ContactForm({
           <input type="tel" autoComplete="tel" inputMode="tel" required={isOffer} maxLength={LIMITS.phone} {...common("phone")} />
           {fieldError("phone")}
         </div>
-        <div className="contact__field">
-          {label("channel", "contact.channel", false)}
-          <select id={id("channel")} name="channel" value={values.channel} onChange={(e) => model.set("channel", e.target.value)}>
-            <option value="">{ui("contact.channel.none", lang)}</option>
-            {CHANNELS.map((c) => (
-              <option key={c} value={c}>
-                {ui(`contact.channel.${c}` as UiKey, lang)}
-              </option>
-            ))}
-          </select>
-        </div>
+        <fieldset className="contact__field contact__field--wide contact__chipset">
+          <legend>
+            {ui("contact.channel", lang)}
+            <span className="contact__optional"> ({ui("contact.optional", lang)})</span>
+          </legend>
+          <div className="contact__chips" role="group" aria-label={ui("contact.channel", lang)}>
+            {["", ...CHANNELS].map((c) => {
+              const off = !channelAvailable(c, values);
+              return (
+                <button key={c || "none"} type="button" className={off ? "contact__chip is-off" : "contact__chip"} data-channel={c} aria-pressed={values.channel === c} aria-disabled={off ? true : undefined} onClick={() => model.pickChannel(c, values)}>
+                  {ui(c === "" ? "contact.channel.none" : (`contact.channel.${c}` as UiKey), lang)}
+                </button>
+              );
+            })}
+          </div>
+          {channelNeed && (
+            <p className="contact__hint" role="status">
+              {ui(channelNeed === "email" ? "contact.channel.needEmail" : "contact.channel.needPhone", lang)}
+            </p>
+          )}
+        </fieldset>
         {values.channel !== "email" && (
-          <div className="contact__field contact__field--wide">
-            <label htmlFor={id("contactWindow")}>{ui("contact.contactWindow", lang)}</label>
-            <select id={id("contactWindow")} name="contactWindow" value={values.contactWindow} aria-describedby={hint ? id("contactWindow-hint") : undefined} onChange={(e) => model.set("contactWindow", e.target.value)}>
+          <fieldset className="contact__field contact__field--wide contact__chipset">
+            <legend>{ui("contact.contactWindow", lang)}</legend>
+            <div className="contact__chips" role="group" aria-label={ui("contact.contactWindow", lang)} aria-describedby={hint ? id("contactWindow-hint") : undefined}>
               {contactWindows.map((w) => (
-                <option key={w.code} value={w.code}>
+                <button key={w.code} type="button" className="contact__chip" data-window={w.code} aria-pressed={values.contactWindow === w.code} onClick={() => model.set("contactWindow", w.code)}>
                   {windowLabel(w, lang)}
-                </option>
+                </button>
               ))}
-            </select>
+            </div>
             {hint && (
               <p className="contact__hint" id={id("contactWindow-hint")}>
                 {hint}
               </p>
             )}
-          </div>
+          </fieldset>
         )}
         <div className="contact__field contact__field--wide">
           <div className="contact__label-row">
@@ -350,6 +426,7 @@ export function ContactForm({
           {agent && values.requestType === "question" && <p className="contact__hint">{ui("contact.agentOptional", lang)}</p>}
           {fieldError("message")}
         </div>
+      </div>
       </div>
 
       <div className="contact__consent">
@@ -381,11 +458,12 @@ export function ContactForm({
         <input type="text" id={id("website")} name="website" tabIndex={-1} autoComplete="off" value={values.website} onChange={(e) => model.set("website", e.target.value)} />
       </div>
 
-      {prototypeNote && <p className="contact__prototype">{ui("contact.prototype", lang)}</p>}
-
-      <button type="submit" className="button" disabled={status === "sending"}>
-        {ui(status === "sending" ? "contact.sending" : "contact.submit", lang)}
-      </button>
+      <div className="contact__actions">
+        {prototypeNote && <p className="contact__prototype">{ui("contact.prototype", lang)}</p>}
+        <button type="submit" className="button" disabled={status === "sending"}>
+          {ui(status === "sending" ? "contact.sending" : "contact.submit", lang)}
+        </button>
+      </div>
     </form>
   );
 }

@@ -97,9 +97,9 @@ describe("validation and limits", () => {
     expect(codes({ requestType: "question", amount: 800 })).toEqual({ amount: "invalid" }); // only an offer has one
   });
 
-  it("reads an amount like the reference site: a dot separates thousands, a comma the decimals", () => {
-    const amountOf = (amount: unknown) => {
-      const r = validateLead({ ...GOOD, ...OFFER, amount });
+  it("reads an amount by the page's language: German, Turkish and Bulgarian a dot for thousands and a comma for decimals, English the other way round", () => {
+    const amountOf = (amount: unknown, lang = "de") => {
+      const r = validateLead({ ...GOOD, ...OFFER, lang, amount });
       return r.ok ? r.data.amount : "refused";
     };
     expect(amountOf("50.000")).toBe(50000);
@@ -107,6 +107,11 @@ describe("validation and limits", () => {
     expect(amountOf("50 000")).toBe(50000);
     expect(amountOf("50000")).toBe(50000);
     expect(amountOf(50000)).toBe(50000);
+    expect(amountOf("50.000", "tr")).toBe(50000);
+    expect(amountOf("49.500,5", "bg")).toBe(49500.5);
+    expect(amountOf("50,000", "en")).toBe(50000);
+    expect(amountOf("49,500.50", "en")).toBe(49500.5);
+    expect(amountOf("50.000", "en")).toBe(50); // the English reading: fifty, with a zero fraction
     expect(amountOf("")).toBe("refused"); // empty is "not given": an offer needs it
     expect(amountOf("5o")).toBe("refused");
   });

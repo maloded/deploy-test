@@ -8,6 +8,7 @@ import { resetFormSnapshotForTests } from "@/lib/form-snapshot";
 import { buildSite } from "@/lib/site";
 import { EXAMPLES_DIR, FIXTURE_DIR, examples, fixtures } from "./helpers";
 import { fakeWidget } from "./fake-widget";
+import { pickSlot, selectedType } from "./form-ui";
 
 // The reference site's page-context and agent-after-send scenarios (multivan-landing tests/page-context.test.js, tests/agent-after-send.test.js), run through this page's
 // real agent bridge: web and agent mode x the four request types: empty, partial, no_consent, complete, sending, sent, error, and navigation after a send.
@@ -113,8 +114,7 @@ function fillAllButTick(t: T, mode: "web" | "agent"): Record<string, unknown> {
     type(field("email"), MAIL);
     base.email = MAIL;
     if (mode === "web") {
-      type(box!.querySelector("dialog .contact__slot input[type=date]") as HTMLInputElement, SLOT.date);
-      type(box!.querySelector("dialog .contact__slot select") as HTMLSelectElement, SLOT.time);
+      pickSlot(box!, SLOT.date, SLOT.time);
       base.slots = [SLOT];
     } else base.slots = [];
   } else if (t === "question") {
@@ -137,7 +137,7 @@ function fillAllButTick(t: T, mode: "web" | "agent"): Record<string, unknown> {
 
 const focusedName = () => {
   const el = document.activeElement as HTMLElement | null;
-  if (el?.closest(".contact__slot") && el instanceof HTMLInputElement && el.type === "date") return "slot-date";
+  if (el?.classList.contains("contact__day")) return "slot-date";
   return (el as HTMLInputElement | null)?.name ?? "";
 };
 
@@ -161,7 +161,7 @@ for (const mode of ["web", "agent"] as const) {
           expect(dialogOpen()).toBe(true);
           expect(form()).toEqual({ phase: "open_filling", type: t, missing: EMPTY[mode][t], consent: false, visible: true, submit: "none" });
           expect(focusedName()).toBe(FIRST[mode][t]);
-          expect((field("requestType") as unknown as HTMLSelectElement).value).toBe(t);
+          expect(selectedType(box!)).toBe(t);
           expect(field("name")).toBeTruthy();
           expect(!!box!.querySelector("dialog form[data-agent]")).toBe(mode === "agent");
         });
@@ -284,7 +284,7 @@ describe("navigate: the contact targets", () => {
       expect(navigate(path).handled, path).toBe(true);
       expect(dialogOpen(), path).toBe(true);
       expect(form().type, path).toBe(expected);
-      expect((field("requestType") as unknown as HTMLSelectElement).value, path).toBe(expected);
+      expect(selectedType(box!), path).toBe(expected);
     }
   });
 

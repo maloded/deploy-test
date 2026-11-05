@@ -82,15 +82,19 @@ describe("page_context: submit", () => {
     expect(a.form).toMatchObject({ name: NAME, email: EMAIL });
   });
 
-  it("sent stays sent when the dialog is closed and reopened: the success panel replaces the form, so there is nothing to edit", async () => {
+  it("sent stays sent while the dialog is closed; the visitor opening it again starts a new request (an empty form, nothing of the old one in the answer)", async () => {
     await mount();
     reply(200);
     fillAll();
     await send();
     act(() => section().close());
+    expect(ask()).toMatchObject({ submit: "sent", phase: "complete" }); // closed: still the sent request
     act(() => section().open());
-    expect(field("name")).toBeNull();
-    expect(ask()).toMatchObject({ submit: "sent", phase: "complete" });
+    expect(field("name")).not.toBeNull(); // the form is back, empty
+    expect(field("name").value).toBe("");
+    expect(ask()).toMatchObject({ submit: "none", phase: "open_filling" });
+    expect(ask().form).not.toHaveProperty("requestId");
+    expect(ask().form).not.toHaveProperty("values");
   });
 
   it("failed 503 keeps the values, reports submit failed, and the visitor's next edit resets it", async () => {

@@ -170,6 +170,17 @@ export function timeSlots(config: Pick<ViewingConfig, "from" | "to" | "durationM
   return out;
 }
 
+/**
+ * The days a request for an appointment can pick, for the picker's day strip: from tomorrow on, the days of the week the viewing settings allow, at most `count` of them and
+ * none beyond the booking horizon. They are calendar days of the seller (todayIn and addDays), so a time zone or a daylight-saving change cannot shift one.
+ */
+export function bookableDays(config: Pick<ViewingConfig, "timezone" | "days">, count: number, now: Date = new Date()): Ymd[] {
+  const { min, max } = bookingWindow(config, now);
+  const out: Ymd[] = [];
+  for (let d = min; d <= max && out.length < count; d = addDays(d, 1)) if (config.days.includes(weekdayOf(d))) out.push(d);
+  return out;
+}
+
 /** A seller-local date and time as an ISO 8601 string with its UTC offset ("2026-06-11T10:00:00+02:00"); null when that local time does not exist. */
 export function isoWithOffset(ymd: Ymd, hm: string, timeZone: string): string | null {
   const at = instantOf(ymd, hm, timeZone);

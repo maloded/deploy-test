@@ -38,18 +38,20 @@ const dialogTitle = (type: RequestType, lang: Language): string =>
   type === "question" ? ui("contact.title", lang) : type === "offer" ? ui("contact.title.offer", lang) : REQUEST_TYPES[type].label[lang];
 
 /**
- * Where focus goes when the dialog opens (and when the agent leads to another type): the first field the form still needs, in page order: the date of the first
- * preferred time (a viewing or test drive), the amount (an offer), the name, the phone number or e-mail (an offer needs both: the one that is empty), the question (a question
+ * Where focus goes when the dialog opens (and when the agent leads to another type): the first field the form still needs, in page order: the first day of the picker
+ * when no time is picked yet (a viewing or test drive), the amount (an offer), the name, the phone number or e-mail (an offer needs both: the one that is empty), the question (a question
  * request) and the consent box; the Name input when all are filled. A request the agent opened (form[data-agent]) does not need the times, the amount or the question.
  */
 function firstEmptyField(dialog: HTMLElement): HTMLElement | null {
   const get = (selector: string) => dialog.querySelector<HTMLInputElement | HTMLTextAreaElement>(selector);
   const empty = (el: HTMLInputElement | HTMLTextAreaElement | null): el is HTMLInputElement | HTMLTextAreaElement => el !== null && el.value.trim() === "";
   const agent = dialog.querySelector<HTMLElement>("form")?.dataset.agent === "true";
-  const date = get(".contact__slot input[type=date]");
-  if (!agent && empty(date)) return date;
+  // a viewing or test drive with no time picked yet: the first day of the strip
+  const day = dialog.querySelector<HTMLElement>(".contact__slots .contact__day");
+  if (!agent && day && dialog.querySelector(".contact__pick:not(.is-empty)") === null) return day;
+  // an offer: the amount field, prefilled with the asking price, takes focus (the caret goes to the end, see focusField) so that it can be edited right away
   const amount = get("[name=amount]");
-  if (!agent && empty(amount)) return amount;
+  if (amount !== null && (!agent || !empty(amount))) return amount; // in a call it is optional: it takes focus only when it starts with a price
   const name = get("[name=name]");
   if (empty(name)) return name;
   const email = get("[name=email]");
@@ -65,6 +67,20 @@ function firstEmptyField(dialog: HTMLElement): HTMLElement | null {
   return name;
 }
 
+/** Focus, and in a text field the caret after the last character (a prefilled amount is edited from its end). */
+function focusField(el: HTMLElement | null) {
+  if (!el) return;
+  el.focus();
+  if (el instanceof HTMLInputElement && el.type === "text") {
+    const end = el.value.length;
+    try {
+      el.setSelectionRange(end, end);
+    } catch {
+      // an input type without a selection: the caret stays where it is
+    }
+  }
+}
+
 /**
  * The contact block lives in the footer: its contact row (the seller's e-mail and phone, and the privacy and imprint
  * links when the seller has them) is the element with id="contact", and it hosts the agent interface. There is no
@@ -72,7 +88,7 @@ function firstEmptyField(dialog: HTMLElement): HTMLElement | null {
  * form in a native <dialog>; without it they scroll to this row, whose mailto link works. The form exists ONLY in the
  * dialog, and only after the page has loaded in a browser: the static markup holds no form field.
  */
-export function ContactSection({ lang, contactWindows, timezone, email, phone, requestTypes, viewing, offer, currency, prototypeNote, consentText, privacyUrl }: { lang: Language; contactWindows: readonly ContactWindow[]; timezone?: string; email: string; phone?: string; requestTypes: readonly RequestType[]; viewing: ViewingConfig | null; /** The range of the amount an offer may name, and the currency of the product's price. */ offer: OfferBounds | null; currency: string; prototypeNote: boolean; consentText: string; privacyUrl?: string }) {
+export function ContactSection({ lang, contactWindows, timezone, email, phone, requestTypes, viewing, offer, price, currency, prototypeNote, consentText, privacyUrl }: { lang: Language; contactWindows: readonly ContactWindow[]; timezone?: string; email: string; phone?: string; requestTypes: readonly RequestType[]; viewing: ViewingConfig | null; /** The range of the amount an offer may name, and the currency of the product's price. */ offer: OfferBounds | null; /** The fixed asking price an offer starts from (null for a price per month and so on: the field starts empty). */ price?: number | null; currency: string; prototypeNote: boolean; consentText: string; privacyUrl?: string }) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const opener = useRef<HTMLElement | null>(null);
@@ -91,7 +107,7 @@ export function ContactSection({ lang, contactWindows, timezone, email, phone, r
     sectionRef.current?.dispatchEvent(new CustomEvent(name, { bubbles: true, detail: {} })); // no personal data, ever
   }, []);
 
-  const model = useContactModel({ lang, viewing, offer, onSubmitted: () => emit("contact-submitted") });
+  const model = useContactModel({ lang, viewing, offer, price, onSubmitted: () => emit("contact-submitted") });
 
   const { setPreset, setAgent, reset } = model;
   /** A counter: each change moves focus to the first field the form still needs, after the form has rendered the fields of its (new) type. */
@@ -105,9 +121,11 @@ export function ContactSection({ lang, contactWindows, timezone, email, phone, r
       const requested = typeof options?.type === "string" ? navigationType(options.type, requestTypes) : null;
       const agent = options?.agent === true; // the voice assistant opened it during a call (the bridge says so), or the visitor did
       const viaAgent = options?.by === "agent"; // the agent's navigate (a call is running then): it keeps a sent request when it asks for the same type again
-      // after a send, the agent leading to the same type keeps the sent request (its answer stays "sent"); another type, or a visitor's link, starts a new request
+      // after a send, the agent leading to the same type keeps the sent request (its answer stays "sent"); another type, or any link, button or address of the visitor,
+      // starts a new request (an empty form of that type)
       let fresh = false;
-      if (requested !== null && contactNavResets({ sent: model.status === "success", sentType: model.sentType, type: requested, agent: viaAgent })) {
+      const wanted = requested ?? resolvePreset((from as HTMLElement | null | undefined)?.dataset?.requestType, requestTypes);
+      if ((requested !== null || !isOpen.current) && contactNavResets({ sent: model.status === "success", sentType: model.sentType, type: wanted, agent: viaAgent })) {
         reset();
         fresh = true;
       }
@@ -122,7 +140,7 @@ export function ContactSection({ lang, contactWindows, timezone, email, phone, r
         return;
       }
       isOpen.current = true;
-      const type = requested ?? resolvePreset((from as HTMLElement | null | undefined)?.dataset?.requestType, requestTypes);
+      const type = wanted;
       setPreset(type);
       setAgent(agent);
       setOpened(type);
@@ -137,11 +155,42 @@ export function ContactSection({ lang, contactWindows, timezone, email, phone, r
     [emit, setPreset, setAgent, reset, requestTypes, model.status, model.sentType, model.values.requestType],
   );
 
+  // "Another request" (the success panel): the model has made a new request of the same type; focus goes to its first field
+  const again = useCallback(() => {
+    model.again();
+    setFocusTick((n) => n + 1);
+  }, [model]);
+
+  // on a phone the on-screen keyboard covers the lower part of the window: the dialog is as tall as what is left (the visual viewport), and a field that gets focus is scrolled
+  // into view, after the keyboard has come up, so that the focused field and the send button are never under it
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!modal || !dialog) return;
+    const vv = window.visualViewport;
+    const fit = () => dialog.style.setProperty("--contact-vv", vv ? `${Math.round(vv.height)}px` : "100dvh");
+    fit();
+    vv?.addEventListener("resize", fit);
+    let timer = 0;
+    const onFocus = (e: FocusEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (!el || !el.matches?.("input, textarea, select, button")) return;
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => el.scrollIntoView?.({ block: "nearest", behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }), 300);
+    };
+    dialog.addEventListener("focusin", onFocus);
+    return () => {
+      vv?.removeEventListener("resize", fit);
+      dialog.removeEventListener("focusin", onFocus);
+      window.clearTimeout(timer);
+      dialog.style.removeProperty("--contact-vv");
+    };
+  }, [modal]);
+
   // focus goes to the first field the form still needs (not the select, not the close button), once the form shows the fields of its type
   useEffect(() => {
     const dialog = dialogRef.current;
     if (focusTick === 0 || !dialog) return;
-    if (!AUTOFOCUS_ONLY_WITH_FINE_POINTER || window.matchMedia?.("(pointer: fine)").matches) firstEmptyField(dialog)?.focus();
+    if (!AUTOFOCUS_ONLY_WITH_FINE_POINTER || window.matchMedia?.("(pointer: fine)").matches) focusField(firstEmptyField(dialog));
     else dialog.querySelector<HTMLElement>(".contact-dialog__title")?.focus();
   }, [focusTick]);
 
@@ -306,7 +355,7 @@ export function ContactSection({ lang, contactWindows, timezone, email, phone, r
           </div>
           {/* only this body scrolls; the title row above stays in place */}
           <div className="contact-dialog__body">
-            {ready && <ContactForm model={model} idBase={formId} lang={lang} currency={currency} contactWindows={contactWindows} timezone={timezone} email={email} requestTypes={requestTypes} prototypeNote={prototypeNote} consentText={consentText} privacyUrl={privacyUrl} onDone={close} />}
+            {ready && <ContactForm model={model} idBase={formId} lang={lang} currency={currency} contactWindows={contactWindows} timezone={timezone} email={email} requestTypes={requestTypes} prototypeNote={prototypeNote} consentText={consentText} privacyUrl={privacyUrl} onDone={close} onAgain={again} />}
           </div>
         </div>
       </dialog>

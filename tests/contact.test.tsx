@@ -9,6 +9,7 @@ import type { ContactElement } from "@/components/ContactSection";
 import { buildSite } from "@/lib/site";
 import { ui, uiFmt } from "@/lib/ui-strings";
 import { FIXTURE_DIR, fixtures } from "./helpers";
+import { chooseType, selectedType } from "./form-ui";
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -133,10 +134,12 @@ describe("the contact block (the footer's contact row)", () => {
   it("has the fields, with labels, required marks, limits and a hidden honeypot", () => {
     mount("en");
     const form = inline();
-    for (const name of ["name", "email", "phone", "channel", "contactWindow", "message", "consent", "website"]) expect(field(form, name), name).toBeTruthy();
+    for (const name of ["name", "email", "phone", "message", "consent", "website"]) expect(field(form, name), name).toBeTruthy();
+    expect(form.querySelectorAll(".contact__chip[data-channel]")).toHaveLength(5); // no preference, e-mail, phone, WhatsApp, Telegram: chips, not a select
+    expect(form.querySelectorAll(".contact__chip[data-window]")).toHaveLength(4); // the seller's contact windows
     expect([...form.querySelectorAll("[required]")].map((e) => e.getAttribute("name"))).toEqual(["name", "message", "consent"]); // a question: the question itself is required on the web, and phone or e-mail (neither is required alone)
     expect(field(form, "message").getAttribute("maxlength")).toBe("1000");
-    expect([...field(form, "channel").querySelectorAll("option")].map((o) => o.getAttribute("value"))).toEqual(["", "email", "phone", "whatsapp", "telegram"]);
+    expect([...form.querySelectorAll(".contact__chip[data-channel]")].map((o) => o.getAttribute("data-channel"))).toEqual(["", "email", "phone", "whatsapp", "telegram"]);
     for (const el of form.querySelectorAll("input:not([type=checkbox]), select, textarea")) {
       const id = el.getAttribute("id")!;
       expect(form.querySelector(`label[for="${id}"]`), id).toBeTruthy();
@@ -146,22 +149,25 @@ describe("the contact block (the footer's contact row)", () => {
     expect(field(form, "website").getAttribute("tabindex")).toBe("-1");
   });
 
-  it("starts with the request type select, default question, listing what the product accepts (no viewing settings: no viewing, no test drive)", () => {
+  it("starts with the request types as tabs, the question chosen, listing what the product accepts (no viewing settings: no viewing, no test drive)", () => {
     mount("en");
-    const first = inline().querySelector(".contact__field")!;
-    expect(first.querySelector("select")!.getAttribute("name")).toBe("requestType");
-    const select = field(inline(), "requestType") as unknown as HTMLSelectElement;
-    expect(select.value).toBe("question");
-    expect([...select.options].map((o) => [o.value, o.textContent])).toEqual([["question", "Question"], ["offer", "Make an offer"]]);
-    expect(select.hasAttribute("required") || inline().querySelector("label[for]")!.textContent!.includes("*")).toBe(true);
+    const list = inline().querySelector("[role=tablist]")!;
+    expect(list.getAttribute("aria-label")).toBeTruthy();
+    expect(selectedType(box!)).toBe("question");
+    expect([...list.querySelectorAll("[role=tab]")].map((t) => [t.getAttribute("data-type"), t.textContent])).toEqual([["question", "Question"], ["offer", "Make an offer"]]);
+    expect(list.querySelector("[aria-selected=true]")!.getAttribute("tabindex")).toBe("0"); // one tab stop: the chosen tab; the others are reached with the arrows
+    expect(list.querySelector("[aria-selected=false]")!.getAttribute("tabindex")).toBe("-1");
+    const panel = inline().querySelector("[role=tabpanel]")!;
+    expect(panel.getAttribute("aria-labelledby")).toBe(list.querySelector("[aria-selected=true]")!.id);
+    expect(list.querySelector("[aria-selected=true]")!.getAttribute("aria-controls")).toBe(panel.id);
   });
 
   it("labels the types in the page language, and sends the chosen one with the lead", async () => {
     mount("de");
-    expect([...(field(inline(), "requestType") as unknown as HTMLSelectElement).options].map((o) => o.textContent)).toEqual(["Frage", "Angebot machen"]);
+    expect([...inline().querySelectorAll("[role=tab]")].map((o) => o.textContent)).toEqual(["Frage", "Angebot machen"]);
     const f = reply(200);
     fill(inline());
-    type(field(inline(), "requestType") as unknown as HTMLSelectElement, "offer");
+    chooseType(box!, "offer");
     type(field(inline(), "phone"), "+00 000 000 000"); // an offer needs both
     type(field(inline(), "amount"), "800"); // the fixture car costs 589: the range is 295 to 1,767
     await submit(inline());
@@ -438,7 +444,7 @@ describe("the dialog", () => {
     act(() => void opener().click());
     fill(dialog().querySelector("form") as HTMLFormElement);
     await submit(dialog().querySelector("form") as HTMLFormElement);
-    const done = dialog().querySelector(".contact__success button") as HTMLButtonElement;
+    const done = dialog().querySelector(".contact__success-actions button:last-child") as HTMLButtonElement;
     expect(document.activeElement).toBe(done);
     act(() => void done.click());
     expect(dialog().open).toBe(false);

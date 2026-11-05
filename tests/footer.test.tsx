@@ -11,6 +11,7 @@ import { buildSite } from "@/lib/site";
 import { sellerSchema } from "@/lib/seller";
 import { UI_KEYS, ui } from "@/lib/ui-strings";
 import { examples, FIXTURE_DIR, fixtures } from "./helpers";
+import { selectedType } from "./form-ui";
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 vi.mock("hanc-webrtc-widgets", () => ({}));
@@ -167,7 +168,7 @@ describe("a click on a contact link opens the form on that tab", () => {
     const dialog = () => box!.querySelector("dialog.contact-dialog") as HTMLDialogElement;
     for (const link of links) {
       act(() => void link.click());
-      const select = box.querySelector("dialog select[name=requestType]") as HTMLSelectElement;
+      const select = { value: selectedType(box) };
       expect(select.value, link.dataset.requestType).toBe(link.dataset.requestType);
       expect(dialog().hasAttribute("open") || dialog().open).toBe(true);
       act(() => void dialog().dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true })));

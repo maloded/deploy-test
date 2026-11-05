@@ -9,6 +9,7 @@ import { getFormSnapshot, resetFormSnapshotForTests } from "@/lib/form-snapshot"
 import { buildSite } from "@/lib/site";
 import { examples } from "./helpers";
 import { fakeWidget } from "./fake-widget";
+import { chooseType, dayButton, pickSlot } from "./form-ui";
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 vi.mock("hanc-webrtc-widgets", () => ({}));
@@ -41,7 +42,6 @@ afterEach(() => {
 
 const section = () => box!.querySelector("#contact") as any;
 const field = (name: string) => box!.querySelector(`dialog form [name=${name}]`) as HTMLInputElement;
-const slotRow = () => box!.querySelector(".contact__slot") as HTMLElement;
 function type(el: HTMLInputElement | HTMLSelectElement, value: string) {
   const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : el instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
   act(() => {
@@ -56,10 +56,7 @@ const ask = () => {
   w.remove();
   return call.answers[0] as Record<string, any>;
 };
-const setSlot = (date: string, time: string) => {
-  type(slotRow().querySelector("input[type=date]") as HTMLInputElement, date);
-  type(slotRow().querySelector("select") as HTMLSelectElement, time);
-};
+const setSlot = (date: string, time: string) => pickSlot(box!, date, time);
 
 describe("page_context: missing", () => {
   it("lists the names of the blocking fields in page order, in every phase but complete", async () => {
@@ -112,7 +109,7 @@ describe("page_context: missing", () => {
   it("a viewing request without a slot names preferredSlots; with a name missing too, both come in one answer", async () => {
     await mount();
     act(() => section().open());
-    type(field("requestType"), "viewing");
+    chooseType(box!, "viewing");
     type(field("email"), EMAIL);
     check(field("consent"));
     expect(ask().missing).toEqual(["preferredSlots", "name"]);
@@ -120,19 +117,20 @@ describe("page_context: missing", () => {
     expect(ask().missing).toEqual(["preferredSlots"]);
   });
 
-  it("a complete slot row that the slot rules refuse (a past day, a day without visits) names preferredSlots; a good one does not", async () => {
+  it("the picker offers only days the slot rules allow (not a past day, not a day without visits), so a viewing without a time names preferredSlots until one is picked", async () => {
     await mount();
     act(() => section().open());
-    type(field("requestType"), "viewing");
+    chooseType(box!, "viewing");
     type(field("name"), NAME);
     type(field("email"), EMAIL);
     check(field("consent"));
-    setSlot("2026-06-09", "10:00"); // yesterday
+    expect(dayButton(box!, "2026-06-09")).toBeNull(); // yesterday
+    expect(dayButton(box!, "2026-06-12")).toBeNull(); // a Friday: no visits
     expect(ask()).toMatchObject({ phase: "open_filling", missing: ["preferredSlots"] });
-    setSlot("2026-06-12", "10:00"); // a Friday: no visits
-    expect(ask().missing).toEqual(["preferredSlots"]);
     setSlot("2026-06-11", "10:00"); // Thursday
     expect(ask()).toMatchObject({ phase: "complete", missing: [] });
+    setSlot("2026-06-11", "10:00"); // pressed again: the time is taken away
+    expect(ask().missing).toEqual(["preferredSlots"]);
   });
 
   it("carries names only: no typed value, no reason, no field content", async () => {

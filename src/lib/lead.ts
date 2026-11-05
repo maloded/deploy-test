@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { CODE_PATTERN } from "./contact-windows";
+import { isLanguage, localeOf } from "./languages";
 import { parseAmount } from "./offer-amount";
 import { canonicalRequestType, needsSlots, REQUEST_TYPE_IDS } from "./request-types";
 import { MAX_SLOTS } from "./viewing";
@@ -35,6 +36,13 @@ export type LeadField = (typeof FIELDS)[number];
 const CONTROL = new RegExp("[\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f\\u007f-\\u009f\\u200b-\\u200f\\u2028\\u2029\\ufeff]", "g");
 
 const PHONE = /^[+0-9 ()./-]{5,40}$/;
+
+/** Whether a phone number or an e-mail address, as typed, is good enough to be used (the same checks as the schema). The form uses them to enable the channel choices. */
+export const validPhone = (value: unknown): boolean => typeof value === "string" && PHONE.test(value.trim());
+export const validEmail = (value: unknown): boolean => typeof value === "string" && value.trim().length <= LIMITS.email && z.email().safeParse(value.trim()).success;
+
+/** Whether a preferred channel can be used with the contact data given: none always; e-mail with a valid e-mail address; phone, WhatsApp and Telegram with a valid phone number. */
+export const channelAvailable = (channel: string, contact: { email: string; phone: string }): boolean => channel === "" || (channel === "email" ? validEmail(contact.email) : validPhone(contact.phone));
 
 /** Plain text only: tags and control characters removed, NFC, trimmed. A single-line field also has its whitespace collapsed. */
 export function cleanText(value: string, multiline = false): string {
@@ -80,12 +88,14 @@ export type LeadInput = z.infer<typeof leadSchema>;
 /** Cleans the strings of a raw body or form state; an empty optional field is left out. Unknown keys are kept (the schema rejects them). */
 export function normalizeLead(raw: unknown): unknown {
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return raw;
+  const lang = (raw as { lang?: unknown }).lang;
+  const locale = typeof lang === "string" && isLanguage(lang) ? localeOf(lang) : "de-DE"; // an amount is read by the page's language
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(raw)) {
     if (typeof value !== "string") out[key] = value;
     else if (key === "lang" || key === "channel" || key === "website" || key === "source") out[key] = key === "website" ? value : value.trim();
     else if (key === "requestType") out[key] = canonicalRequestType(value.trim()) ?? value.trim(); // "test_drive" is the same thing as "testdrive"
-    else if (key === "amount") out[key] = value.trim() === "" ? "" : Number.isFinite(parseAmount(value)) ? parseAmount(value) : value; // "50.000", "49500,5"
+    else if (key === "amount") out[key] = value.trim() === "" ? "" : Number.isFinite(parseAmount(value, locale)) ? parseAmount(value, locale) : value; // "50.000", "49500,5", and in English "50,000"
     else out[key] = cleanText(value, key === "message");
   }
   for (const key of ["email", "phone", "channel", "message", "website", "amount", "source"]) if (out[key] === "") delete out[key];

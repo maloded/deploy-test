@@ -14,7 +14,7 @@ const section = fs.readFileSync(path.join(process.cwd(), "src", "components", "C
 describe("the dialog never exceeds the window and only its body scrolls", () => {
   it("the dialog is at most the viewport high (dvh), centred, and clips to its rounded box without scrolling itself", () => {
     const d = body(".contact-dialog");
-    expect(d).toMatch(/max-height: calc\(100dvh - 2 \* var\(--space-3\)\)/);
+    expect(d).toMatch(/max-height: min\(calc\(100dvh - 2 \* var\(--space-3\)\), calc\(var\(--contact-vv, 100dvh\) - 2 \* var\(--space-2\)\)\)/); // the window, or what an on-screen keyboard leaves of it
     expect(d).toMatch(/margin: auto/);
     expect(d).toMatch(/overflow: hidden/);
     expect(d).not.toMatch(/overflow(-y)?: (auto|scroll)/);
@@ -67,10 +67,10 @@ describe("the compact form", () => {
     expect(css).not.toContain(".contact__lead");
   });
 
-  it("name and e-mail share a row of two columns, phone and channel share one; the contact window and the message each get a full row", () => {
+  it("name and e-mail share a row of two columns, the phone has one; the channel chips, the contact window chips and the message each get a full row", () => {
     expect(form).not.toContain("contact__field--third"); // the best time was the third column; the window select has its own row
     expect(css).not.toContain("contact__field--third");
-    expect(form.match(/contact__field contact__field--wide/g)).toHaveLength(2); // the window select and the message
+    expect(form.match(/contact__field contact__field--wide/g)).toHaveLength(3); // the channel chips, the window chips and the message
     // the rows are tighter than the columns since the contact window got its own row (the German form must still fit 1440x800)
     expect(body(".contact__grid")).toMatch(/gap: var\(--space-2\) var\(--space-3\)/);
     expect(css).toMatch(/\.contact__grid \{\s*grid-template-columns: repeat\(6, 1fr\)/);
@@ -90,7 +90,7 @@ describe("the compact form", () => {
   });
 
   it("keeps every field, the consent text and the submit button", () => {
-    for (const name of ['name="requestType"', 'autoComplete="name"', 'type="email"', 'type="tel"', 'name="channel"', "contact.contactWindow", "contact.message", 'name="consent"', 'name="website"', 'type="submit"']) expect(form, name).toContain(name);
+    for (const name of ['role="tablist"', 'autoComplete="name"', 'type="email"', 'type="tel"', 'data-channel={c}', "contact.contactWindow", "contact.message", 'name="consent"', 'name="website"', 'type="submit"']) expect(form, name).toContain(name);
     expect(form).toContain("{consentText}");
   });
 });

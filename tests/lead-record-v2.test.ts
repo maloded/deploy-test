@@ -60,9 +60,9 @@ describe("the amount of an offer (offer-amount.ts)", () => {
 describe("the API checks the amount against the product's range", () => {
   it("the fixture car (589): 295 to 1,767, edges included; outside is a 400 that names the amount and stores nothing", async () => {
     const e = env();
-    for (const amount of [800, "295", 1767, "1.000"]) expect((await post({ ...OFFER, amount }, e)).status, String(amount)).toBe(200);
+    for (const amount of [800, "295", 1767, "1,000"]) expect((await post({ ...OFFER, amount }, e)).status, String(amount)).toBe(200); // (the body's page language is English: a comma separates thousands)
     expect(stored(e)).toHaveLength(4);
-    for (const amount of [5, 294, 1768, "2.000.000"]) {
+    for (const amount of [5, 294, 1768, "2,000,000"]) {
       const res = await post({ ...OFFER, amount }, e);
       expect(res.status, String(amount)).toBe(400);
       expect(await res.json()).toEqual({ ok: false, error: "invalid", errors: { amount: "amount" } });
@@ -72,7 +72,7 @@ describe("the API checks the amount against the product's range", () => {
 
   it("stores the amount as a number with the currency of the price, only for an offer", async () => {
     const e = env();
-    await post({ ...OFFER, amount: "800,5" }, e);
+    await post({ ...OFFER, amount: "800.5" }, e);
     await post({ ...BASE, requestType: "question", message: "Hello" }, e);
     const offer = stored(e).find((r) => r.type === "offer")!;
     const question = stored(e).find((r) => r.type === "question")!;
@@ -238,8 +238,8 @@ describe("delivery.notified", () => {
       return new Response(JSON.stringify({ ok: true, result: {} }), { status: 200 });
     });
     expect((await post({ ...OFFER, amount: 800, source: "agent" }, e, f as unknown as typeof fetch)).status).toBe(200);
-    expect(calls[0]).toMatch(/Offered amount: .*800/);
-    expect(calls[0]).toContain("Sofia (voice agent)");
+    expect(calls[0]).toMatch(/Offer: .*800/);
+    expect(calls[0]).toContain("Source: Voice agent"); // the fixture seller names no agent
   });
 
   it("markNotified changes nothing for another store, and never throws for a file that is gone", async () => {

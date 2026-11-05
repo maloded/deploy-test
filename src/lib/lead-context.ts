@@ -42,6 +42,10 @@ export type LeadContext = {
   consentVersion?: string;
   /** The currency of the product's price (ISO 4217): the currency of an offer's amount. */
   currency?: string;
+  /** The product's asking price (absent for a price that is per month, week or year): the owner message shows it with an offer and the difference to it. */
+  price?: number;
+  /** The name of the seller's voice agent (seller.json, agent.avatar.name), for the owner message; absent when the seller gave none. */
+  agentName?: string;
   /** The range of the amount an offer request may name; null when the product has no price to go by and gives none. */
   offer?: OfferBounds | null;
 };
@@ -61,6 +65,7 @@ export function readLeadContext(env: Env = process.env, projectRoot: string = pr
     viewing?: ViewingSettings;
     timezone?: string;
     contactWindows?: ContactWindow[];
+    agent?: { avatar?: { name?: string } };
   };
   const languages = (seller.languages ?? []).filter(isLanguage);
   const fallback = isLanguage(seller.defaultLanguage) ? seller.consentText?.[seller.defaultLanguage] : undefined;
@@ -71,7 +76,7 @@ export function readLeadContext(env: Env = process.env, projectRoot: string = pr
     consent[lang] = sha256(text);
   }
   if (languages.length === 0) throw new Error("seller.json offers no supported language");
-  const productFile = JSON.parse(fs.readFileSync(/*turbopackIgnore: true*/ path.join(root, product, "product.json"), "utf8")) as { productType?: string; viewing?: ViewingSettings; title?: Record<string, string>; price?: { amount?: number; currency?: string }; offerAmount?: { min?: number; max?: number } };
+  const productFile = JSON.parse(fs.readFileSync(/*turbopackIgnore: true*/ path.join(root, product, "product.json"), "utf8")) as { productType?: string; viewing?: ViewingSettings; title?: Record<string, string>; price?: { amount?: number; currency?: string; per?: string }; offerAmount?: { min?: number; max?: number } };
   const merged = mergeViewing(seller.viewing, productFile.viewing);
   // (the loader refuses an incomplete or invalid merge when the page is built; here it simply means "no viewing")
   const viewing = merged && missingViewingFields(merged).length === 0 && checkViewing(merged).length === 0 ? (merged as ViewingConfig) : null;
@@ -80,7 +85,7 @@ export function readLeadContext(env: Env = process.env, projectRoot: string = pr
   const timezone = sellerZone(viewing?.timezone, seller.timezone);
   const defaultLanguage = isLanguage(seller.defaultLanguage) && languages.includes(seller.defaultLanguage) ? seller.defaultLanguage : languages[0];
   const productTitle = productFile.title?.[defaultLanguage];
-  return { product, languages, ...(productTitle ? { productTitle } : {}), ...(timezone ? { timezone } : {}), contactWindows: contactWindowsOf(seller), defaultLanguage, requestTypes: allowedRequestTypes(listed, viewing !== null), viewing, consent, consentVersion: seller.consentVersion ?? "unversioned", ...(productFile.price?.currency ? { currency: productFile.price.currency } : {}), offer: offerBounds(productFile.price?.amount ?? 0, productFile.offerAmount) };
+  return { product, languages, ...(productTitle ? { productTitle } : {}), ...(timezone ? { timezone } : {}), contactWindows: contactWindowsOf(seller), defaultLanguage, requestTypes: allowedRequestTypes(listed, viewing !== null), viewing, consent, consentVersion: seller.consentVersion ?? "unversioned", ...(productFile.price?.currency ? { currency: productFile.price.currency } : {}), ...(productFile.price?.amount && !productFile.price.per ? { price: productFile.price.amount } : {}), ...(seller.agent?.avatar?.name ? { agentName: seller.agent.avatar.name } : {}), offer: offerBounds(productFile.price?.amount ?? 0, productFile.offerAmount) };
 }
 
 /** The value next.config.ts inlines as LEAD_CONTEXT; empty when the content cannot be read here. */

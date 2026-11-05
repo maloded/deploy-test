@@ -49,7 +49,7 @@ describe("--radius-dialog and --radius-control", () => {
     expect(using("--radius-dialog")[0].body).toMatch(/overflow: hidden/); // clips the content to the rounded box
   });
 
-  it("the form controls use --radius-control: the inputs, selects and the textarea (slot date and time fields included), nothing else", () => {
+  it("the form controls use --radius-control: the inputs, selects and the textarea, nothing else (the tabs, chips and time buttons are buttons: they keep the shared style)", () => {
     const rule = using("--radius-control");
     expect(rule.map((r) => r.selector)).toEqual([".contact__field input, .contact__field select, .contact__field textarea"]);
     expect(rule[0].body).toMatch(/border-radius: var\(--radius-control, var\(--radius\)\)/);
@@ -59,7 +59,7 @@ describe("--radius-dialog and --radius-control", () => {
     for (const r of [...using("--radius-dialog"), ...using("--radius-control")]) {
       expect(r.selector, r.selector).not.toMatch(/button|\.button|\[type="?submit|__close|__remove|__add|__open/);
     }
-    for (const selector of [".button", ".contact-dialog__close", ".contact__slot-remove"]) {
+    for (const selector of [".button", ".contact-dialog__close", ".contact__tab", ".contact__chip", ".contact__day", ".contact__time"]) {
       const body = rules.filter((r) => r.selector === selector).map((r) => r.body).join(" ");
       expect(body, selector).toMatch(/border-radius: var\(--radius\)/);
     }

@@ -138,7 +138,7 @@ describe("a viewing request", () => {
 
   it("a request without slots is still fine for the other types", async () => {
     expect((await post({ ...BASE, requestType: "question", message: "Is it still available?" })).status).toBe(200);
-    expect((await post({ ...BASE, requestType: "offer", phone: "+00 000 000 000", amount: "500.000" })).status).toBe(200); // the house costs 890,000: 445,000 to 2,670,000
+    expect((await post({ ...BASE, requestType: "offer", phone: "+00 000 000 000", amount: "500,000" })).status).toBe(200); // the house costs 890,000: 445,000 to 2,670,000
   });
 });
 

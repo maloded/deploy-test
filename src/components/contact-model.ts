@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ANYTIME } from "@/lib/contact-windows";
 import { missingKeysOf } from "@/lib/form-context";
-import { FIELDS, validateLead, type LeadErrors, type LeadField } from "@/lib/lead";
+import { localeOf } from "@/lib/languages";
+import { channelAvailable, FIELDS, validateLead, type LeadErrors, type LeadField } from "@/lib/lead";
 import { updateFormSnapshot } from "@/lib/form-snapshot";
-import { amountProblem, parseAmount, type OfferBounds } from "@/lib/offer-amount";
+import { amountProblem, formatAmount, parseAmount, type OfferBounds } from "@/lib/offer-amount";
 import { DEFAULT_REQUEST_TYPE, needsSlots, type RequestType } from "@/lib/request-types";
 import { MAX_SLOTS, slotProblem, type SlotProblem, type ViewingConfig } from "@/lib/viewing";
 import type { Language } from "@/lib/schema";
@@ -13,9 +14,9 @@ import type { Language } from "@/lib/schema";
 export type Failure = "invalid" | "tooFast" | "rate" | "unavailable";
 export type Status = "idle" | "sending" | "success" | "error";
 
-/** One preferred time as typed: both parts may still be empty. */
+/** One preferred time the visitor picked: a day and a time of the seller's calendar. */
 export type SlotInput = { date: string; time: string };
-/** What is wrong with a slot row: a problem of the slot rules, or an incomplete row. */
+/** What is wrong with a picked time: a problem of the slot rules, or a repeat. */
 export type SlotError = SlotProblem | "missing" | "duplicate";
 
 export type Values = {
@@ -34,13 +35,11 @@ export type Values = {
   /** The honeypot. */
   website: string;
 };
-const EMPTY: Values = { requestType: DEFAULT_REQUEST_TYPE, slots: [{ date: "", time: "" }], name: "", email: "", phone: "", amount: "", channel: "", contactWindow: ANYTIME, message: "", consent: false, website: "" };
+const EMPTY: Values = { requestType: DEFAULT_REQUEST_TYPE, slots: [], name: "", email: "", phone: "", amount: "", channel: "", contactWindow: ANYTIME, message: "", consent: false, website: "" };
 
-/** The problem of each slot row, or null: blank rows are ignored; a half-filled row, or a row the slot rules refuse, is an error of that row. */
+/** The problem of each picked time, or null: one the slot rules refuse (the picker offers only good ones, so this is the server's rule as a second line), or a repeat. */
 function slotRowErrors(rows: SlotInput[], viewing: ViewingConfig): (SlotError | null)[] {
   return rows.map((s, i) => {
-    if (!s.date && !s.time) return null;
-    if (!s.date || !s.time) return "missing";
     const seen = rows.findIndex((o) => o.date === s.date && o.time === s.time);
     return slotProblem(s, viewing) ?? (seen !== i ? "duplicate" : null);
   });
@@ -58,7 +57,8 @@ function leadBody(values: Values, lang: Language, viewing: ViewingConfig | null,
   const complete = (wantsSlots ? values.slots : []).filter((s) => s.date && s.time);
   const { slots: _slots, amount, ...fields } = values;
   void _slots;
-  const offered = values.requestType === "offer" && amount.trim() !== "" ? { amount: Number.isFinite(parseAmount(amount)) ? parseAmount(amount) : amount } : {};
+  const locale = localeOf(lang);
+  const offered = values.requestType === "offer" && amount.trim() !== "" ? { amount: Number.isFinite(parseAmount(amount, locale)) ? parseAmount(amount, locale) : amount } : {};
   return { wantsSlots, body: { ...fields, ...offered, source: agent ? ("agent" as const) : ("form" as const), contactWindow: effectiveWindow(values), lang, ...(wantsSlots ? { preferredSlots: complete } : {}), elapsedMs } };
 }
 
@@ -76,8 +76,10 @@ export type ContactModel = ReturnType<typeof useContactModel>;
 /**
  * The form model of the contact dialog. The values are only here (in this component's state): the page API on section#contact (open and close) has no way to read or write them.
  */
-export function useContactModel({ lang, viewing, offer, onSubmitted }: { lang: Language; viewing: ViewingConfig | null; /** The range of the amount an offer may name (the product's); null: no range to check. */ offer: OfferBounds | null; onSubmitted: () => void }) {
-  const [values, setValues] = useState<Values>(EMPTY);
+export function useContactModel({ lang, viewing, offer, price = null, onSubmitted }: { lang: Language; viewing: ViewingConfig | null; /** The product's fixed asking price (not a rent per month): an offer starts with it in the amount field; null: the field starts empty. */ price?: number | null; /** The range of the amount an offer may name (the product's); null: no range to check. */ offer: OfferBounds | null; onSubmitted: () => void }) {
+  // an empty request: the amount of an offer starts at the asking price (as the page language writes it), which counts as filled until the visitor clears it
+  const blank = useMemo<Values>(() => ({ ...EMPTY, amount: price !== null && price > 0 ? formatAmount(price, localeOf(lang)) : "" }), [price, lang]);
+  const [values, setValues] = useState<Values>(blank);
   const [errors, setErrors] = useState<LeadErrors>({});
   const [status, setStatus] = useState<Status>("idle");
   const [failure, setFailure] = useState<Failure | null>(null);
@@ -99,11 +101,35 @@ export function useContactModel({ lang, viewing, offer, onSubmitted }: { lang: L
     updateFormSnapshot({ submit: "none", status: "none", requestId: null });
   }, []);
 
+  /** The channel the visitor pressed while it was not usable yet ("email": no valid e-mail address, "phone": no valid phone number): the form says what to enter first. */
+  const [channelHint, setChannelHint] = useState<"email" | "phone" | null>(null);
+  /** The day the picker shows the times of (a YYYY-MM-DD of the seller's calendar). */
+  const [slotDay, setSlotDay] = useState("");
+  /** The number the server gave the request that was sent (the success screen shows it). */
+  const [requestNumber, setRequestNumber] = useState<string | null>(null);
+
   const set = useCallback((name: keyof Values, value: string | boolean) => {
     if (startedAt.current === null) startedAt.current = Date.now(); // the fill time starts at the first keystroke
     edited();
-    setValues((v) => ({ ...v, [name]: value }));
+    setValues((v) => {
+      const next = { ...v, [name]: value };
+      // a channel that cannot be used without the e-mail address or the phone number just changed falls back to "no preference", live
+      if ((name === "email" || name === "phone") && !channelAvailable(next.channel, next)) next.channel = "";
+      return next;
+    });
     setErrors((e) => (name in e ? { ...e, [name]: undefined } : e));
+  }, [edited]);
+
+  /** A channel chip: a usable one is chosen; one that needs an e-mail address or a phone number not entered yet only shows what to enter. */
+  const pickChannel = useCallback((channel: string, contact: { email: string; phone: string }) => {
+    if (startedAt.current === null) startedAt.current = Date.now();
+    edited();
+    if (!channelAvailable(channel, contact)) {
+      setChannelHint(channel === "email" ? "email" : "phone");
+      return;
+    }
+    setChannelHint(null);
+    setValues((v) => ({ ...v, channel }));
   }, [edited]);
 
   /** The pressed button's preset: only the type select changes; what was typed stays, and the fill timer is not started by it. */
@@ -112,22 +138,22 @@ export function useContactModel({ lang, viewing, offer, onSubmitted }: { lang: L
     setErrors((e) => (e.requestType ? { ...e, requestType: undefined } : e));
   }, []);
 
-  const setSlot = useCallback((index: number, part: keyof SlotInput, value: string) => {
+  /** A time chip: it adds the time of the day shown to the picked ones (up to the maximum), or takes it away again. */
+  const toggleSlot = useCallback((slot: SlotInput) => {
     if (startedAt.current === null) startedAt.current = Date.now();
     edited();
-    setValues((v) => ({ ...v, slots: v.slots.map((s, i) => (i === index ? { ...s, [part]: value } : s)) }));
-    setSlotErrors((e) => e.map((x, i) => (i === index ? null : x)));
+    setValues((v) => {
+      const at = v.slots.findIndex((s) => s.date === slot.date && s.time === slot.time);
+      const next = at >= 0 ? v.slots.filter((_, i) => i !== at) : v.slots.length < MAX_SLOTS ? [...v.slots, slot].sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`)) : v.slots;
+      return { ...v, slots: next };
+    });
+    setSlotErrors([]);
     setErrors((e) => (e.preferredSlots ? { ...e, preferredSlots: undefined } : e));
-  }, [edited]);
-
-  const addSlot = useCallback(() => {
-    edited();
-    setValues((v) => (v.slots.length < MAX_SLOTS ? { ...v, slots: [...v.slots, { date: "", time: "" }] } : v));
   }, [edited]);
 
   const removeSlot = useCallback((index: number) => {
     edited();
-    setValues((v) => ({ ...v, slots: v.slots.length > 1 ? v.slots.filter((_, i) => i !== index) : [{ date: "", time: "" }] }));
+    setValues((v) => ({ ...v, slots: v.slots.filter((_, i) => i !== index) }));
     setSlotErrors([]);
   }, [edited]);
 
@@ -183,6 +209,7 @@ export function useContactModel({ lang, viewing, offer, onSubmitted }: { lang: L
         return;
       }
       sending.current = true;
+      setChannelHint(null);
       setErrors({});
       setFailure(null);
       setStatus("sending");
@@ -213,10 +240,11 @@ export function useContactModel({ lang, viewing, offer, onSubmitted }: { lang: L
       sending.current = false;
       if (next === "ok") {
         setSentType(values.requestType);
+        setRequestNumber(requestId);
         frozen.current = true;
         updateFormSnapshot({ submit: "sent", status: "sent", requestId });
         setAgent(false);
-        setValues(EMPTY);
+        setValues(blank);
         setSlotErrors([]);
         startedAt.current = null;
         setStatus("success");
@@ -230,7 +258,7 @@ export function useContactModel({ lang, viewing, offer, onSubmitted }: { lang: L
         focus("summary");
       }
     },
-    [values, lang, viewing, offer, agent, onSubmitted],
+    [values, lang, viewing, offer, agent, onSubmitted, blank],
   );
 
   /**
@@ -241,16 +269,25 @@ export function useContactModel({ lang, viewing, offer, onSubmitted }: { lang: L
     frozen.current = false;
     startedAt.current = null;
     sending.current = false;
-    setValues({ ...EMPTY, slots: [{ date: "", time: "" }] }); // a fresh object: the snapshot effect runs again
+    setValues({ ...blank, slots: [{ date: "", time: "" }] }); // a fresh object: the snapshot effect runs again
     setErrors({});
     setFailure(null);
     setSlotErrors([]);
     setSentType(null);
+    setRequestNumber(null);
+    setChannelHint(null);
+    setSlotDay("");
     setStatus("idle");
     updateFormSnapshot({ submit: "none", status: "none", requestId: null });
-  }, []);
+  }, [blank]);
 
-  return { values, errors, status, failure, attention, slotErrors, sentType, viewing, offer, agent, setAgent, reset, set, setPreset, setSlot, addSlot, removeSlot, submit };
+  /** "Another request": a new, empty request of the type that was sent (the same type, nothing of the old one: no values, no number, no consent). */
+  const again = useCallback(() => {
+    reset();
+    if (sentType !== null) setPreset(sentType);
+  }, [reset, sentType, setPreset]);
+
+  return { values, errors, status, failure, attention, slotErrors, sentType, requestNumber, channelHint, slotDay, setSlotDay, viewing, offer, price, agent, setAgent, reset, again, set, setPreset, pickChannel, toggleSlot, removeSlot, submit };
 }
 
 export type { LeadField };

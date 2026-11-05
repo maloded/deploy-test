@@ -9,6 +9,7 @@ import { buildSite } from "@/lib/site";
 import { ui } from "@/lib/ui-strings";
 import { FIXTURE_DIR, examples, fixtures } from "./helpers";
 import { fakeWidget } from "./fake-widget";
+import { chooseChannel, chooseWindow, selectedWindow, windowChip } from "./form-ui";
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 vi.mock("hanc-webrtc-widgets", () => ({}));
@@ -69,20 +70,19 @@ const ask = () => {
   w.remove();
   return call.answers[0] as Record<string, any>;
 };
-const optionsOf = () => [...field("contactWindow").options].map((o) => [o.value, o.textContent]);
+const optionsOf = () => [...form().querySelectorAll(".contact__chip[data-window]")].map((o) => [o.getAttribute("data-window"), o.textContent]);
 
-describe("the contact window select", () => {
-  it("offers the four default windows with the hours, anytime first and selected, in English", async () => {
+describe("the contact window chips", () => {
+  it("offer the four default windows with the hours, anytime first and pressed, in English", async () => {
     await mount(house("en"));
-    expect(field("contactWindow").tagName).toBe("SELECT");
-    expect(field("contactWindow").value).toBe("anytime");
+    expect(selectedWindow(box!)).toBe("anytime");
     expect(optionsOf()).toEqual([
       ["anytime", "Any time"],
       ["morning", "Morning (09:00–12:00)"],
       ["afternoon", "Afternoon (12:00–17:00)"],
       ["evening", "Evening (17:00–20:00)"],
     ]);
-    expect(form().querySelector(`label[for="${field("contactWindow").id}"]`)!.textContent).toBe(ui("contact.contactWindow", "en"));
+    expect(windowChip(box!, "anytime")!.closest("fieldset")!.querySelector("legend")!.textContent).toBe(ui("contact.contactWindow", "en"));
     expect(ui("contact.contactWindow", "en")).toBe("When can we reach you?");
   });
 
@@ -99,14 +99,14 @@ describe("the contact window select", () => {
 
   it("has its own full-width row and replaces the free-text field entirely", async () => {
     await mount(house("en"));
-    expect(field("contactWindow").closest(".contact__field")!.className).toContain("contact__field--wide");
+    expect(windowChip(box!, "anytime")!.closest("fieldset")!.className).toContain("contact__field--wide");
     expect(form().querySelector("[name=bestTime]")).toBeNull();
   });
 
   it("shows the seller's zone as one line under it, in the page language; a generic line for other zones; none without a zone", async () => {
     await mount(house("en"));
     expect(form().querySelector(".contact__hint")!.textContent).toBe("Times are in Vienna time.");
-    expect(field("contactWindow").getAttribute("aria-describedby")).toBe(form().querySelector(".contact__hint")!.id);
+    expect(windowChip(box!, "anytime")!.closest("[role=group]")!.getAttribute("aria-describedby")).toBe(form().querySelector(".contact__hint")!.id);
     act(() => root!.unmount());
     box!.remove();
     await mount(house("de"));
@@ -120,19 +120,21 @@ describe("the contact window select", () => {
     box!.remove();
     await mount(car("en"));
     expect(form().querySelector(".contact__hint")).toBeNull();
-    expect(field("contactWindow").getAttribute("aria-describedby")).toBeNull();
+    expect(windowChip(box!, "anytime")!.closest("[role=group]")!.getAttribute("aria-describedby")).toBeNull();
   });
 
   it("is hidden when the preferred channel is e-mail and shown again for any other channel", async () => {
     await mount(house("en"));
-    expect(field("contactWindow")).not.toBeNull();
-    type(field("channel"), "email");
-    expect(form().querySelector("[name=contactWindow]")).toBeNull();
+    type(field("email"), "person@example.invalid"); // a channel needs what it uses
+    type(field("phone"), "+00 000 000 000");
+    expect(windowChip(box!, "anytime")).not.toBeNull();
+    chooseChannel(box!, "email");
+    expect(windowChip(box!, "anytime")).toBeNull();
     expect(form().querySelector(".contact__hint")).toBeNull();
-    type(field("channel"), "phone");
-    expect(field("contactWindow")).not.toBeNull();
-    type(field("channel"), "");
-    expect(field("contactWindow")).not.toBeNull(); // no preference: shown
+    chooseChannel(box!, "phone");
+    expect(windowChip(box!, "anytime")).not.toBeNull();
+    chooseChannel(box!, "");
+    expect(windowChip(box!, "anytime")).not.toBeNull(); // no preference: shown
   });
 
   it("sends the chosen code, and sends anytime when the select is hidden for e-mail (even after a window was chosen)", async () => {
@@ -140,8 +142,9 @@ describe("the contact window select", () => {
     await mount(house("en"));
     act(() => section().open());
     fillPerson();
-    type(field("channel"), "phone");
-    type(field("contactWindow"), "morning");
+    type(field("phone"), "+00 000 000 000");
+    chooseChannel(box!, "phone");
+    chooseWindow(box!, "morning");
     await send();
     expect(JSON.parse((f.mock.calls as any)[0][1].body)).toMatchObject({ channel: "phone", contactWindow: "morning" });
     expect(JSON.parse((f.mock.calls as any)[0][1].body)).not.toHaveProperty("bestTime");
@@ -152,8 +155,8 @@ describe("the contact window select", () => {
     await mount(house("en"));
     act(() => section().open());
     fillPerson();
-    type(field("contactWindow"), "evening");
-    type(field("channel"), "email");
+    chooseWindow(box!, "evening");
+    chooseChannel(box!, "email");
     await send();
     expect(JSON.parse((f.mock.calls as any)[0][1].body)).toMatchObject({ channel: "email", contactWindow: "anytime" });
   });
@@ -161,8 +164,9 @@ describe("the contact window select", () => {
   it("the snapshot and the page_context answer carry the CODE only, and only in the phase complete", async () => {
     await mount(house("en"));
     act(() => section().open());
-    type(field("channel"), "phone");
-    type(field("contactWindow"), "afternoon");
+    type(field("phone"), "+00 000 000 000");
+    chooseChannel(box!, "phone");
+    chooseWindow(box!, "afternoon");
     expect(getFormSnapshot().contactWindow).toBe("afternoon");
     let a = ask();
     expect(a.phase).toBe("open_filling");
@@ -175,7 +179,7 @@ describe("the contact window select", () => {
     expect(a.form.contactWindow).toBe("afternoon");
     expect(a.form).not.toHaveProperty("bestTime");
     expect(JSON.stringify(a)).not.toContain("12:00–17:00"); // the label is never in the answer
-    type(field("channel"), "email");
+    chooseChannel(box!, "email");
     expect(ask().form.contactWindow).toBe("anytime");
   });
 
@@ -185,7 +189,7 @@ describe("the contact window select", () => {
     act(() => section().close());
     expect(ask().phase).toBe("closed_empty");
     act(() => section().open());
-    type(field("contactWindow"), "evening");
+    chooseWindow(box!, "evening");
     act(() => section().close());
     expect(ask().phase).not.toBe("closed_empty");
   });
@@ -200,8 +204,9 @@ describe("privacy and leftovers", () => {
     await mount(house("en"));
     act(() => section().open());
     fillPerson();
-    type(field("channel"), "phone");
-    type(field("contactWindow"), "morning");
+    type(field("phone"), "+00 000 000 000");
+    chooseChannel(box!, "phone");
+    chooseWindow(box!, "morning");
     ask();
     await send();
     ask();

@@ -10,6 +10,7 @@ import { BUTTON_PRESETS, resolvePreset } from "@/lib/request-types";
 import { buildSite } from "@/lib/site";
 import { ui } from "@/lib/ui-strings";
 import { examples, FIXTURE_DIR, fixtures } from "./helpers";
+import { chooseType, selectedType, tabOf } from "./form-ui";
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -36,7 +37,7 @@ const dialog = () => q<HTMLDialogElement>("dialog.contact-dialog");
 const form = () => q<HTMLFormElement>("dialog form.contact__form");
 const field = (name: string) => form().querySelector(`[name=${name}]`) as HTMLInputElement;
 const title = () => q("dialog .contact-dialog__title").textContent;
-const selected = () => (field("requestType") as unknown as HTMLSelectElement).value;
+const selected = () => selectedType(document)!;
 const hero = () => q<HTMLAnchorElement>('.hero a[href="#contact"]');
 const offer = () => q<HTMLAnchorElement>('.offer a[href="#contact"]');
 const click = (el: Element) => act(() => void (el as HTMLElement).click());
@@ -130,7 +131,7 @@ describe("each button opens the dialog with its preset and title", () => {
   it("the visitor can change the type in the dialog; the title keeps the button's", () => {
     mount(car("en"));
     click(offer());
-    type(field("requestType") as unknown as HTMLSelectElement, "question");
+    chooseType(document, "question");
     expect(selected()).toBe("question");
     expect(title()).toBe("Make an offer");
   });
@@ -142,7 +143,7 @@ describe("the preset replaces the type and nothing else", () => {
     click(offer());
     type(field("name"), "Typed once");
     type(field("email"), "person@example.invalid");
-    type(field("requestType") as unknown as HTMLSelectElement, "question");
+    chooseType(document, "question");
     esc();
     click(offer());
     expect(selected()).toBe("offer"); // the pressed button wins over the earlier choice
@@ -207,7 +208,7 @@ describe("focus and autofill", () => {
       click(opener);
       // the first field the form still needs: the name, and for an offer (hero is a question) the amount above it
       expect(document.activeElement, opener.className).toBe(button === offer ? field("amount") : field("name"));
-      expect(document.activeElement).not.toBe(field("requestType"));
+      expect(document.activeElement).not.toBe(tabOf(document, "question"));
       esc();
       expect(dialog().open).toBe(false);
       expect(document.activeElement).toBe(opener);

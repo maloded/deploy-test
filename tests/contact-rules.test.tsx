@@ -9,6 +9,7 @@ import { buildSite } from "@/lib/site";
 import { ui } from "@/lib/ui-strings";
 import { EXAMPLES_DIR, FIXTURE_DIR, examples, fixtures } from "./helpers";
 import { fakeWidget } from "./fake-widget";
+import { chooseType } from "./form-ui";
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 vi.mock("hanc-webrtc-widgets", () => ({}));
@@ -17,8 +18,8 @@ const AGENT = { id: "test-agent-id", variant: "inline", voiceServiceUrl: "https:
 let root: Root | undefined;
 let box: HTMLDivElement | undefined;
 /** The fixture car costs 589 (offers from 295 to 1,767; question and offer only); the example house 890,000 (viewing too). */
-async function mount(which: "car" | "house" = "car") {
-  const site = which === "car" ? buildSite(null, `${fixtures.seller}/fixture-car`, FIXTURE_DIR, "en") : buildSite(null, examples.ref("example-house"), EXAMPLES_DIR, "en");
+async function mount(which: "car" | "house" = "car", lang: "en" | "de" = "en") {
+  const site = which === "car" ? buildSite(null, `${fixtures.seller}/fixture-car`, FIXTURE_DIR, lang) : buildSite(null, examples.ref("example-house"), EXAMPLES_DIR, lang);
   box = document.createElement("div");
   document.body.appendChild(box);
   root = createRoot(box);
@@ -126,7 +127,7 @@ describe("phone or e-mail", () => {
 describe("an offer: phone, e-mail and an amount inside the product's range", () => {
   const fillOffer = (amount: string) => {
     act(() => section().open());
-    type(field("requestType"), "offer");
+    chooseType(box!, "offer");
     type(field("name"), "Test Person");
     type(field("email"), "person@example.invalid");
     type(field("phone"), "+00 000 000 000");
@@ -134,31 +135,79 @@ describe("an offer: phone, e-mail and an amount inside the product's range", () 
     check();
   };
 
-  it("shows the amount field with the range, in the product's currency, only for an offer", async () => {
+  it("shows the amount field, in the product's currency, only for an offer; no range is printed under it", async () => {
     await mount();
     act(() => section().open());
     expect(form().querySelector("[name=amount]")).toBeNull();
-    type(field("requestType"), "offer");
+    chooseType(box!, "offer");
     expect(field("amount")).toBeTruthy();
-    const hint = form().querySelector(".contact__hint")!.textContent!;
-    expect(hint).toContain("295"); // half of 589, rounded
-    expect(hint).toContain("1,767"); // three times
-    expect(hint).toMatch(/€|EUR/);
-    expect([...form().querySelectorAll("label")].find((l) => l.textContent?.startsWith(ui("contact.phone", "en")))!.textContent).toContain("*"); // an offer needs both
+    expect(form().querySelector(".contact__amount-unit")!.textContent).toBe("€");
+    expect(form().textContent).not.toMatch(/295|1,767/); // the range stays a rule: it is named in the error of an amount outside it (see offer-prefill.test.tsx)
   });
 
-  it("sends the amount as a number: '800', '1.000' (a dot separates thousands) and '800,5' (a comma the decimals)", async () => {
-    for (const [typed, number] of [["800", 800], ["1.000", 1000], ["800,5", 800.5]] as const) {
-      await mount();
+  it("reads the amount by the page language: English '1,000' and '800.5', German '1.000' and '800,5'; both send a number", async () => {
+    for (const [lang, typed, number] of [["en", "800", 800], ["en", "1,000", 1000], ["en", "800.5", 800.5], ["en", "1 000", 1000], ["de", "800", 800], ["de", "1.000", 1000], ["de", "800,5", 800.5]] as const) {
+      await mount("car", lang);
       const f = reply();
       fillOffer(typed);
       await send();
-      expect(sent(f), typed).toMatchObject({ requestType: "offer", amount: number });
+      expect(sent(f), `${lang} ${typed}`).toMatchObject({ requestType: "offer", amount: number, lang });
       act(() => root!.unmount());
       box!.remove();
       root = box = undefined;
       resetFormSnapshotForTests();
     }
+  });
+
+  it("an English visitor who writes '1.000' means one: 1 is below the range; a German visitor who writes '1,000' means one too", async () => {
+    for (const [lang, typed] of [["en", "1.000"], ["de", "1,000"]] as const) {
+      await mount("car", lang);
+      const f = reply();
+      fillOffer(typed);
+      await send();
+      expect(f, `${lang} ${typed}`).not.toHaveBeenCalled();
+      expect(errors().join("|")).toMatch(/295/);
+      act(() => root!.unmount());
+      box!.remove();
+      root = box = undefined;
+      resetFormSnapshotForTests();
+    }
+  });
+
+  it("shows the amount back as the language writes it once the field loses focus, without counting as an edit when nothing changes", async () => {
+    await mount("house", "en");
+    act(() => section().open());
+    chooseType(box!, "offer");
+    type(field("amount"), "500000");
+    act(() => {
+      field("amount").focus();
+      field("amount").blur();
+    });
+    expect(field("amount").value).toBe("500,000");
+    type(field("amount"), "49500.5");
+    act(() => {
+      field("amount").focus();
+      field("amount").blur();
+    });
+    expect(field("amount").value).toBe("49,500.5");
+    act(() => root!.unmount());
+    box!.remove();
+    root = box = undefined;
+    await mount("house", "de");
+    act(() => section().open());
+    chooseType(box!, "offer");
+    type(field("amount"), "500000");
+    act(() => {
+      field("amount").focus();
+      field("amount").blur();
+    });
+    expect(field("amount").value).toBe("500.000");
+    type(field("amount"), "49500,5");
+    act(() => {
+      field("amount").focus();
+      field("amount").blur();
+    });
+    expect(field("amount").value).toBe("49.500,5");
   });
 
   it("an amount outside the range, or not a number, is refused with the range in the message; none is needed to look at the field", async () => {
@@ -184,7 +233,7 @@ describe("an offer: phone, e-mail and an amount inside the product's range", () 
   it("the snapshot the agent can read has the amount as typed, the missing field is named, and a range error blocks 'complete'", async () => {
     await mount();
     act(() => section().open());
-    type(field("requestType"), "offer");
+    chooseType(box!, "offer");
     type(field("name"), "Test Person");
     type(field("email"), "person@example.invalid");
     type(field("phone"), "+00 000 000 000");
@@ -219,7 +268,7 @@ describe("the voice assistant opens the form during a call", () => {
     await mount("house");
     const f = reply();
     agentOpens();
-    type(field("requestType"), "viewing");
+    chooseType(box!, "viewing");
     expect(form().textContent).toContain(ui("contact.agentOptional", "en"));
     type(field("name"), "Test Person");
     type(field("email"), "person@example.invalid");
@@ -271,7 +320,7 @@ describe("what to bring", () => {
       await act(async () => root!.render(<ProductLayout site={{ ...car, viewing: config as any }} />));
       act(() => section().open());
       for (const kind of ["viewing", "testdrive"] as const) {
-        type(field("requestType"), kind);
+        chooseType(box!, kind);
         const shown = [...form().querySelectorAll(".contact__viewing dd")].map((d) => d.textContent);
         expect(shown.includes(expected[kind] ?? "\u0000"), `${kind}: ${shown}`).toBe(expected[kind] !== null);
       }

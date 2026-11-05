@@ -91,7 +91,7 @@ export async function handleLead(request: Request, env: Record<string, string | 
     return json(400, { ok: false, error: "invalid", errors: { amount: "amount" } });
   }
 
-  const owner = { lang: context.defaultLanguage ?? context.languages[0], windows: context.contactWindows, productTitle: context.productTitle };
+  const owner = { lang: context.defaultLanguage ?? context.languages[0], windows: context.contactWindows, productTitle: context.productTitle, price: context.price, agentName: context.agentName };
   const record = buildRecord(checked.data, context, request.headers.get("user-agent"), new Date(), randomUUID(), storeKindOf(env));
   try {
     const wrong = checkDelivery(env);
