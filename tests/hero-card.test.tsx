@@ -96,7 +96,7 @@ describe("the hero's CSS with the card", () => {
     const one = "(min-width: 56em) and (min-height: 37.5em)";
     const slot = block(".hero__slot", one);
     expect(slot).toMatch(/align-self: stretch/);
-    expect(slot).toMatch(/width: min\(36rem, 44vw, calc\(var\(--hero-slot-h, 100vh\) \* 0\.8\)\)/); // 4:5 of the row's height, the script hands that over
+    expect(slot).toMatch(/width: min\(36rem, 44vw, calc\(var\(--hero-slot-h, calc\(100svh - 24\.8rem\)\) \* 0\.8\)\)/); // 4:5 of the row's height, the script hands that over
     expect(slot).toMatch(/min-width: 18rem/);
     expect(slot).toMatch(/aspect-ratio: auto/); // the slot's height is the row's: it must not push the row up
     expect(block(".hero__top", one)).toMatch(/flex: 1/);

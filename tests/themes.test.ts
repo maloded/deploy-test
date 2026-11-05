@@ -124,6 +124,8 @@ describe("optional theme variables", () => {
       "--avatar-card-radius",
       "--avatar-hero-card-w",
       "--hero-panel-edge",
+      "--hero-podium",
+      "--hero-podium-metal",
     ]);
     expect(declaredVars(css("light-editorial"), "light-editorial")).toContain("--accent-line");
     expect(declaredVars(css("dark-premium"), "dark-premium")).not.toContain("--accent-line");

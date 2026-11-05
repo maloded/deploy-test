@@ -65,6 +65,8 @@ export type LoadedProduct = {
   logo: string | null;
   /** The developer credit's icon as inline SVG markup (seller.json developer.icon, checked); null without one. */
   developerIcon: string | null;
+  /** The podium's emblem (product.json hero.podium.emblem, an SVG file next to product.json, checked like the logo) as inline SVG markup; null without one. */
+  podiumEmblem: string | null;
   /** Missing media files, only reported (instead of thrown) when `strictMedia` is false. */
   warnings: string[];
 };
@@ -135,6 +137,23 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
   if (!result.ok) throw new ContentError(`${ref}/product.json`, result.issues);
   const { typeFields } = result;
   const file = result.product;
+
+  // the podium's emblem: an SVG file next to product.json, read and checked like the seller's logo (plain shapes only); a missing file is an error like a missing photo (a warning when strictMedia is false)
+  let podiumEmblem: string | null = null;
+  const emblemName = typeof file.hero?.podium === "object" ? file.hero.podium.emblem : undefined;
+  if (emblemName) {
+    const emblemFile = path.join(/*turbopackIgnore: true*/ dir, emblemName);
+    if (!fs.existsSync(/*turbopackIgnore: true*/ emblemFile)) {
+      const msg = `hero.podium.emblem: file "${emblemName}" not found in ${ref}/`;
+      if (strictMedia) throw new ContentError(`${ref}/product.json`, [msg]);
+      warnings0.push(`${ref}/product.json: ${msg}`);
+    } else {
+      const text = fs.readFileSync(/*turbopackIgnore: true*/ emblemFile, "utf8");
+      const problem = logoProblem(text, fs.statSync(/*turbopackIgnore: true*/ emblemFile).size);
+      if (problem) throw new ContentError(`${ref}/product.json`, [`hero.podium.emblem: "${emblemName}" ${problem}`]);
+      podiumEmblem = logoMarkup(text);
+    }
+  }
 
   const issues: string[] = [];
   const report = reportLocalized(file, languages, defaultLanguage);
@@ -208,5 +227,5 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
   // without it gets it last (listing "contact" only decides where it goes)
   const listed = file.blocks ?? defaultBlocksFor(typeFields);
   const blocks: BlockId[] = listed.includes("contact") ? [...listed] : [...listed, "contact"];
-  return { ref, seller, product, typeFields, blocks, viewing, images, translationWarnings, coverage, warnings, avatar, logo, developerIcon };
+  return { ref, seller, product, typeFields, blocks, viewing, images, translationWarnings, coverage, warnings, avatar, logo, developerIcon, podiumEmblem };
 }

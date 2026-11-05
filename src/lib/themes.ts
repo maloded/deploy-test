@@ -61,6 +61,8 @@ export const OPTIONAL_VARS = [
   "--avatar-card-radius",
   "--avatar-hero-card-w",
   "--hero-panel-edge",
+  "--hero-podium",
+  "--hero-podium-metal",
 ];
 
 export const THEMES_DIR = path.join(process.cwd(), "public", "themes");

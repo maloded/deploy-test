@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { preload } from "react-dom";
 import { StatusProvider } from "@/components/StatusContext";
 import { metadataRobots } from "@/lib/indexing";
+import { fontPreloads } from "@/lib/font-preload";
 import { isLanguage } from "@/lib/languages";
 import { pick } from "@/lib/i18n";
 import { OG_HEIGHT, OG_WIDTH, ogImagePath } from "@/lib/og-image";
@@ -68,8 +70,11 @@ export default async function RootLayout({ children, params }: { children: React
   // Reading headers makes the page dynamic, so it is done only when the theme switcher exists
   // (development, or REVIEW_THEME_SWITCHER=1 for a review).
   const override = themeSwitcherEnabled() ? ((await headers()).get("x-theme-override") ?? null) : null;
-  const { theme, lang, seller, availableThemes } = await siteFor(params, override);
+  const site = await siteFor(params, override);
+  const { theme, lang, seller, availableThemes } = site;
   const pair = themePair(theme, availableThemes);
+  // the theme's fonts for this language, asked for in the head (with the stylesheet, not after the first layout)
+  for (const href of fontPreloads(theme, lang)) preload(href, { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
 
   // suppressHydrationWarning: the head script below may already have set data-theme to the visitor's choice (React must not undo it)
   return (
@@ -77,6 +82,8 @@ export default async function RootLayout({ children, params }: { children: React
       <head>
         {/* the visitor's stored or system theme, before the first paint (src/lib/theme-pref.ts); only when the product can switch */}
         {pair && <script dangerouslySetInnerHTML={{ __html: themeBootScript(theme, pair) }} />}
+        {/* the hero stays invisible until its measured fits are done (lib/hero-fit.ts removes this attribute; a CSS failsafe shows it after 150 ms in any case) */}
+        {site.blocks.includes("hero") && <script dangerouslySetInnerHTML={{ __html: 'document.documentElement.setAttribute("data-hero-pending","")' }} />}
         <link rel="stylesheet" href={`/themes/${theme}.css`} data-theme-css={theme} />
       </head>
       <body>

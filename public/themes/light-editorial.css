@@ -1,5 +1,25 @@
 /* light-editorial: cream paper, navy ink, dark ochre-gold accent (4.5:1+ on the paper). Fonts: Source Serif 4 + Source Sans 3 (OFL, self-hosted). */
 
+/* metric-matched stand-in while "Source Serif 4" loads: the same average letter width and line box, so a font swap does not change line breaks or heights */
+@font-face {
+  font-family: "Source Serif 4 Fallback";
+  src: local("Times New Roman");
+  size-adjust: 112.2%;
+  ascent-override: 92.4%;
+  descent-override: 29.9%;
+  line-gap-override: 0%;
+}
+
+/* metric-matched stand-in while "Source Sans 3" loads: the same average letter width and line box, so a font swap does not change line breaks or heights */
+@font-face {
+  font-family: "Source Sans 3 Fallback";
+  src: local("Arial");
+  size-adjust: 89.9%;
+  ascent-override: 113.9%;
+  descent-override: 44.5%;
+  line-gap-override: 0%;
+}
+
 @font-face {
   font-family: "Source Serif 4";
   font-style: normal;
@@ -95,8 +115,8 @@
   --radius-control: 0.375rem; /* optional: text, e-mail and phone inputs, selects, the textarea, the date and time fields (never buttons) */
   --radius-media: 0.75rem; /* optional: the hero photo and its thumbnails beside the agent card */
   --radius-menu: 0.75rem; /* optional: the language menu's panel (its rows take half of it) */
-  --font-heading: "Source Serif 4", Georgia, "Times New Roman", serif;
-  --font-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-heading: "Source Serif 4", "Source Serif 4 Fallback", Georgia, "Times New Roman", serif;
+  --font-body: "Source Sans 3", "Source Sans 3 Fallback", system-ui, -apple-system, "Segoe UI", sans-serif;
   --base-size: 18px;
   --line-height: 1.45;
   --space-1: 4px;
@@ -119,6 +139,8 @@
   --avatar-orb-b: #ec4899;
   --avatar-stage: #120e0c; /* optional: the dark stage of the card (the card is a screen in both themes) */
   --avatar-ink: #f7f1ec; /* optional: the text and light parts on that stage */
+  --hero-podium: color-mix(in srgb, color-mix(in srgb, var(--accent) 64%, var(--avatar-ink)) 80%, var(--avatar-stage)); /* optional: the top of the hero podium (hero.podium): warm gold-brown, lightened with the card's ink */
+  --hero-podium-metal: #d8cbb0; /* optional: the metal of the raised lettering on the hero podium's rim: brushed champagne */
   --hero-panel-edge: color-mix(in srgb, var(--accent) 50%, var(--avatar-stage)); /* optional: where the backdrop of a cut-out hero panel ends at its edges: halfway between the primary button (--accent, gold-brown) and the card stage colour here */
   --avatar-live: #22c55e; /* optional: the dot of the live-call pill */
   --avatar-danger: linear-gradient(135deg, #dc2626, #ef4444); /* optional: the disc of the call button after an error */

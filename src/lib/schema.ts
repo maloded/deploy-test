@@ -5,6 +5,7 @@ import { isLanguage, unsupportedLanguageMessage, type Language } from "./languag
 import { parseVideo } from "./video";
 import { GALLERY_CATEGORIES, SLUG_PATTERN } from "./gallery-model";
 import { checkContactWindows } from "./contact-windows";
+import { LOGO_FILE, LOGO_FILE_MESSAGE } from "./seller-logo";
 import { checkViewing, DAYS, MAX_DURATION, MIN_DURATION, isTime, isTimeZone, type ViewingSettings } from "./viewing";
 
 export { LANGUAGES, type Language } from "./languages";
@@ -13,6 +14,11 @@ export { LANGUAGES, type Language } from "./languages";
  * The ONE list of block ids, in the default page order. The value says whether a component renders the block. The
  * implemented set and the default order of every product type are derived from this (see defaultBlocksFor in fields.ts).
  */
+const frameSchema = z
+  .object({ left: z.number().min(-300).max(100), right: z.number().min(0).max(400), top: z.number().min(-300).max(100), bottom: z.number().min(0).max(400) })
+  .strict()
+  .refine((f) => f.right > f.left && f.bottom > f.top, "right must be greater than left and bottom greater than top");
+
 export const BLOCKS = { hero: true, gallery: true, video: true, specs: true, offer: true, faq: true, contact: true } as const;
 
 export type BlockId = keyof typeof BLOCKS;
@@ -234,6 +240,81 @@ export const baseShape = {
       priceLabel: localizedSchema.optional(),
       /** The compact button beside the price in the phone layout ("Termin"); it opens the contact form like the big button. */
       shortCta: localizedSchema.optional(),
+      /**
+       * The photo area of a hero with the agent's card: "tiles" (default: the photo and, beside it, two small tiles that open the gallery) or "single" (the photo
+       * alone, one large image filling the left column, no tiles). `podium` and `lights` belong to "single" with a cut-out photo (media.heroCutout) and are ignored otherwise.
+       */
+      mode: z.enum(["tiles", "single"]).optional(),
+      /**
+       * The cut-out stands on a quiet oval podium: true (an oval under the photo's bottom edge) or its geometry, so that another photo can be tuned without code. The
+       * oval is the footprint seen from the camera's height: `x` and `y` its centre in percent of the photo's width and height (default 50 and 100), `angle` the tilt
+       * of its long axis in degrees (default 0; positive: the right end lower, as the line from a car's rear wheel to its front wheel in a three-quarter photo),
+       * `ratio` its height over its width before the tilt (default 0.3; a flat oval is a camera at table height, a rounder one a raised camera), `scale` its width as a
+       * multiple of the photo's width (default 1.2), `shadowY` where the contact shadow is centred (percent of the photo's height, default `y`: under the tyres, so that the oval can move without the shadow), `textOffset` moves the lettering along the rim (percent of the oval's width, positive: to the right, default 0), `emblem` an SVG file next to product.json (the same plain-shapes rules as the seller's logo) engraved before the text at the same height, `text` the lettering engraved on the near rim (a string or a localized one, at most 24 characters: the brand; none: no engraving), `leds` recessed spots around the top surface (`true` or `{ count: 3-24 (default 12), colour: "#rrggbb" (default: warm white from the theme), breathe: true for a very slow, faint pulse }`; off by default), `phoneScale` and `phoneY` the same for the layouts of `phoneFrame` (default: `scale` and `y`; a phone's oval may be a little smaller against the van, and lower so that there is more surface in front of it; the contact shadow stays where `y` puts it, under the tyres), `thickness` the platform's edge in percent of its width (default 3.5). The rim shows on the near side only.
+       */
+      podium: z
+        .union([
+          z.boolean(),
+          z
+            .object({
+              x: z.number().min(-50).max(150).optional(),
+              y: z.number().min(-50).max(200).optional(),
+              angle: z.number().min(-80).max(80).optional(),
+              ratio: z.number().min(0.1).max(1).optional(),
+              scale: z.number().min(0.3).max(3).optional(),
+              phoneScale: z.number().min(0.3).max(3).optional(),
+              phoneY: z.number().min(-50).max(200).optional(),
+              shadowY: z.number().min(-50).max(200).optional(),
+              textOffset: z.number().min(-30).max(30).optional(),
+              emblem: z.string().regex(LOGO_FILE, LOGO_FILE_MESSAGE).optional(),
+              text: z.union([z.string().trim().min(1).max(24), localizedSchema]).optional(),
+              leds: z
+                .union([
+                  z.boolean(),
+                  z
+                    .object({
+                      count: z.number().int().min(3).max(24).optional(),
+                      colour: z.string().regex(/^#[0-9a-fA-F]{6}$/, "a colour: # and six hexadecimal digits").optional(),
+                      breathe: z.boolean().optional(),
+                      twinkle: z.boolean().optional(),
+                      period: z.number().min(3).max(20).optional(),
+                    })
+                    .strict(),
+                ])
+                .optional(),
+              thickness: z.number().min(0).max(12).optional(),
+            })
+            .strict(),
+        ])
+        .optional(),
+      /**
+       * The area of the photo's coordinate space that is fitted into the panel, in percent of the photo's width and height (the photo itself is 0..100 each way; a
+       * frame may reach beyond it). Without it the area is the photo plus whatever the podium needs, so changing the podium moves and rescales the van; with it the
+       * van keeps its place and size however the podium is tuned (a podium that reaches beyond the frame still widens it, nothing is cut off). In the one-screen
+       * layout (a wide, tall window) the panel is as wide as this frame is wide: the frame's room at the sides is the panel's side margin, so the panel hugs its picture.
+       */
+      frame: frameSchema.optional(),
+      /** The same for the layouts that are not the one-screen one (a phone, a short window): there the panel is a box of its own ratio, so it wants its own, usually narrower frame. Without it `frame` is used. */
+      phoneFrame: frameSchema.optional(),
+      /**
+       * Lights of the cut-out that glow now and then (the headlights: two soft flashes, a pause of several seconds; no motion for a visitor who asked for less). Each
+       * point: `x` and `y` in percent of the photo, `size` the glow's width in percent of the photo's width, `aspect` its width over its height (default 1, a
+       * round glow), `angle` its tilt in degrees (default 0). None: nothing glows.
+       */
+      lights: z
+        .array(
+          z
+            .object({
+              x: z.number().min(0).max(100),
+              y: z.number().min(0).max(100),
+              size: z.number().min(0.5).max(60),
+              aspect: z.number().min(0.2).max(8).optional(),
+              angle: z.number().min(-90).max(90).optional(),
+            })
+            .strict(),
+        )
+        .max(6)
+        .optional(),
     })
     .strict()
     .optional(),

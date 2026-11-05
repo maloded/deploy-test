@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { CSSProperties } from "react";
 import { objectPosition } from "@/lib/focus";
 import { frameRangeForTheme, heroDescription, heroEyebrow, heroFacts, factPairs, heroFit, heroHeadline, heroMobile, splitLead } from "@/lib/hero";
+import { heroFitScript, type HeroFitParts } from "@/lib/hero-fit";
 import { heroThumbs } from "@/lib/hero-thumbs";
 import { formatPrice, pick } from "@/lib/i18n";
 import { ui } from "@/lib/ui-strings";
@@ -9,7 +10,9 @@ import { getOfferType } from "@/offer-types";
 import type { Site } from "./blocks";
 import { FactIcon } from "./fact-icons";
 import { galleryProps } from "./gallery-props";
+import { HeroCar, podiumOf } from "./HeroCar";
 import { HeroFacts } from "./HeroFacts";
+import { HeroFit } from "./HeroFit";
 import { HeroThumbs } from "./HeroThumbs";
 import { presetFor } from "./request-presets";
 import { SofiaIntro } from "./SofiaIntro";
@@ -47,17 +50,25 @@ export function Hero({ site }: { site: Site }) {
 
   // with the agent's card the left column has room beside the photo: the next two gallery photos after the hero one, as thumbnails that open the gallery
   // at that photo (the same deep link as /#gallery-N). Only when the page renders the gallery block.
-  const thumbs = hasCard && site.blocks.includes("gallery") ? heroThumbs(galleryProps(site).slides, image?.src) : [];
+  // hero.mode "single": the photo alone, one large image in the left column and no tiles; with a cut-out it can stand on a podium and have glowing lights (hero.podium, hero.lights)
+  const single = hasCard && product.hero?.mode === "single";
+  const car = single && cutout && Boolean(image);
+  const podium = car ? podiumOf(product.hero?.podium, lang) : null;
+  const lights = car ? (product.hero?.lights ?? []) : [];
+  const fitParts: HeroFitParts = { ...(facts.length > 0 ? { facts: ".hero__facts" } : {}), ...(hasCard ? { heading: ".sofia-intro__heading", slot: "[data-agent-slot]" } : {}) };
+  const thumbs = hasCard && !single && site.blocks.includes("gallery") ? heroThumbs(galleryProps(site).slides, image?.src) : [];
 
   // the title zone: eyebrow, then headline and the photo frame
   const eyebrow = <p className="hero__eyebrow label">{heroEyebrow(product, lang, getOfferType(product.offerType).label)}</p>;
   const stage = (
     <>
       <h1 className="hero__headline">{heroHeadline(product, lang)}</h1>
-      <div className="hero__photo" data-fit={fit} data-cutout={cutout ? "true" : undefined} data-thumbs={thumbs.length > 0 ? thumbs.length : undefined}>
+      <div className="hero__photo" data-fit={fit} data-cutout={cutout ? "true" : undefined} data-thumbs={thumbs.length > 0 ? thumbs.length : undefined} data-mode={single ? "single" : undefined} data-podium={podium ? "true" : undefined}>
         <div className="hero__frame">
           <div className="hero__box">
-            {image ? (
+            {car && image ? (
+              <HeroCar src={image.src} width={image.width} height={image.height} alt={pick(product.title, lang)} podium={podium} frame={product.hero?.frame} phoneFrame={product.hero?.phoneFrame} lights={lights} emblem={site.podiumEmblem} />
+            ) : image ? (
               <Image
                 className="hero__image"
                 src={image.src}
@@ -169,6 +180,9 @@ export function Hero({ site }: { site: Site }) {
           </div>
         </div>
       </div>
+      {/* the fits that need a measurement (the facts in one row, the invitation on one line, the card's column) run here, before the first paint, so the page is painted as it will stay; HeroFit repeats them */}
+      <script dangerouslySetInnerHTML={{ __html: heroFitScript(fitParts) }} />
+      <HeroFit parts={fitParts} />
     </section>
   );
 }

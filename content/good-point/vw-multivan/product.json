@@ -83,6 +83,54 @@
       "en": "Book a visit",
       "tr": "Randevu",
       "bg": "Оглед"
+    },
+    "mode": "single",
+    "podium": {
+      "x": 50.4,
+      "y": 63.8,
+      "angle": 1,
+      "ratio": 0.367,
+      "scale": 1.465,
+      "thickness": 5.25,
+      "phoneScale": 1.4327,
+      "phoneY": 68.9,
+      "shadowY": 62.4,
+      "text": "Volkswagen",
+      "leds": {
+        "count": 12,
+        "twinkle": true,
+        "period": 7
+      },
+      "textOffset": 4,
+      "emblem": "podium-emblem.svg"
+    },
+    "lights": [
+      {
+        "x": 62.5,
+        "y": 57.5,
+        "size": 26,
+        "aspect": 2.8,
+        "angle": 15
+      },
+      {
+        "x": 96.2,
+        "y": 43.8,
+        "size": 6,
+        "aspect": 1.6,
+        "angle": 55
+      }
+    ],
+    "frame": {
+      "left": -38.5,
+      "right": 139.3,
+      "top": -8.17,
+      "bottom": 123.73
+    },
+    "phoneFrame": {
+      "left": -27.94,
+      "right": 128.74,
+      "top": -20.66,
+      "bottom": 133.69
     }
   },
   "specs": [

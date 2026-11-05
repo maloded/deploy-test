@@ -259,7 +259,7 @@ main:focus-visible {
 
 .lang-switch a[aria-current="true"] {
   color: var(--text);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .lang-switch a:focus-visible {
@@ -296,8 +296,8 @@ main:focus-visible {
 
 .lang-menu__current::after {
   content: "\25BE";
-  color: var(--muted);
-  font-size: 0.8em;
+  color: var(--muted); /* the globe's colour (.lang-menu__globe); a solid triangle looks brighter than a thin line drawing, so it is a little smaller */
+  font-size: 0.7em;
 }
 
 .lang-menu[open] .lang-menu__current,
@@ -334,9 +334,10 @@ main:focus-visible {
   color: var(--muted);
 }
 
+/* the code is a quiet label like the header's button text: medium, not bold, and the button's letter-spacing */
 .lang-menu__current-code {
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-weight: 500;
+  letter-spacing: 0.14em;
 }
 
 /* a row: the code in a pill, the language's own name, the check mark of the current one */
@@ -357,7 +358,7 @@ main:focus-visible {
   border-radius: 99rem;
   color: var(--muted);
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.08em;
   line-height: 1.4;
   text-align: center;
@@ -375,7 +376,7 @@ main:focus-visible {
 
 .lang-menu__list a[aria-current="true"] {
   color: var(--text);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .lang-menu__list a[aria-current="true"] .lang-menu__code {
@@ -811,13 +812,13 @@ main:focus-visible {
     font-size: calc(clamp(1.25rem, 1.9vw, 1.5rem) * var(--fact-scale, 1));
   }
 
-  /* the four facts stay in ONE row on a wide window (HeroFacts sets data-row once the row is wide enough and measured): the pairs never wrap onto a second row; a value that
+  /* the four facts stay in ONE row on a wide window (the hero's fit sets data-fact-row on <html> once the row is wide enough and measured): the pairs never wrap onto a second row; a value that
      does not fit even at the smallest size wraps inside its own tile ("прибл." over "37 500 км", the unit kept together by glueUnit) */
-  .hero__facts[data-row] {
+  html[data-fact-row] .hero__facts {
     flex-wrap: nowrap;
   }
 
-  .hero__facts[data-row="wrap"] .hero__fact-value {
+  html[data-fact-row="wrap"] .hero__fact-value {
     white-space: normal;
     text-wrap: balance;
   }
@@ -970,6 +971,21 @@ main:focus-visible {
  * as --hero-slot-h; at most 36rem and 44vw, not under 18rem; before the script runs it is the 36rem / 44vw cap). The column is that wide, so
  * the card ends exactly at the container's right edge, in line with the price and the buttons. No container query.
  */
+/*
+ * Until the hero's measured fits are done (the inline script of the hero, once the fonts in use have arrived: lib/hero-fit.ts) the hero is invisible (visibility,
+ * it keeps its room), so a late font cannot make it jump; after 150 ms it shows itself in any case (a page whose script never runs, a slow font).
+ */
+html[data-hero-pending] .hero {
+  visibility: hidden;
+  animation: hero-fit-failsafe 1ms linear 150ms forwards;
+}
+
+@keyframes hero-fit-failsafe {
+  to {
+    visibility: visible;
+  }
+}
+
 .hero__lead-in {
   padding-block: var(--space-5) var(--space-3);
   text-align: center;
@@ -1056,7 +1072,7 @@ main:focus-visible {
 
   .hero__slot {
     align-self: stretch;
-    width: min(36rem, 44vw, calc(var(--hero-slot-h, 100vh) * 0.8));
+    width: min(36rem, 44vw, calc(var(--hero-slot-h, calc(100svh - 24.8rem)) * 0.8));
     min-width: 18rem;
     aspect-ratio: auto; /* its height is the row's (stretch): the slot must not push the row's height up */
   }
@@ -1322,6 +1338,26 @@ main:focus-visible {
 }
 
 /*
+ * One-screen hero with the card: more room for the picture. The eyebrow stays at the top of its band (the band keeps its height: Sofia's invitation sits in it, above
+ * the card), the headline block (the eyebrow's band is not touched) is pulled up under the eyebrow by 1.55rem (the left stage has a negative top margin and, being
+ * stretched, is taller by as much: its bottom stays level with the card's bottom), and the headline is one step smaller (0.9 of the theme's size, but not below
+ * 2.7rem, about the section titles' size, so that it stays the largest text of the page; it is never larger than the theme's size). The panel gets all the room that is freed, and its picture scales with it.
+ */
+@media (min-width: 56em) and (min-height: 37.5em) {
+  .hero[data-card] .hero__lead-in {
+    padding-block: var(--space-2) 0;
+  }
+
+  .hero[data-card] .hero__top .hero__stage {
+    margin-top: -1.55rem;
+  }
+
+  .hero[data-card] .hero__top .hero__headline {
+    font-size: min(var(--hero-headline-size, clamp(1.9rem, 4vw, 3.25rem)), max(calc(var(--hero-headline-size, clamp(1.9rem, 4vw, 3.25rem)) * 0.9), 2.7rem));
+  }
+}
+
+/*
  * Windows between 801 and 960px tall (a 1080p screen with the browser bars, a 900px laptop): the two buttons are still stacked here, so the right column below
  * the divider (price, note, button, button) is the lowest part of the hero. Its vertical spacing is tightened first: divider to price 24 -> 16px, price to
  * note 4 -> 0, note to the first button 24 -> 16px, between the buttons 16 -> 8px. Under 864px the buttons are a little lower (3rem -> 2.6rem; the text keeps
@@ -1545,6 +1581,375 @@ main:focus-visible {
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+}
+
+/*
+ * hero.mode "single" (Hero.tsx, HeroCar.tsx): the photo alone. The two tiles are gone; the cut-out is one large image in the left column, centred, as large as the panel's height
+ * allows (the panel fills the column and is as high as the card's slot beside it). The van, its podium, its reflection and its lights are ONE inline SVG (viewBox: the photo plus the room
+ * of the podium), fitted into the panel as a whole (meet, anchored at the bottom): whatever the panel's shape, the wheels stay on the platform, and the lights' percentages are the
+ * photo's. No container queries.
+ *
+ * hero.podium: an oval platform under the van, quiet and in the theme's colours. It is the van's footprint seen from the camera's height: its centre, tilt, flatness and
+ * size come from the content (angle, ratio, x, y, scale), so that the ground oval has the same perspective as the photo. A flat top (the card's stage colour lightened with
+ * its ink, a hint of the accent, a little lighter in the middle), a darker rim that shows on the near side only (the top shifted down), a thin rim line (the card's ink at low
+ * strength, one pixel at every size) and a soft contact shadow in the same tilt. No glow, no ring.
+ *
+ * hero.lights: soft warm-white glows over the headlights, two quick flashes and then a pause of about six seconds; nothing moves for a visitor who asked for less motion.
+ */
+.hero__car {
+  position: absolute;
+  inset: var(--space-2);
+  display: block;
+  width: calc(100% - 2 * var(--space-2));
+  height: calc(100% - 2 * var(--space-2));
+  overflow: visible;
+}
+
+/* the two pictures of hero.frame + hero.phoneFrame: the narrow one is drawn everywhere except in the one-screen layout (below), where the wide one takes over; the one that is not drawn is not in the accessibility tree either */
+.hero__car--wide {
+  display: none;
+}
+
+/* a phone: the picture fills the panel edge to edge; the room around the group (about 14px at the sides) is the phone frame's (hero.phoneFrame) */
+@media (max-width: 55.999em) {
+  .hero__car {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.hero__photo[data-mode="single"] .hero__box {
+  --pod-metal: var(--hero-podium-metal, color-mix(in srgb, var(--avatar-ink, white) 80%, var(--accent)));
+  --pod-surface: var(--hero-podium, color-mix(in srgb, var(--avatar-stage, var(--surface)) 72%, var(--avatar-ink, white)));
+}
+
+.hero__pod-top-a {
+  stop-color: color-mix(in srgb, var(--pod-surface, var(--surface)) 80%, var(--avatar-ink, white));
+}
+
+.hero__pod-top-b {
+  stop-color: var(--pod-surface, var(--surface));
+}
+
+.hero__pod-top-c {
+  stop-color: color-mix(in srgb, var(--pod-surface, var(--surface)) 80%, black);
+}
+
+.hero__pod-top {
+  stroke: color-mix(in srgb, var(--avatar-ink, white) 26%, transparent);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+
+/* the side wall, one extrusion of the top oval: shaded across (darker toward both ends, like a drum), with a fine outline that continues the top's edge */
+.hero__pod-side-a {
+  stop-color: color-mix(in srgb, var(--pod-surface, var(--surface)) 34%, black);
+}
+
+.hero__pod-side-b {
+  stop-color: color-mix(in srgb, var(--pod-surface, var(--surface)) 58%, black);
+}
+
+.hero__pod-side-edge {
+  fill: none;
+  stroke: color-mix(in srgb, var(--avatar-ink, white) 20%, transparent);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+
+.hero__pod-drop {
+  fill: color-mix(in srgb, black 30%, transparent);
+}
+
+.hero__pod-contact {
+  fill: color-mix(in srgb, black 48%, transparent);
+}
+
+/* the raised lettering on the near rim: crisp metal letters (no blur, no glow) standing out from the wall: a fine dark shadow right under them, a light edge on their top and the metal face between
+   (a brushed gradient of the theme's metal colour, light above, dark below); the lettering is hidden on a small phone, where the rim is too thin to read */
+.hero__pod-letter,
+.hero__pod-letter-shadow,
+.hero__pod-letter-top {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  text-rendering: geometricPrecision;
+}
+
+.hero__pod-letter-shadow {
+  fill: color-mix(in srgb, black 55%, transparent);
+}
+
+.hero__pod-letter-top {
+  fill: color-mix(in srgb, white 88%, var(--pod-metal, white));
+}
+
+.hero__pod-emblem * {
+  fill: inherit;
+}
+
+.hero__pod-emblem--shadow {
+  color: color-mix(in srgb, black 55%, transparent);
+}
+
+.hero__pod-emblem--shadow * {
+  fill: currentcolor;
+}
+
+.hero__pod-emblem--top {
+  color: color-mix(in srgb, white 88%, var(--pod-metal, white));
+}
+
+.hero__pod-emblem--top * {
+  fill: currentcolor;
+}
+
+.hero__metal-a {
+  stop-color: color-mix(in srgb, white 62%, var(--pod-metal, white));
+}
+
+.hero__metal-b {
+  stop-color: var(--pod-metal, white);
+}
+
+.hero__metal-c {
+  stop-color: color-mix(in srgb, black 34%, var(--pod-metal, white));
+}
+
+@media (max-width: 24em) {
+  .hero__pod-engraving {
+    display: none;
+  }
+}
+
+/* the recessed spots: a faint pool of light on the surface, a soft halo, a dark recess with a thin metal ring and a small warm-white core; --led (the content's colour) or a warm white of the theme */
+.hero__led-pool-a {
+  stop-color: color-mix(in srgb, var(--led, color-mix(in srgb, var(--accent) 14%, white)) 50%, transparent);
+}
+
+.hero__led-pool-b {
+  stop-color: transparent;
+}
+
+.hero__led-halo-a {
+  stop-color: color-mix(in srgb, var(--led, color-mix(in srgb, var(--accent) 14%, white)) 88%, transparent);
+}
+
+.hero__led-halo-b {
+  stop-color: transparent;
+}
+
+.hero__led-core-a {
+  stop-color: color-mix(in srgb, white 82%, var(--led, color-mix(in srgb, var(--accent) 14%, white)));
+}
+
+.hero__led-core-b {
+  stop-color: var(--led, color-mix(in srgb, var(--accent) 14%, white));
+}
+
+.hero__led-pool,
+.hero__led-halo {
+  mix-blend-mode: screen;
+}
+
+.hero__led-recess {
+  fill: color-mix(in srgb, var(--pod-surface, var(--surface)) 30%, black);
+}
+
+.hero__led-ring {
+  fill: none;
+  stroke: color-mix(in srgb, var(--avatar-ink, white) 62%, color-mix(in srgb, var(--pod-surface, var(--surface)) 60%, black));
+  opacity: 0.45;
+}
+
+.hero__led-glint-a {
+  stop-color: color-mix(in srgb, white 90%, var(--led, color-mix(in srgb, var(--accent) 14%, white)));
+}
+
+.hero__led-glint-b {
+  stop-color: transparent;
+}
+
+.hero__led-glint {
+  mix-blend-mode: screen;
+  opacity: 0.45;
+}
+
+/* the twinkle: now and then (each light has its own period and start, set in the markup) a light brightens briefly, its bloom swells and its glint flares; mostly at rest */
+.hero__led[data-twinkle] .hero__led-glint,
+.hero__led[data-twinkle] .hero__led-halo,
+.hero__led[data-twinkle] .hero__led-core {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: var(--tw-dur, 7s) ease-in-out var(--tw-delay, 0s) infinite;
+}
+
+.hero__led[data-twinkle] .hero__led-glint {
+  animation-name: hero-led-flare-glint;
+}
+
+.hero__led[data-twinkle] .hero__led-halo {
+  animation-name: hero-led-flare-halo;
+}
+
+.hero__led[data-twinkle] .hero__led-core {
+  animation-name: hero-led-flare-core;
+}
+
+@keyframes hero-led-flare-glint {
+  0%,
+  78%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  88% {
+    opacity: 1;
+    transform: scale(1.9);
+  }
+}
+
+@keyframes hero-led-flare-halo {
+  0%,
+  78%,
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  88% {
+    opacity: 1;
+    transform: scale(1.55);
+  }
+}
+
+@keyframes hero-led-flare-core {
+  0%,
+  78%,
+  100% {
+    transform: scale(1);
+  }
+  88% {
+    transform: scale(1.3);
+  }
+}
+
+.hero__leds[data-breathe] {
+  animation: hero-led-breathe 7s ease-in-out infinite;
+}
+
+@keyframes hero-led-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.72;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__leds[data-breathe],
+  .hero__led[data-twinkle] .hero__led-glint,
+  .hero__led[data-twinkle] .hero__led-halo,
+  .hero__led[data-twinkle] .hero__led-core {
+    animation: none;
+  }
+}
+
+.hero__light-a {
+  stop-color: color-mix(in srgb, var(--accent) 12%, white);
+}
+
+.hero__light-b {
+  stop-color: color-mix(in srgb, var(--accent) 24%, white);
+}
+
+.hero__light-c {
+  stop-color: color-mix(in srgb, var(--accent) 58%, transparent);
+}
+
+.hero__light-d {
+  stop-color: transparent;
+}
+
+.hero__light {
+  mix-blend-mode: screen;
+  opacity: 0;
+  pointer-events: none;
+  animation: hero-light 8s ease-in-out infinite;
+}
+
+@keyframes hero-light {
+  0%,
+  62% {
+    opacity: 0;
+  }
+  65% {
+    opacity: 0.8;
+  }
+  69% {
+    opacity: 0.12;
+  }
+  73% {
+    opacity: 0.7;
+  }
+  82%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__light {
+    animation: none;
+  }
+}
+
+@media (min-width: 56em) and (min-height: 37.5em) {
+  /*
+   * one screen: the panel is as high as the cell (level with the card's slot) and hugs its picture instead of stretching over the column: the picture (the SVG, whose
+   * shape is hero.frame) has the panel's height and takes its width from its own ratio, the panel is as wide as that plus its inset, and sits at the column's left edge,
+   * under the headline. The room the frame leaves at the sides is the panel's side margin; the rest of the column stays free between the panel and the card.
+   */
+  .hero__top .hero__photo[data-mode="single"] {
+    place-items: stretch start;
+  }
+
+  .hero__top .hero__photo[data-mode="single"] .hero__frame {
+    display: block;
+    width: fit-content;
+    min-width: 0;
+    max-width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+  }
+
+  .hero__top .hero__photo[data-mode="single"] .hero__box {
+    box-sizing: border-box;
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    height: 100%;
+    max-height: none;
+    padding: var(--space-2);
+    aspect-ratio: auto;
+  }
+
+  .hero__top .hero__photo[data-mode="single"] .hero__car {
+    position: static;
+    width: auto;
+    max-width: 100%;
+    height: 100%;
+  }
+
+  .hero__top .hero__photo[data-mode="single"] .hero__car--wide {
+    display: block;
+  }
+
+  .hero__top .hero__photo[data-mode="single"] .hero__car--narrow {
+    display: none;
   }
 }
 
