@@ -31,6 +31,7 @@
     "tr": "Good Point’in talebime yanıt vermek ve bu konuda benimle iletişime geçmek amacıyla bilgilerimi işlemesini kabul ediyorum. Bilgiler yalnızca bu amaçla saklanır. Ayrıntılar için gizlilik bildirimine bakın.",
     "bg": "Съгласен/съгласна съм Good Point да обработва данните ми, за да отговори на запитването ми и да се свърже с мен във връзка с него. Данните се съхраняват само за тази цел. Повече информация – в известието за поверителност."
   },
+  "consentVersion": "2026-11-03-draft",
   "developer": {
     "name": "GoodPoint Labs",
     "url": "https://goodpoint.at",

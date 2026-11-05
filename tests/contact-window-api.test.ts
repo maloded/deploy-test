@@ -14,7 +14,7 @@ afterAll(() => fs.rmSync(tmp, { recursive: true, force: true }));
 const HOUSE = examples.ref("example-house"); // Europe/Vienna
 let n = 0;
 const env = () => ({ CONTENT_DIR: EXAMPLES_DIR, CONTENT_PRODUCT: HOUSE, LEADS_STORE: "file", LEADS_DIR: path.join(tmp, `l${n++}`) });
-const BASE = { lang: "en", requestType: "question", name: "Test Person", email: "person@example.invalid", consent: true, website: "", elapsedMs: MIN_FILL_MS + 500 };
+const BASE = { lang: "en", requestType: "question", message: "A question about the house", name: "Test Person", email: "person@example.invalid", consent: true, website: "", elapsedMs: MIN_FILL_MS + 500 };
 let ip = 0;
 const post = (body: unknown, e = env()) =>
   handleLead(new Request("http://localhost:3000/api/lead", { method: "POST", headers: { "content-type": "application/json", "x-lead-request": "1", host: "localhost:3000", "x-forwarded-for": `198.51.100.${(ip++ % 250) + 1}` }, body: JSON.stringify(body) }), e);

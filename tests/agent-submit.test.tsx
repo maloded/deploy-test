@@ -40,7 +40,7 @@ const form = () => box!.querySelector("dialog form") as HTMLFormElement;
 const field = (name: string) => box!.querySelector(`dialog form [name=${name}]`) as HTMLInputElement;
 function type(el: HTMLInputElement, value: string) {
   act(() => {
-    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(el, value);
+    Object.getOwnPropertyDescriptor(el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype, "value")!.set!.call(el, value);
     el.dispatchEvent(new Event("input", { bubbles: true }));
   });
 }
@@ -56,6 +56,7 @@ const fillAll = () => {
   act(() => section().open());
   type(field("name"), NAME);
   type(field("email"), EMAIL);
+  type(field("message"), "A question about the car"); // the default type is a question, and the web form needs it
   act(() => void field("consent").click());
 };
 const send = () => act(async () => void form().dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })));

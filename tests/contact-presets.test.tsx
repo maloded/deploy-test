@@ -42,7 +42,7 @@ const offer = () => q<HTMLAnchorElement>('.offer a[href="#contact"]');
 const click = (el: Element) => act(() => void (el as HTMLElement).click());
 const esc = () => act(() => void dialog().dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true })));
 function type(el: HTMLInputElement | HTMLSelectElement, value: string) {
-  const proto = el instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
+  const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : el instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
   act(() => {
     Object.getOwnPropertyDescriptor(proto, "value")!.set!.call(el, value);
     el.dispatchEvent(new Event(el instanceof HTMLSelectElement ? "change" : "input", { bubbles: true }));
@@ -182,10 +182,10 @@ describe("the preset replaces the type and nothing else", () => {
 });
 
 describe("the agent interface", () => {
-  it("open() takes no argument and always uses question, whatever was used before and whatever has focus", () => {
+  it("open() takes no type and always uses question, whatever was used before and whatever has focus (its one optional argument only says the agent opened it)", () => {
     mount(car("en"));
     const el = q<ContactElement>("#contact");
-    expect(el.open.length).toBe(0);
+    expect(el.open.length).toBe(1);
     click(offer());
     expect(selected()).toBe("offer");
     esc();
@@ -205,7 +205,8 @@ describe("focus and autofill", () => {
       const opener = button();
       opener.focus();
       click(opener);
-      expect(document.activeElement, opener.className).toBe(field("name"));
+      // the first field the form still needs: the name, and for an offer (hero is a question) the amount above it
+      expect(document.activeElement, opener.className).toBe(button === offer ? field("amount") : field("name"));
       expect(document.activeElement).not.toBe(field("requestType"));
       esc();
       expect(dialog().open).toBe(false);

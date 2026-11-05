@@ -25,7 +25,7 @@ const typesIn = (html: string) => [...html.matchAll(/<a href="#contact" data-req
 
 describe("the footer's contact links", () => {
   it("are one per request type the page offers, in the product type's order, and a type that needs viewing settings is left out without them", () => {
-    const four = ["viewing", "test_drive", "question", "offer"];
+    const four = ["viewing", "testdrive", "question", "offer"];
     expect(typesIn(footer(withTypes(base(), four, false)))).toEqual(["question", "offer"]);
     expect(typesIn(footer(withTypes(base(), four, true)))).toEqual(four);
     expect(typesIn(footer(withTypes(base(), ["question"], false)))).toEqual(["question"]);
@@ -33,8 +33,8 @@ describe("the footer's contact links", () => {
 
   it("are one row: the types' links, then the e-mail (and the phone, when the seller has one), each with an icon, and no heading", () => {
     for (const lang of ["en", "de"] as const) {
-      const out = footer(withTypes(base(lang), ["viewing", "test_drive", "question", "offer"], true));
-      for (const type of ["viewing", "test_drive", "question", "offer"] as const) expect(out).toContain(`<span>${REQUEST_TYPES[type].label[lang]}</span>`);
+      const out = footer(withTypes(base(lang), ["viewing", "testdrive", "question", "offer"], true));
+      for (const type of ["viewing", "testdrive", "question", "offer"] as const) expect(out).toContain(`<span>${REQUEST_TYPES[type].label[lang]}</span>`);
       expect(out).not.toContain("site-footer__heading");
       expect(out).toContain(`role="group" aria-label="${ui("footer.contact", lang)}"`); // the block is named for assistive technology
       expect(out.match(/<ul class="site-footer__links">/g)).toHaveLength(1); // one list: one row

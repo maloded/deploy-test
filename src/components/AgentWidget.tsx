@@ -1,6 +1,6 @@
 "use client";
 
-import { createElement, useEffect, useState } from "react";
+import { createElement, useEffect, useRef, useState } from "react";
 import { buildPageContext } from "@/lib/agent-context";
 import { registerAgentBridge } from "@/lib/agent-bridge";
 import { readPageView } from "@/lib/page-view";
@@ -28,6 +28,22 @@ export function AgentWidget({ agent, lang, product, avatar, requestType, heroSlo
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [host, setHost] = useState<WidgetHost | null>(null); // the widget element of the avatar card, for its own start button
+  const inCall = useRef(false); // a call is running (the widget's call-start and call-end on the document)
+
+  useEffect(() => {
+    const start = () => {
+      inCall.current = true;
+    };
+    const end = () => {
+      inCall.current = false;
+    };
+    document.addEventListener("call-start", start);
+    document.addEventListener("call-end", end);
+    return () => {
+      document.removeEventListener("call-start", start);
+      document.removeEventListener("call-end", end);
+    };
+  }, []);
 
   useEffect(() => {
     let live = true;
@@ -43,7 +59,7 @@ export function AgentWidget({ agent, lang, product, avatar, requestType, heroSlo
   // the command handler exists only while the widget is mounted
   useEffect(() => {
     if (!ready) return;
-    return registerAgentBridge({ lang, answer: () => buildPageContext({ language: lang, product, path: window.location.pathname, title: document.title, snapshot: getFormSnapshot(), view: readPageView() }) });
+    return registerAgentBridge({ lang, callActive: () => inCall.current, answer: () => buildPageContext({ language: lang, product, path: window.location.pathname, title: document.title, snapshot: getFormSnapshot(), view: readPageView() }) });
   }, [ready, lang, product]);
 
   const common = {

@@ -81,7 +81,7 @@ describe("the loader merges the settings", () => {
   it("uses the seller's settings alone, and offers every type of the product type", () => {
     const loaded = load(root(FULL, undefined));
     expect(loaded.viewing).toEqual(FULL);
-    expect(allowedRequestTypes(loaded.typeFields.requestTypes, loaded.viewing !== null)).toEqual(["viewing", "test_drive", "question", "offer"]);
+    expect(allowedRequestTypes(loaded.typeFields.requestTypes, loaded.viewing !== null)).toEqual(["viewing", "testdrive", "question", "offer"]);
   });
 
   it("a product alone can carry complete settings", () => {

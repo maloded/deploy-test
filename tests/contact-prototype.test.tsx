@@ -64,12 +64,13 @@ describe("the prototype note in the dialog (NEXT_PUBLIC_PROTOTYPE_NOTE)", () => 
     const set = (name: string, value: string) => {
       const el = form().querySelector(`[name=${name}]`) as HTMLInputElement;
       act(() => {
-        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(el, value);
+        Object.getOwnPropertyDescriptor(el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype, "value")!.set!.call(el, value);
         el.dispatchEvent(new Event("input", { bubbles: true }));
       });
     };
     set("name", "Test Person");
     set("email", "person@example.invalid");
+    set("message", "A question about the car");
     act(() => void (form().querySelector("[name=consent]") as HTMLElement).click());
     await act(async () => void form().dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })));
     expect(box!.querySelector(".contact__success")).toBeNull();

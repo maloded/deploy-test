@@ -1,3 +1,4 @@
+import type { MissingKey, SubmitStatus } from "./form-context";
 import type { LeadField } from "./lead";
 import { DEFAULT_REQUEST_TYPE, type RequestType } from "./request-types";
 import type { Language } from "./schema";
@@ -24,6 +25,8 @@ export type FormSnapshot = {
   contactWindow: string;
   /** Cut to SNAPSHOT_MESSAGE_MAX characters. */
   message: string;
+  /** The amount of an offer as typed ("" for the other types). */
+  amount: string;
   /** Only the complete rows (both a date and a time). */
   preferredSlots: { date: string; time: string }[];
   /** The page language; null until the form has mounted. */
@@ -36,6 +39,12 @@ export type FormSnapshot = {
   dialogOpen: boolean;
   everOpened: boolean;
   submit: SubmitState;
+  /** The request number the server gave the last sent request (after "sent"), or null. */
+  requestId: string | null;
+  /** The state of the send for the answer's `form.submit`: none, sending (in flight), sent, error. The older `submit` above stays for the deprecated top-level keys. */
+  status: SubmitStatus;
+  /** What blocks the form in the agent's words (form-context.ts MISSING_KEYS): phone_or_email, slots, amount ...; the older `missing` above has the lead schema's names. */
+  formMissing: MissingKey[];
 };
 
 const INITIAL: FormSnapshot = {
@@ -46,20 +55,24 @@ const INITIAL: FormSnapshot = {
   preferredChannel: "",
   contactWindow: "anytime",
   message: "",
+  amount: "",
   preferredSlots: [],
   language: null,
   consentGiven: false,
   valid: false,
-  missing: ["name", "email", "consent"],
+  missing: ["name", "email", "phone", "message", "consent"],
   dialogOpen: false,
   everOpened: false,
   submit: "none",
+  requestId: null,
+  status: "none",
+  formMissing: ["message", "name", "phone_or_email", "consent"],
 };
 
 let current: FormSnapshot = INITIAL;
 
 /** A copy: a caller cannot change the stored value. */
-export const getFormSnapshot = (): FormSnapshot => ({ ...current, preferredSlots: current.preferredSlots.map((s) => ({ ...s })), missing: [...current.missing] });
+export const getFormSnapshot = (): FormSnapshot => ({ ...current, preferredSlots: current.preferredSlots.map((s) => ({ ...s })), missing: [...current.missing], formMissing: [...current.formMissing] });
 
 export function updateFormSnapshot(patch: Partial<FormSnapshot>): void {
   current = { ...current, ...patch, ...(patch.message !== undefined ? { message: Array.from(patch.message).slice(0, SNAPSHOT_MESSAGE_MAX).join("") } : {}) };

@@ -56,8 +56,9 @@ const ask = () => {
   expect(call.answers).toHaveLength(1);
   return call.answers[0] as Record<string, any>;
 };
-const noValues = (answer: Record<string, unknown>) => {
-  expect(answer).not.toHaveProperty("form");
+const noValues = (answer: Record<string, any>) => {
+  expect(answer.form).not.toHaveProperty("values"); // the states are in the answer, the values are not
+  for (const legacy of ["name", "email", "phone", "message", "preferredSlots", "contactWindow"]) expect(answer.form, legacy).not.toHaveProperty(legacy);
   const text = JSON.stringify(answer);
   for (const secret of [NAME, EMAIL, "Quillfeather", MESSAGE, "+43 1 000 000", "mornings"]) expect(text).not.toContain(secret);
 };
@@ -65,13 +66,20 @@ const openAndFill = () => {
   act(() => section().open());
   type(field("name"), NAME);
   type(field("email"), EMAIL);
+  type(field("message"), "A question about the car"); // the default type is a question: the web form needs it
 };
 
 describe("page_context answer: the phases", () => {
   it("not_opened: the dialog was never opened", async () => {
     await mount("de");
     const a = ask();
-    expect(a).toEqual({ language: "de", product: PRODUCT, path: window.location.pathname, title: document.title, dialogOpen: false, phase: "not_opened", submit: "none", missing: ["name", "email", "consent"], view: { section: null, category: "exterior", photo: "front", index: 1, total: 5, spot: null, fullscreen: false } });
+    const view = { section: null, category: "exterior", photo: "front", index: 1, total: 5, spot: null, fullscreen: false };
+    expect(a).toEqual({
+      language: "de", product: PRODUCT, path: window.location.pathname, title: document.title, section: null, view,
+      form: { phase: "not_opened", type: "question", missing: ["message", "name", "phone_or_email", "consent"], consent: false, visible: false, submit: "none" },
+      // deprecated, for one release: the first version's top-level keys
+      dialogOpen: false, phase: "not_opened", submit: "none", missing: ["name", "email", "phone", "message", "consent"],
+    });
   });
 
   it("view: what is on screen, read when asked, so a swipe or a tap by the visitor shows at once", async () => {
@@ -144,7 +152,10 @@ describe("page_context answer: the phases", () => {
       const a = ask();
       expect(a.phase).toBe("complete");
       expect(a.dialogOpen).toBe(dialogOpen);
-      expect(a.form).toEqual({ requestType: "question", name: NAME, email: EMAIL, phone: "+43 1 000 000", preferredChannel: "phone", contactWindow: "morning", message: MESSAGE, preferredSlots: [] });
+      expect(a.form).toMatchObject({ phase: "complete", type: "question", missing: [], consent: true, visible: dialogOpen, submit: "none" });
+      expect(a.form.values).toEqual({ name: NAME, email: EMAIL, phone: "+43 1 000 000", channel: "phone", window: "morning", message: MESSAGE });
+      // deprecated, for one release: the values flat in `form`, as the first version had them
+      expect(a.form).toMatchObject({ requestType: "question", name: NAME, email: EMAIL, phone: "+43 1 000 000", preferredChannel: "phone", contactWindow: "morning", message: MESSAGE, preferredSlots: [] });
     }
   });
 
@@ -178,12 +189,13 @@ describe("page_context answer: the phases", () => {
     check(field("consent"));
     const a = ask();
     // "submit" and "missing" are documented keys since the form-states step (states and field names, no value)
-    expect(Object.keys(a).sort()).toEqual(["dialogOpen", "form", "language", "missing", "path", "phase", "product", "submit", "title", "view"]);
-    expect(Object.keys(a.form).sort()).toEqual(["contactWindow", "email", "message", "name", "phone", "preferredChannel", "preferredSlots", "requestType"]);
+    expect(Object.keys(a).sort()).toEqual(["dialogOpen", "form", "language", "missing", "path", "phase", "product", "section", "submit", "title", "view"]);
+    expect(Object.keys(a.form).sort()).toEqual(["consent", "contactWindow", "email", "message", "missing", "name", "phase", "phone", "preferredChannel", "preferredSlots", "requestType", "submit", "type", "values", "visible"]);
+    expect(Object.keys(a.form.values).sort()).toEqual(["channel", "email", "message", "name", "phone", "window"]); // a question: no slots, no amount
     const text = JSON.stringify(a);
     expect(consentText.length).toBeGreaterThan(10);
     expect(text).not.toContain(consentText);
-    expect(text).not.toMatch(/website|honeypot|elapsed|consent|startedAt/i);
+    expect(text).not.toMatch(/website|honeypot|elapsed|startedAt/i); // (the key `consent` and the phase `no_consent` are states, not the consent text)
   });
 });
 
@@ -197,21 +209,31 @@ describe("phaseOf and buildPageContext", () => {
     expect(phaseOf({ ...base, everOpened: true, consentGiven: true, valid: true, name: "x" })).toBe("complete");
   });
 
-  it("switching 'form' off cuts only the form key: language, dialogOpen, phase, submit, missing and view stay", () => {
+  it("switching 'form' off cuts only the values: language, section, view, dialogOpen, phase, submit, missing and the form's states stay", () => {
     expect(AGENT_INCLUDE_FORM).toBe(true);
-    const done = { ...base, everOpened: true, consentGiven: true, valid: true, name: NAME, email: EMAIL };
+    const done = { ...base, everOpened: true, consentGiven: true, valid: true, name: NAME, email: EMAIL, formMissing: [] };
     const input = { language: "en", product: PRODUCT, path: "/en", title: "T", snapshot: done };
-    expect(buildPageContext(input, false)).toEqual({ language: "en", product: PRODUCT, path: "/en", title: "T", dialogOpen: false, phase: "complete", submit: "none", missing: [], view: { section: null, category: null, photo: null, index: null, total: null, spot: null, fullscreen: false } });
-    expect(buildPageContext({ ...input, snapshot: { ...done, dialogOpen: true } }, false)).toEqual({ language: "en", product: PRODUCT, path: "/en", title: "T", dialogOpen: true, phase: "complete", submit: "none", missing: [], view: { section: null, category: null, photo: null, index: null, total: null, spot: null, fullscreen: false } });
-    expect(buildPageContext({ ...input, snapshot: base }, false)).toEqual({ language: "en", product: PRODUCT, path: "/en", title: "T", dialogOpen: false, phase: "not_opened", submit: "none", missing: ["name", "email", "consent"], view: { section: null, category: null, photo: null, index: null, total: null, spot: null, fullscreen: false } });
-    expect(buildPageContext(input)).toHaveProperty("form");
+    const view = { section: null, category: null, photo: null, index: null, total: null, spot: null, fullscreen: false };
+    const off = buildPageContext(input, false) as any;
+    expect(off).toEqual({
+      language: "en", product: PRODUCT, path: "/en", title: "T", section: null, view,
+      form: { phase: "complete", type: "question", missing: [], consent: true, visible: false, submit: "none" }, // no values, no flat values
+      dialogOpen: false, phase: "complete", submit: "none", missing: [],
+    });
+    expect(buildPageContext({ ...input, snapshot: { ...done, dialogOpen: true } }, false)).toMatchObject({ dialogOpen: true, form: { visible: true, phase: "complete" } });
+    expect(buildPageContext({ ...input, snapshot: base }, false)).toMatchObject({ phase: "not_opened", missing: ["name", "email", "phone", "message", "consent"], form: { phase: "not_opened" } });
+    const on = buildPageContext(input) as any;
+    expect(on.form.values).toMatchObject({ name: NAME, email: EMAIL });
+    expect(on.form).toMatchObject({ name: NAME, email: EMAIL }); // the deprecated flat values
   });
 
   it("the answer is a copy: changing it does not change the store", () => {
-    updateFormSnapshot({ everOpened: true, consentGiven: true, valid: true, name: "A", preferredSlots: [{ date: "2030-01-01", time: "10:00" }] });
+    updateFormSnapshot({ everOpened: true, consentGiven: true, valid: true, name: "A", preferredSlots: [{ date: "2030-01-01", time: "10:00" }], formMissing: [] });
     const a = buildPageContext({ language: "en", product: PRODUCT, path: "/", title: "t", snapshot: getFormSnapshot() }) as any;
     a.form.name = "changed";
     a.form.preferredSlots[0].time = "99:99";
+    a.form.missing.push("x");
+    a.form.values.name = "changed too";
     expect(getFormSnapshot()).toMatchObject({ name: "A", preferredSlots: [{ date: "2030-01-01", time: "10:00" }] });
   });
 });

@@ -8,7 +8,7 @@ import * as route from "@/app/api/lead/route";
 import { cleanText, LIMITS, MIN_FILL_MS, validateLead } from "@/lib/lead";
 import { handleLead, MAX_BODY_BYTES } from "@/lib/lead-handler";
 import { leadContext, readLeadContext, sha256 } from "@/lib/lead-context";
-import { FILE_NAME, storeLead, type LeadRecord } from "@/lib/leads";
+import { FILE_NAME, LEAD_SCHEMA_VERSION, storeLead, type LeadRecord } from "@/lib/leads";
 import { leadLimiter, RateLimiter } from "@/lib/rate-limit";
 import { FIXTURE_DIR, fixtures } from "./helpers";
 
@@ -25,7 +25,9 @@ const dir = () => path.join(tmp, `leads${n++}`);
 const baseEnv = (extra: Record<string, string> = {}) => ({ CONTENT_DIR: FIXTURE_DIR, CONTENT_PRODUCT: REF, LEADS_STORE: "file", LEADS_DIR: dir(), ...extra });
 const files = (env: Record<string, string>) => (fs.existsSync(env.LEADS_DIR) ? fs.readdirSync(env.LEADS_DIR) : []);
 
-const GOOD = { lang: "en", requestType: "question", name: "Test Person", email: "person@example.invalid", consent: true, website: "", elapsedMs: MIN_FILL_MS + 500 };
+/** The fixture seller has a time zone or not: the record has `timezone` only with one. */
+const OPTIONAL_TIMEZONE: string[] = fixtures.sellerJson().timezone ? ["timezone"] : [];
+const GOOD = { lang: "en", requestType: "question", name: "Test Person", email: "person@example.invalid", message: "A question about the car", consent: true, website: "", elapsedMs: MIN_FILL_MS + 500 };
 const UA = "TestBrowser/1.0 (UA-MARKER)";
 let ip = 0;
 const post = (body: unknown, headers: Record<string, string> = {}, env = baseEnv(), fetchImpl?: typeof fetch) =>
@@ -47,6 +49,7 @@ describe("validation and limits", () => {
     const r = validateLead({ ...GOOD, ...body });
     return r.ok ? {} : r.errors;
   };
+  const OFFER = { requestType: "offer", phone: "+00 000 000 000", amount: 800 };
 
   it("accepts a good body and a body with every field", () => {
     expect(validateLead(GOOD).ok).toBe(true);
@@ -57,8 +60,6 @@ describe("validation and limits", () => {
     expect(codes({ name: "" })).toEqual({ name: "required" });
     expect(codes({ name: "x".repeat(LIMITS.name + 1) })).toEqual({ name: "max" });
     expect(codes({ email: "nope" })).toEqual({ email: "email" });
-    expect(codes({ email: "" })).toEqual({ email: "required" });
-    expect(codes({ email: undefined })).toEqual({ email: "required" });
     expect(codes({ phone: "abc" })).toEqual({ phone: "phone" });
     expect(codes({ channel: "fax" })).toMatchObject({ channel: "invalid" });
     expect(codes({ message: "x".repeat(LIMITS.message + 1) })).toEqual({ message: "max" });
@@ -73,19 +74,77 @@ describe("validation and limits", () => {
     expect(JSON.stringify(await res.json())).not.toContain("secret-not-an-email");
   });
 
-  it("refuses unknown fields (the schema is strict), also the old agent source", () => {
-    expect(codes({ extra: 1 })).toEqual({ form: "invalid" });
-    expect(codes({ source: "agent" })).toEqual({ form: "invalid" });
-    expect(codes({ source: "form" })).toEqual({ form: "invalid" }); // the source is set by the server, never sent
+  it("a viewing, a test drive and a question need a phone number OR an e-mail address; what is given is always checked", () => {
+    const slots = [{ date: "2026-11-05", time: "10:00" }];
+    for (const body of [{ requestType: "question" }, { requestType: "viewing", preferredSlots: slots }, { requestType: "testdrive", preferredSlots: slots }]) {
+      expect(validateLead({ ...GOOD, ...body, email: undefined, phone: "+00 000 000 000" }).ok, JSON.stringify(body)).toBe(true); // phone only
+      expect(validateLead({ ...GOOD, ...body }).ok, JSON.stringify(body)).toBe(true); // e-mail only
+      expect(codes({ ...body, email: undefined })).toEqual({ email: "phoneOrEmail", phone: "phoneOrEmail" }); // neither: both fields say so
+      expect(codes({ ...body, email: "", phone: "" })).toEqual({ email: "phoneOrEmail", phone: "phoneOrEmail" });
+      expect(codes({ ...body, phone: "abc" })).toEqual({ phone: "phone" }); // a valid e-mail does not excuse a broken phone number
+      expect(codes({ ...body, email: "nope", phone: "+00 000 000 000" })).toEqual({ email: "email" }); // nor the other way round
+    }
   });
 
-  it("needs a request type of the registry", () => {
+  it("an offer needs name, phone and e-mail, and an amount", () => {
+    expect(validateLead({ ...GOOD, ...OFFER }).ok).toBe(true);
+    expect(codes({ ...OFFER, phone: undefined })).toEqual({ phone: "required" });
+    expect(codes({ ...OFFER, email: undefined })).toEqual({ email: "required" });
+    expect(codes({ ...OFFER, email: undefined, phone: undefined })).toEqual({ email: "required", phone: "required" });
+    expect(codes({ ...OFFER, amount: undefined })).toEqual({ amount: "required" });
+    expect(codes({ ...OFFER, amount: "abc" })).toEqual({ amount: "amount" });
+    expect(codes({ ...OFFER, amount: -5 })).toEqual({ amount: "amount" });
+    expect(codes({ requestType: "question", amount: 800 })).toEqual({ amount: "invalid" }); // only an offer has one
+  });
+
+  it("reads an amount like the reference site: a dot separates thousands, a comma the decimals", () => {
+    const amountOf = (amount: unknown) => {
+      const r = validateLead({ ...GOOD, ...OFFER, amount });
+      return r.ok ? r.data.amount : "refused";
+    };
+    expect(amountOf("50.000")).toBe(50000);
+    expect(amountOf("49500,5")).toBe(49500.5);
+    expect(amountOf("50 000")).toBe(50000);
+    expect(amountOf("50000")).toBe(50000);
+    expect(amountOf(50000)).toBe(50000);
+    expect(amountOf("")).toBe("refused"); // empty is "not given": an offer needs it
+    expect(amountOf("5o")).toBe("refused");
+  });
+
+  it("the question of a question request is required on the web and optional from the agent", () => {
+    expect(codes({ message: undefined })).toEqual({ message: "required" });
+    expect(codes({ message: "   " })).toEqual({ message: "required" });
+    expect(validateLead({ ...GOOD, message: undefined, source: "agent" }).ok).toBe(true);
+  });
+
+  it("source is \"form\" or \"agent\"; the agent's request may leave the times, the question and the amount out, but never name, contact or consent", () => {
+    const slots = [{ date: "2026-11-05", time: "10:00" }];
+    expect(validateLead({ ...GOOD, source: "form" }).ok).toBe(true);
+    expect(codes({ source: "robot" })).toMatchObject({ form: "invalid" });
+    expect(validateLead({ ...GOOD, requestType: "viewing", source: "agent" }).ok).toBe(true); // no slot
+    expect(codes({ requestType: "viewing" })).toEqual({ preferredSlots: "required" }); // the same from the web
+    expect(validateLead({ ...GOOD, ...OFFER, amount: undefined, source: "agent" }).ok).toBe(true); // no amount
+    expect(validateLead({ ...GOOD, requestType: "viewing", source: "agent", preferredSlots: slots }).ok).toBe(true); // what is given is checked like any other
+    expect(codes({ source: "agent", name: "" })).toEqual({ name: "required" });
+    expect(codes({ source: "agent", email: undefined })).toEqual({ email: "phoneOrEmail", phone: "phoneOrEmail" });
+    expect(codes({ source: "agent", consent: false })).toEqual({ consent: "consent" });
+    expect(codes({ ...OFFER, source: "agent", email: undefined })).toEqual({ email: "required" }); // an offer still needs both
+    expect(codes({ ...OFFER, source: "agent", amount: "abc" })).toEqual({ amount: "amount" }); // a given amount is checked
+  });
+
+  it("refuses unknown fields (the schema is strict)", () => {
+    expect(codes({ extra: 1 })).toEqual({ form: "invalid" });
+  });
+
+  it("needs a request type of the registry; testdrive is canonical and test_drive means the same", () => {
     expect(codes({ requestType: "booking" })).toMatchObject({ requestType: "invalid" });
     expect(codes({ requestType: undefined })).toMatchObject({ requestType: "invalid" });
-    for (const requestType of ["question", "offer"]) expect(validateLead({ ...GOOD, requestType }).ok, requestType).toBe(true);
+    for (const body of [{ requestType: "question" }, OFFER]) expect(validateLead({ ...GOOD, ...body }).ok, body.requestType).toBe(true);
     const slots = [{ date: "2026-11-05", time: "10:00" }];
-    for (const requestType of ["viewing", "test_drive"]) {
-      expect(validateLead({ ...GOOD, requestType, preferredSlots: slots }).ok, requestType).toBe(true);
+    for (const requestType of ["viewing", "testdrive", "test_drive"]) {
+      const r = validateLead({ ...GOOD, requestType, preferredSlots: slots });
+      expect(r.ok, requestType).toBe(true);
+      if (r.ok) expect(r.data.requestType).toBe(requestType === "viewing" ? "viewing" : "testdrive"); // canonical
       expect(codes({ requestType })).toEqual({ preferredSlots: "required" }); // these types need at least one slot
     }
     expect(codes({ requestType: "question", preferredSlots: slots })).toEqual({ preferredSlots: "invalid" }); // and the others take none
@@ -111,20 +170,24 @@ describe("validation and limits", () => {
 });
 
 describe("POST /api/lead", () => {
-  it("stores a good lead and answers { ok: true }", async () => {
+  it("stores a good lead and answers { ok: true, id } with the request number the stored record has", async () => {
     const env = baseEnv();
     const res = await post(GOOD, {}, env);
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ ok: true });
+    const body = (await res.json()) as { ok: boolean; id: string };
+    expect(body).toEqual({ ok: true, id: expect.stringMatching(/^[0-9A-F]{8}$/) });
     expect(res.headers.get("cache-control")).toBe("no-store");
     expect(files(env)).toHaveLength(1);
+    const record = JSON.parse(fs.readFileSync(path.join(env.LEADS_DIR, files(env)[0]), "utf8")) as LeadRecord;
+    expect(body.id).toBe(record.requestNumber);
+    expect(record.id.slice(0, 8).toUpperCase()).toBe(body.id);
   });
 
   it("swallows a honeypot hit: the same answer as a success, nothing stored", async () => {
     const env = baseEnv();
     const res = await post({ ...GOOD, website: "http://spam.example" }, {}, env);
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ ok: true });
+    expect(await res.json()).toEqual({ ok: true, id: expect.stringMatching(/^[0-9A-F]{8}$/) }); // a request number like any other: a bot cannot tell
     expect(files(env)).toEqual([]);
     const withoutDetails = await post({ website: "x" }, {}, env); // even a body that would fail validation
     expect(withoutDetails.status).toBe(200);
@@ -197,24 +260,25 @@ describe("the stored record", () => {
     const env = baseEnv();
     await post({ ...GOOD, phone: "+43 1 000", channel: "whatsapp", contactWindow: "evening", message: "Hello <b>there</b>" }, { "x-forwarded-for": "203.0.113.77" }, env);
     const { name, text, record } = read(env);
-    expect(Object.keys(record).sort()).toEqual(["channel", "consent", "consentTextSha256", "contactWindow", "email", "id", "lang", "message", "name", "phone", "product", "receivedAt", "requestType", "source", "userAgentSha256"]);
-    expect(record).toMatchObject({ product: REF, lang: "en", name: "Test Person", email: "person@example.invalid", phone: "+43 1 000", channel: "whatsapp", contactWindow: "evening", message: "Hello there", consent: true, source: "form" });
+    expect(Object.keys(record).sort()).toEqual([...OPTIONAL_TIMEZONE, "channel", "consent", "consentTextSha256", "consentVersion", "contactWindow", "createdAt", "delivery", "email", "id", "lang", "message", "name", "phone", "product", "requestNumber", "schemaVersion", "seller", "source", "type", "userAgentSha256"].sort());
+    expect(record).toMatchObject({ schemaVersion: LEAD_SCHEMA_VERSION, seller: fixtures.seller, product: "fixture-car", type: "question", lang: "en", name: "Test Person", email: "person@example.invalid", phone: "+43 1 000", channel: "whatsapp", contactWindow: "evening", message: "Hello there", consent: true, consentVersion: "unversioned", source: "form", delivery: { stored: true, store: "file", notified: false } });
     expect(record.id).toMatch(/^[0-9a-f-]{36}$/);
-    expect(record.receivedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    expect(record.requestNumber).toBe(record.id.slice(0, 8).toUpperCase());
+    expect(record.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     expect(record.consentTextSha256).toBe(sha256(fixtures.sellerJson().consentText.en));
     expect(record.userAgentSha256).toBe(sha256(UA));
     expect(text).not.toContain("203.0.113");
     expect(text).not.toContain("UA-MARKER");
     expect(text).not.toMatch(/<[a-z]/i);
     expect(name).toMatch(FILE_NAME);
-    expect(name).toBe(`${record.receivedAt.replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z")}-${record.id}.json`);
+    expect(name).toBe(`${record.createdAt.replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z")}-${record.id}.json`);
     expect(fs.statSync(path.join(env.LEADS_DIR, name)).mode & 0o777).toBe(0o600);
   });
 
   it("omits the optional fields that were not given", async () => {
     const env = baseEnv();
     await post(GOOD, {}, env);
-    expect(Object.keys(read(env).record).sort()).toEqual(["consent", "consentTextSha256", "contactWindow", "email", "id", "lang", "name", "product", "receivedAt", "requestType", "source", "userAgentSha256"]);
+    expect(Object.keys(read(env).record).sort()).toEqual([...OPTIONAL_TIMEZONE, "consent", "consentTextSha256", "consentVersion", "contactWindow", "createdAt", "delivery", "email", "id", "lang", "message", "name", "product", "requestNumber", "schemaVersion", "seller", "source", "type", "userAgentSha256"].sort()); // GOOD has a message and an e-mail only
   });
 
   it("stores the page language and the hash of the consent text shown in that language", async () => {
@@ -239,9 +303,9 @@ describe("the stored record", () => {
 
   it("stores the request type, and refuses a type the product does not offer (a car fixture without viewing settings)", async () => {
     const env = baseEnv();
-    await post({ ...GOOD, requestType: "offer" }, {}, env);
-    expect(read(env).record.requestType).toBe("offer");
-    for (const requestType of ["viewing", "test_drive"]) {
+    await post({ ...GOOD, requestType: "offer", phone: "+00 000 000 000", amount: "800" }, {}, env);
+    expect(read(env).record).toMatchObject({ type: "offer", amount: 800, currency: "EUR" });
+    for (const requestType of ["viewing", "testdrive", "test_drive"]) {
       const res = await post({ ...GOOD, requestType, preferredSlots: [{ date: "2026-11-05", time: "10:00" }] }, {}, env);
       expect(res.status, requestType).toBe(400);
       expect(await res.json()).toEqual({ ok: false, error: "invalid", errors: { requestType: "invalid" } });
@@ -331,7 +395,7 @@ describe("the webhook store", () => {
     expect(init.method).toBe("POST");
     expect(init.headers).toMatchObject({ "content-type": "application/json" });
     const sent = JSON.parse(String(init.body)) as LeadRecord;
-    expect(sent).toMatchObject({ source: "form", product: REF, email: "person@example.invalid", consent: true });
+    expect(sent).toMatchObject({ source: "form", seller: fixtures.seller, product: "fixture-car", delivery: { stored: true, store: "webhook", notified: false }, email: "person@example.invalid", consent: true });
     expect(JSON.stringify(sent)).not.toContain("203.0.113");
   });
 

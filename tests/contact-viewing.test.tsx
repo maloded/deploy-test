@@ -57,6 +57,7 @@ const reply = (status: number, body: unknown = { ok: status === 200 }) => {
 const fillPerson = () => {
   type(field("name"), "Test Person");
   type(field("email"), "person@example.invalid");
+  type(field("message"), "A question about the house"); // a question needs it on the web
   click(field("consent"));
 };
 const chooseViewing = () => type(field("requestType"), "viewing");
@@ -148,6 +149,8 @@ describe("the slots", () => {
     type(timeSelect(0), "10:00");
     type(field("requestType"), "offer");
     expect(form().querySelector(".contact__slots")).toBeNull();
+    type(field("phone"), "+00 000 000 000"); // an offer needs phone and e-mail, and an amount inside the product's range
+    type(field("amount"), "500.000");
     fillPerson();
     await submit();
     expect(sent(f)).not.toHaveProperty("preferredSlots");

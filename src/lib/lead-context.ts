@@ -11,6 +11,7 @@ import { fields as house } from "../product-types/house/fields.ts";
 import { fields as watch } from "../product-types/watch/fields.ts";
 import { contactWindowsOf, sellerZone, type ContactWindow } from "./contact-windows.ts";
 import { isLanguage, type Language } from "./languages.ts";
+import { offerBounds, type OfferBounds } from "./offer-amount.ts";
 import { allowedRequestTypes, type RequestType } from "./request-types.ts";
 import { checkViewing, mergeViewing, missingViewingFields, type ViewingConfig, type ViewingSettings } from "./viewing.ts";
 
@@ -37,6 +38,12 @@ export type LeadContext = {
   viewing: ViewingConfig | null;
   /** Language -> SHA-256 (hex) of the consent text shown in that language (a missing translation shows the default's). */
   consent: Record<string, string>;
+  /** The seller's label of the consent text's version (seller.json `consentVersion`); "unversioned" when it has none. */
+  consentVersion?: string;
+  /** The currency of the product's price (ISO 4217): the currency of an offer's amount. */
+  currency?: string;
+  /** The range of the amount an offer request may name; null when the product has no price to go by and gives none. */
+  offer?: OfferBounds | null;
 };
 
 /** SHA-256 of a text, hex. */
@@ -50,6 +57,7 @@ export function readLeadContext(env: Env = process.env, projectRoot: string = pr
     languages?: unknown[];
     defaultLanguage?: unknown;
     consentText?: Record<string, string>;
+    consentVersion?: string;
     viewing?: ViewingSettings;
     timezone?: string;
     contactWindows?: ContactWindow[];
@@ -63,7 +71,7 @@ export function readLeadContext(env: Env = process.env, projectRoot: string = pr
     consent[lang] = sha256(text);
   }
   if (languages.length === 0) throw new Error("seller.json offers no supported language");
-  const productFile = JSON.parse(fs.readFileSync(/*turbopackIgnore: true*/ path.join(root, product, "product.json"), "utf8")) as { productType?: string; viewing?: ViewingSettings; title?: Record<string, string> };
+  const productFile = JSON.parse(fs.readFileSync(/*turbopackIgnore: true*/ path.join(root, product, "product.json"), "utf8")) as { productType?: string; viewing?: ViewingSettings; title?: Record<string, string>; price?: { amount?: number; currency?: string }; offerAmount?: { min?: number; max?: number } };
   const merged = mergeViewing(seller.viewing, productFile.viewing);
   // (the loader refuses an incomplete or invalid merge when the page is built; here it simply means "no viewing")
   const viewing = merged && missingViewingFields(merged).length === 0 && checkViewing(merged).length === 0 ? (merged as ViewingConfig) : null;
@@ -72,7 +80,7 @@ export function readLeadContext(env: Env = process.env, projectRoot: string = pr
   const timezone = sellerZone(viewing?.timezone, seller.timezone);
   const defaultLanguage = isLanguage(seller.defaultLanguage) && languages.includes(seller.defaultLanguage) ? seller.defaultLanguage : languages[0];
   const productTitle = productFile.title?.[defaultLanguage];
-  return { product, languages, ...(productTitle ? { productTitle } : {}), ...(timezone ? { timezone } : {}), contactWindows: contactWindowsOf(seller), defaultLanguage, requestTypes: allowedRequestTypes(listed, viewing !== null), viewing, consent };
+  return { product, languages, ...(productTitle ? { productTitle } : {}), ...(timezone ? { timezone } : {}), contactWindows: contactWindowsOf(seller), defaultLanguage, requestTypes: allowedRequestTypes(listed, viewing !== null), viewing, consent, consentVersion: seller.consentVersion ?? "unversioned", ...(productFile.price?.currency ? { currency: productFile.price.currency } : {}), offer: offerBounds(productFile.price?.amount ?? 0, productFile.offerAmount) };
 }
 
 /** The value next.config.ts inlines as LEAD_CONTEXT; empty when the content cannot be read here. */

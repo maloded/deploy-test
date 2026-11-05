@@ -42,6 +42,7 @@ const check = (el: HTMLInputElement) => act(() => void el.click());
 const fillValid = () => {
   type(field("name"), "Test Person");
   type(field("email"), "person@example.invalid");
+  type(field("message"), "A question about the car"); // the default type is a question: the web form needs it
   check(field("consent"));
 };
 
@@ -65,6 +66,7 @@ describe("form snapshot store", () => {
     type(field("phone"), "+43 1 000 000");
     type(field("channel"), "phone");
     type(field("contactWindow"), "morning"); // the best-time text field became a contact window select
+    type(field("message"), "A question"); // a question is required on the web
     check(field("consent"));
     expect(getFormSnapshot()).toMatchObject({ email: "person@example.invalid", phone: "+43 1 000 000", preferredChannel: "phone", contactWindow: "morning", consentGiven: true, valid: true, requestType: "question" });
     type(field("email"), "not an address");

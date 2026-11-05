@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { formatMoney, formatPrice } from "@/lib/i18n";
 import { roleLine, spokenName } from "@/lib/avatar-view";
+import { getFormSnapshot } from "@/lib/form-snapshot";
 import { buildPageContext } from "@/lib/agent-context";
 import { ogLocale } from "@/lib/social-meta";
 import { AI_DRAFT_LANGUAGES, ui } from "@/lib/ui-strings";
@@ -32,7 +33,7 @@ describe("the page metadata of tr and bg", () => {
   });
 
   it("reports the page language in page_context", () => {
-    const snapshot = { dialogOpen: false, submit: "idle", missing: [], fields: {} } as never;
+    const snapshot = getFormSnapshot();
     for (const language of ["tr", "bg"]) expect(buildPageContext({ language, product: "p", path: `/${language}`, title: "t", snapshot }).language).toBe(language);
   });
 });

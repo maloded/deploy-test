@@ -25,6 +25,36 @@
       "bg": "с ДДС"
     }
   },
+  "offerAmount": {
+    "min": 30000,
+    "max": 200000
+  },
+  "viewing": {
+    "address": {
+      "de": "Die Adresse nennen wir bei der Terminbestätigung.",
+      "en": "We will give you the address when we confirm the appointment.",
+      "tr": "Adresi randevuyu onaylarken size bildireceğiz.",
+      "bg": "Адреса ще съобщим при потвърждаването на часа."
+    },
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri",
+      "sat"
+    ],
+    "from": "10:00",
+    "to": "18:00",
+    "durationMinutes": 30,
+    "timezone": "Europe/Vienna",
+    "testDriveNotes": {
+      "de": "Führerschein und Ausweis mitbringen",
+      "en": "Please bring your driving licence and ID.",
+      "tr": "Lütfen ehliyetinizi ve kimliğinizi getirin.",
+      "bg": "Моля, носете шофьорска книжка и документ за самоличност."
+    }
+  },
   "hero": {
     "eyebrow": [
       {

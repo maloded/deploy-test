@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ANYTIME } from "@/lib/contact-windows";
+import { missingKeysOf } from "@/lib/form-context";
 import { FIELDS, validateLead, type LeadErrors, type LeadField } from "@/lib/lead";
 import { updateFormSnapshot } from "@/lib/form-snapshot";
+import { amountProblem, parseAmount, type OfferBounds } from "@/lib/offer-amount";
 import { DEFAULT_REQUEST_TYPE, needsSlots, type RequestType } from "@/lib/request-types";
 import { MAX_SLOTS, slotProblem, type SlotProblem, type ViewingConfig } from "@/lib/viewing";
 import type { Language } from "@/lib/schema";
@@ -22,6 +24,8 @@ export type Values = {
   name: string;
   email: string;
   phone: string;
+  /** The amount of an offer, as typed ("50.000", "49500,5"); sent only with an offer request. */
+  amount: string;
   channel: string;
   /** The code of a contact window (contact-windows.ts); only sent when the preferred channel is not e-mail. */
   contactWindow: string;
@@ -30,7 +34,7 @@ export type Values = {
   /** The honeypot. */
   website: string;
 };
-const EMPTY: Values = { requestType: DEFAULT_REQUEST_TYPE, slots: [{ date: "", time: "" }], name: "", email: "", phone: "", channel: "", contactWindow: ANYTIME, message: "", consent: false, website: "" };
+const EMPTY: Values = { requestType: DEFAULT_REQUEST_TYPE, slots: [{ date: "", time: "" }], name: "", email: "", phone: "", amount: "", channel: "", contactWindow: ANYTIME, message: "", consent: false, website: "" };
 
 /** The problem of each slot row, or null: blank rows are ignored; a half-filled row, or a row the slot rules refuse, is an error of that row. */
 function slotRowErrors(rows: SlotInput[], viewing: ViewingConfig): (SlotError | null)[] {
@@ -45,13 +49,23 @@ function slotRowErrors(rows: SlotInput[], viewing: ViewingConfig): (SlotError | 
 /** The window that is sent and shown to the agent: the select is hidden for e-mail, and then the answer is "anytime". */
 export const effectiveWindow = (v: Pick<Values, "channel" | "contactWindow">): string => (v.channel === "email" ? ANYTIME : v.contactWindow);
 
-/** The body the lead schema checks (the submit and the snapshot build it the same way). */
-function leadBody(values: Values, lang: Language, viewing: ViewingConfig | null, elapsedMs: number) {
+/**
+ * The body the lead schema checks (the submit and the snapshot build it the same way). `agent`: the voice assistant led the visitor to the form during a call, so the
+ * request says so (source "agent"); the amount goes only with an offer, as a number when it reads as one.
+ */
+function leadBody(values: Values, lang: Language, viewing: ViewingConfig | null, elapsedMs: number, agent: boolean) {
   const wantsSlots = needsSlots(values.requestType) && viewing !== null;
   const complete = (wantsSlots ? values.slots : []).filter((s) => s.date && s.time);
-  const { slots: _slots, ...fields } = values;
+  const { slots: _slots, amount, ...fields } = values;
   void _slots;
-  return { wantsSlots, body: { ...fields, contactWindow: effectiveWindow(values), lang, ...(wantsSlots ? { preferredSlots: complete } : {}), elapsedMs } };
+  const offered = values.requestType === "offer" && amount.trim() !== "" ? { amount: Number.isFinite(parseAmount(amount)) ? parseAmount(amount) : amount } : {};
+  return { wantsSlots, body: { ...fields, ...offered, source: agent ? ("agent" as const) : ("form" as const), contactWindow: effectiveWindow(values), lang, ...(wantsSlots ? { preferredSlots: complete } : {}), elapsedMs } };
+}
+
+/** The amount outside the product's range is a problem the shared schema does not know (the range is the product's): the one more error the form checks. */
+function rangeErrors(body: { amount?: unknown }, type: RequestType, offer: OfferBounds | null): LeadErrors {
+  if (type !== "offer" || body.amount === undefined) return {};
+  return typeof body.amount === "number" && amountProblem(body.amount, offer) !== null ? { amount: "amount" } : {};
 }
 
 /** Where focus goes after a submit: the error summary, or the success panel. */
@@ -62,7 +76,7 @@ export type ContactModel = ReturnType<typeof useContactModel>;
 /**
  * The form model of the contact dialog. The values are only here (in this component's state): the page API on section#contact (open and close) has no way to read or write them.
  */
-export function useContactModel({ lang, viewing, onSubmitted }: { lang: Language; viewing: ViewingConfig | null; onSubmitted: () => void }) {
+export function useContactModel({ lang, viewing, offer, onSubmitted }: { lang: Language; viewing: ViewingConfig | null; /** The range of the amount an offer may name (the product's); null: no range to check. */ offer: OfferBounds | null; onSubmitted: () => void }) {
   const [values, setValues] = useState<Values>(EMPTY);
   const [errors, setErrors] = useState<LeadErrors>({});
   const [status, setStatus] = useState<Status>("idle");
@@ -71,6 +85,8 @@ export function useContactModel({ lang, viewing, onSubmitted }: { lang: Language
   const [slotErrors, setSlotErrors] = useState<(SlotError | null)[]>([]);
   /** The type of the request that was sent last (the success text differs for a viewing). */
   const [sentType, setSentType] = useState<RequestType | null>(null);
+  /** The visitor was led to the form by the voice assistant during a call: the request says so and a few fields are optional. Set by the page API (open), cleared by the visitor opening the form themselves and after a send. */
+  const [agent, setAgent] = useState(false);
   const startedAt = useRef<number | null>(null);
   const sending = useRef(false);
   const tick = useRef(0);
@@ -80,7 +96,7 @@ export function useContactModel({ lang, viewing, onSubmitted }: { lang: Language
   /** An edit by the visitor: the outcome of the last send no longer describes the form. */
   const edited = useCallback(() => {
     frozen.current = false;
-    updateFormSnapshot({ submit: "none" });
+    updateFormSnapshot({ submit: "none", status: "none", requestId: null });
   }, []);
 
   const set = useCallback((name: keyof Values, value: string | boolean) => {
@@ -122,13 +138,16 @@ export function useContactModel({ lang, viewing, onSubmitted }: { lang: Language
       updateFormSnapshot({ language: lang });
       return;
     }
-    const { wantsSlots, body } = leadBody(values, lang, viewing, 0);
-    // one rule set: validateLead (now listing every blocking field at once) plus slotRowErrors for the slot rows; valid and missing both come from it
+    const { wantsSlots, body } = leadBody(values, lang, viewing, 0, agent);
+    // one rule set: validateLead (listing every blocking field at once) plus slotRowErrors for the slot rows and the product's range for the amount; valid and missing all come from it
     const checked = validateLead(body);
-    const blocking = new Set<string>(checked.ok ? [] : Object.keys(checked.errors));
+    const blocking = new Set<string>([...(checked.ok ? [] : Object.keys(checked.errors)), ...Object.keys(rangeErrors(body, values.requestType, offer))]);
     if (wantsSlots && slotRowErrors(values.slots, viewing!).some(Boolean)) blocking.add("preferredSlots");
     const valid = blocking.size === 0;
     const missing = FIELDS.filter((f) => blocking.has(f));
+    // the same blocking fields in the agent's words (form.missing): phone_or_email when both contact fields are empty, slots, amount ...
+    const codes = checked.ok ? {} : checked.errors;
+    const formMissing = missingKeysOf(blocking, { email: codes.email, phone: codes.phone });
     updateFormSnapshot({
       requestType: values.requestType,
       name: values.name.trim(),
@@ -137,24 +156,27 @@ export function useContactModel({ lang, viewing, onSubmitted }: { lang: Language
       preferredChannel: values.channel,
       contactWindow: effectiveWindow(values),
       message: values.message.trim(),
+      amount: values.requestType === "offer" ? values.amount.trim() : "",
       preferredSlots: values.slots.filter((s) => s.date && s.time).map((s) => ({ date: s.date, time: s.time })),
       language: lang,
       consentGiven: values.consent,
       valid,
       missing,
+      formMissing,
     });
-  }, [values, lang, viewing]);
+  }, [values, lang, viewing, offer, agent]);
 
   const submit = useCallback(
     async () => {
       if (sending.current) return;
       const focus = (target: Attention["target"]) => setAttention({ target, n: ++tick.current });
-      const { wantsSlots, body } = leadBody(values, lang, viewing, startedAt.current === null ? 0 : Date.now() - startedAt.current);
+      const { wantsSlots, body } = leadBody(values, lang, viewing, startedAt.current === null ? 0 : Date.now() - startedAt.current, agent);
       const rowErrors = wantsSlots ? slotRowErrors(values.slots, viewing!) : [];
       const checked = validateLead(body);
+      const range = rangeErrors(body, values.requestType, offer);
       setSlotErrors(rowErrors);
-      if (!checked.ok || rowErrors.some(Boolean)) {
-        setErrors(checked.ok ? { preferredSlots: "invalid" } : checked.errors);
+      if (!checked.ok || rowErrors.some(Boolean) || Object.keys(range).length > 0) {
+        setErrors({ ...(checked.ok ? (rowErrors.some(Boolean) ? { preferredSlots: "invalid" as const } : {}) : checked.errors), ...range });
         setFailure(null);
         setStatus("error");
         focus("summary");
@@ -164,16 +186,21 @@ export function useContactModel({ lang, viewing, onSubmitted }: { lang: Language
       setErrors({});
       setFailure(null);
       setStatus("sending");
+      updateFormSnapshot({ status: "sending" }); // the agent can see the request is in flight
       let next: Failure | "ok" | "fields" = "unavailable";
       let serverErrors: LeadErrors = {};
+      let requestId: string | null = null;
       try {
         const res = await fetch("/api/lead", {
           method: "POST",
           headers: { "content-type": "application/json", "x-lead-request": "1" },
           body: JSON.stringify(body),
         });
-        const json = (await res.json().catch(() => null)) as { ok?: boolean; errors?: LeadErrors } | null;
-        if (res.ok && json?.ok === true) next = "ok";
+        const json = (await res.json().catch(() => null)) as { ok?: boolean; id?: unknown; errors?: LeadErrors } | null;
+        if (res.ok && json?.ok === true) {
+          next = "ok";
+          if (typeof json.id === "string") requestId = json.id;
+        }
         else if (res.status === 422) next = "tooFast";
         else if (res.status === 429) next = "rate";
         else if (res.status === 400) {
@@ -187,7 +214,8 @@ export function useContactModel({ lang, viewing, onSubmitted }: { lang: Language
       if (next === "ok") {
         setSentType(values.requestType);
         frozen.current = true;
-        updateFormSnapshot({ submit: "sent" });
+        updateFormSnapshot({ submit: "sent", status: "sent", requestId });
+        setAgent(false);
         setValues(EMPTY);
         setSlotErrors([]);
         startedAt.current = null;
@@ -195,17 +223,34 @@ export function useContactModel({ lang, viewing, onSubmitted }: { lang: Language
         focus("success");
         onSubmitted();
       } else {
-        updateFormSnapshot({ submit: "failed" });
+        updateFormSnapshot({ submit: "failed", status: "error" });
         if (next === "fields") setErrors(serverErrors);
         setFailure(next === "fields" ? null : next);
         setStatus("error");
         focus("summary");
       }
     },
-    [values, lang, viewing, onSubmitted],
+    [values, lang, viewing, offer, agent, onSubmitted],
   );
 
-  return { values, errors, status, failure, attention, slotErrors, sentType, viewing, set, setPreset, setSlot, addSlot, removeSlot, submit };
+  /**
+   * A new request: what a request left behind is gone (the sent state and its number, the typed values, the errors, the consent) and the next send starts afresh. The agent
+   * asking for another kind of request after a send does this (form-context.ts contactNavResets), as does a visitor's link; the same kind again does not.
+   */
+  const reset = useCallback(() => {
+    frozen.current = false;
+    startedAt.current = null;
+    sending.current = false;
+    setValues({ ...EMPTY, slots: [{ date: "", time: "" }] }); // a fresh object: the snapshot effect runs again
+    setErrors({});
+    setFailure(null);
+    setSlotErrors([]);
+    setSentType(null);
+    setStatus("idle");
+    updateFormSnapshot({ submit: "none", status: "none", requestId: null });
+  }, []);
+
+  return { values, errors, status, failure, attention, slotErrors, sentType, viewing, offer, agent, setAgent, reset, set, setPreset, setSlot, addSlot, removeSlot, submit };
 }
 
 export type { LeadField };

@@ -5,6 +5,7 @@ import {
   bookingWindow,
   checkViewing,
   instantOf,
+  isoWithOffset,
   isTime,
   isTimeZone,
   isYmd,
@@ -253,5 +254,26 @@ describe("a list of slots", () => {
     expect(slotsProblem("x", CONFIG, now)).toBe("count");
     expect(slotsProblem([one, one], CONFIG, now)).toBe("duplicate");
     expect(slotsProblem([one, { date: "2026-06-12", time: "10:00" }], CONFIG, now)).toBe("day");
+  });
+});
+
+describe("isoWithOffset", () => {
+  it("is the seller-local date and time as ISO 8601 with the zone's UTC offset, following daylight saving", () => {
+    expect(isoWithOffset("2026-01-06", "10:00", "Europe/Vienna")).toBe("2026-01-06T10:00:00+01:00");
+    expect(isoWithOffset("2026-06-11", "10:00", "Europe/Vienna")).toBe("2026-06-11T10:00:00+02:00");
+    expect(isoWithOffset("2026-03-29", "01:30", "Europe/Vienna")).toBe("2026-03-29T01:30:00+01:00"); // the night the clocks go forward: before ...
+    expect(isoWithOffset("2026-03-29", "03:00", "Europe/Vienna")).toBe("2026-03-29T03:00:00+02:00"); // ... and after
+    expect(isoWithOffset("2026-10-25", "02:30", "Europe/Vienna")).toBe("2026-10-25T02:30:00+01:00"); // repeated hour: the later one, like instantOf
+    expect(isoWithOffset("2026-01-15", "09:00", "America/New_York")).toBe("2026-01-15T09:00:00-05:00");
+    expect(isoWithOffset("2026-07-15", "09:00", "America/New_York")).toBe("2026-07-15T09:00:00-04:00");
+    expect(isoWithOffset("2026-06-11", "12:00", "Asia/Kolkata")).toBe("2026-06-11T12:00:00+05:30"); // a zone with a half-hour offset
+    expect(isoWithOffset("2026-06-11", "12:00", "UTC")).toBe("2026-06-11T12:00:00+00:00");
+  });
+
+  it("is the same instant as instantOf says, and null for a local time that does not exist", () => {
+    for (const [date, time, zone] of [["2026-06-11", "10:00", "Europe/Vienna"], ["2026-01-06", "23:30", "America/New_York"], ["2026-12-31", "00:00", "Asia/Kolkata"]] as const) {
+      expect(Date.parse(isoWithOffset(date, time, zone)!), `${date} ${time} ${zone}`).toBe(instantOf(date, time, zone));
+    }
+    expect(isoWithOffset("2026-03-29", "02:30", "Europe/Vienna")).toBeNull(); // the skipped hour
   });
 });

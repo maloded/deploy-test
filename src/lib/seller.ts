@@ -144,6 +144,8 @@ export const sellerShape = {
   theme: z.string().min(1),
   /** The seller is the data controller: this is the consent text of the contact form, per language. */
   consentText: localizedSchema,
+  /** Optional label of the consent text's version (letters, digits, dashes, for example "2026-11-03"): stored with every request next to the text's hash; change it when the text changes. */
+  consentVersion: z.string().regex(/^[0-9a-z][0-9a-z-]{0,23}$/, "lowercase letters, digits and dashes, at most 24 characters").optional(),
   /** Optional viewing settings, the default for the seller's products (a product may override single fields). */
   viewing: viewingSchema.optional(),
   /** Optional IANA time zone of the seller (for example "Europe/Vienna"): the zone of the contact window hint and of the times in the messages to the seller when there are no viewing settings. */
@@ -210,6 +212,7 @@ export const SELLER_FIELDS = [
   { key: "defaultLanguage", label: { en: "Default language", de: "Standardsprache", tr: "Varsayılan dil", bg: "Език по подразбиране" }, required: true, type: "language" },
   { key: "theme", label: { en: "Default theme", de: "Standard-Theme", tr: "Varsayılan tema", bg: "Тема по подразбиране" }, required: true, type: "theme" },
   { key: "consentText", label: { en: "Consent text of the contact form", de: "Einwilligungstext des Kontaktformulars", tr: "İletişim formunun onay metni", bg: "Текст на съгласието в контактната форма" }, required: true, type: "localized" },
+  { key: "consentVersion", label: { en: "Version label of the consent text", de: "Versionsbezeichnung des Einwilligungstexts", tr: "Onay metninin sürüm etiketi", bg: "Етикет на версията на текста на съгласието" }, required: false, type: "text" },
   { key: "viewing", label: { en: "Viewing settings (default)", de: "Besichtigungseinstellungen (Standard)", tr: "Randevu ayarları (varsayılan)", bg: "Настройки за оглед (по подразбиране)" }, required: false, type: "viewing" },
   { key: "timezone", label: { en: "Time zone (IANA, for example Europe/Vienna)", de: "Zeitzone (IANA, zum Beispiel Europe/Vienna)", tr: "Saat dilimi (IANA, örneğin Europe/Vienna)", bg: "Часова зона (IANA, например Europe/Vienna)" }, required: false, type: "timezone" },
   { key: "contactWindows", label: { en: "Contact windows (override of the defaults)", de: "Erreichbarkeitsfenster (überschreibt die Standardwerte)", tr: "Ulaşılabilirlik pencereleri (varsayılanları geçersiz kılar)", bg: "Периоди за връзка (заменят стандартните)" }, required: false, type: "contactWindows" },

@@ -1,6 +1,6 @@
 import { ANYTIME, DEFAULT_CONTACT_WINDOWS, windowLabel, zoneCity, localStamp, type ContactWindow } from "./contact-windows";
 import type { Language } from "./languages";
-import { languageEntry } from "./languages";
+import { languageEntry, localeOf } from "./languages";
 import type { LeadRecord } from "./leads";
 import { REQUEST_TYPES } from "./request-types";
 import type { TelegramDetail } from "./telegram-config";
@@ -20,6 +20,11 @@ export const OWNER_LABELS = {
   channel: { en: "Preferred channel", de: "Bevorzugter Kanal", tr: "Tercih ettiğiniz iletişim kanalı", bg: "Предпочитан канал за връзка" },
   contactWindow: { en: "Contact window", de: "Erreichbarkeit", tr: "Ulaşılabilirlik", bg: "Достъпност за връзка" },
   message: { en: "Message", de: "Nachricht", tr: "Mesaj", bg: "Съобщение" },
+  source: { en: "Source", de: "Quelle", tr: "Kaynak", bg: "Източник" },
+  sourceForm: { en: "Form (website)", de: "Formular (Website)", tr: "Form (web sitesi)", bg: "Формуляр (уебсайт)" },
+  sourceAgent: { en: "Sofia (voice agent)", de: "Sofia (Agent)", tr: "Sofia (sesli asistan)", bg: "София (гласов агент)" },
+  amount: { en: "Offered amount", de: "Angebotener Betrag", tr: "Teklif edilen tutar", bg: "Предложена сума" },
+  amountInCall: { en: "Offered amount: to be agreed in the call", de: "Angebotener Betrag: im Gespräch mit Sofia", tr: "Teklif edilen tutar: görüşmede belirlenecek", bg: "Предложена сума: ще се уточни в разговора" },
   slots: { en: "Preferred times (seller's local time)", de: "Wunschtermine (Ortszeit des Verkäufers)", tr: "Tercih edilen zamanlar (satıcının yerel saati)", bg: "Предпочитани часове (местно време на продавача)" },
   time: { en: "Received", de: "Eingegangen", tr: "Alındı", bg: "Получено" },
   hint: { en: "Details: see your lead store.", de: "Einzelheiten: siehe Ihr Anfragenspeicher.", tr: "Ayrıntılar: talep kayıt deponuza bakın.", bg: "Подробности: вижте хранилището си със запитвания." },
@@ -42,13 +47,26 @@ export type OwnerContext = { lang: Language; windows?: readonly ContactWindow[];
 
 /** "2026-06-10 12:05 (Wien) \u00b7 10:05 UTC" with the zone stored in the record; "2026-06-10 10:05 UTC" without one. */
 function receivedLine(record: LeadRecord, lang: Language): string {
-  const utc = `${record.receivedAt.slice(0, 10)} ${record.receivedAt.slice(11, 16)} UTC`;
+  const utc = `${record.createdAt.slice(0, 10)} ${record.createdAt.slice(11, 16)} UTC`;
   if (!record.timezone) return utc;
-  return `${localStamp(record.receivedAt, record.timezone)} (${zoneCity(record.timezone, lang)}) \u00b7 ${record.receivedAt.slice(11, 16)} UTC`;
+  return `${localStamp(record.createdAt, record.timezone)} (${zoneCity(record.timezone, lang)}) \u00b7 ${record.createdAt.slice(11, 16)} UTC`;
 }
 
 /** The title of the product followed by its reference in brackets; just the reference when the title is unknown. */
-const productLine = (record: LeadRecord, title: string | undefined): string => (title && title !== record.product ? `${title} (${record.product})` : record.product);
+const productLine = (record: LeadRecord, title: string | undefined): string => {
+  const reference = `${record.seller}/${record.product}`;
+  return title && title !== reference ? `${title} (${reference})` : reference;
+};
+
+/** An amount in the product's currency, in the seller's language ("53.000 €", "€53,000"); whole numbers without decimals. */
+function amountText(record: LeadRecord, lang: Language): string {
+  const amount = record.amount as number;
+  try {
+    return new Intl.NumberFormat(localeOf(lang), { style: "currency", currency: record.currency ?? "EUR", maximumFractionDigits: Number.isInteger(amount) ? 0 : 2 }).format(amount);
+  } catch {
+    return `${amount} ${record.currency ?? ""}`.trim();
+  }
+}
 
 /** The label with its hours, never the raw code (an unknown code reads as the first window, "anytime"). */
 function windowText(record: LeadRecord, owner: OwnerContext): string {
@@ -68,17 +86,20 @@ export function ownerMessage(record: LeadRecord, detail: TelegramDetail, owner: 
   const l = (key: keyof typeof OWNER_LABELS) => OWNER_LABELS[key][lang];
   const lines = [
     `${l("title")} #${requestNumber(record.id)}`,
-    `${l("type")}: ${REQUEST_TYPES[record.requestType].label[lang]}`,
+    `${l("type")}: ${REQUEST_TYPES[record.type].label[lang]}`,
+    `${l("source")}: ${l(record.source === "agent" ? "sourceAgent" : "sourceForm")}`,
     `${l("product")}: ${productLine(record, ctx.productTitle)}`,
     `${l("pageLanguage")}: ${languageEntry(record.lang).name}`,
   ];
   if (detail === "full") {
-    lines.push(`${l("name")}: ${record.name}`, `${l("email")}: ${record.email}`);
+    lines.push(`${l("name")}: ${record.name}`);
+    if (record.email) lines.push(`${l("email")}: ${record.email}`);
     if (record.phone) lines.push(`${l("phone")}: ${record.phone}`);
     if (record.channel) lines.push(`${l("channel")}: ${l(CHANNEL_LABEL[record.channel as keyof typeof CHANNEL_LABEL] ?? "channelEmail")}`);
     lines.push(`${l("contactWindow")}: ${windowText(record, ctx)}`);
+    if (record.type === "offer") lines.push(record.amount !== undefined ? `${l("amount")}: ${amountText(record, lang)}` : l("amountInCall"));
     if (record.message) lines.push(`${l("message")}: ${Array.from(record.message).slice(0, OWNER_MESSAGE_MAX).join("")}`);
-    if (record.preferredSlots?.length) lines.push(`${l("slots")}:`, ...record.preferredSlots.map((s) => `- ${s.date} ${s.time}`));
+    if (record.slots?.length) lines.push(`${l("slots")}:`, ...record.slots.map((s) => `- ${s.date} ${s.time}`));
   }
   lines.push(`${l("time")}: ${receivedLine(record, lang)}`);
   if (detail === "short") lines.push(l("hint"));

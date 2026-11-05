@@ -24,7 +24,7 @@ const PATHS: Record<RequestType | "mail" | "phone", React.ReactNode> = {
       <path d="M4 10h16M8.5 3.5v4M15.5 3.5v4" />
     </>
   ),
-  test_drive: (
+  testdrive: (
     <>
       <circle cx="12" cy="12" r="8" />
       <circle cx="12" cy="12" r="2" />

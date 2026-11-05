@@ -1,9 +1,12 @@
 import { DEFAULT_CONTACT_WINDOWS, isWindowCode } from "./contact-windows";
 import { leadContext } from "./lead-context";
 import { MIN_FILL_MS, validateLead } from "./lead";
+import { randomUUID } from "node:crypto";
+import { amountProblem } from "./offer-amount";
 import { needsSlots } from "./request-types";
 import { slotsProblem } from "./viewing";
-import { buildRecord, checkDelivery, LeadStoreError, notifyLead, storeLead } from "./leads";
+import { buildRecord, checkDelivery, LeadStoreError, markNotified, notifyLead, storeKindOf, storeLead } from "./leads";
+import { requestNumber } from "./owner-message";
 import { leadLimiter } from "./rate-limit";
 
 /** The largest body accepted: the longest message plus every other field is far below this. */
@@ -36,7 +39,7 @@ function sameOrigin(request: Request): boolean {
  * POST /api/lead. In order: same-origin and custom header (403), JSON content type (415), rate limit (429), body size
  * (413), JSON (400), honeypot (a silent 200 that stores nothing), the shared schema (400 with one code per field), the
  * minimum fill time (422), the site context (503), the store (503 when none works). Only a stored lead answers 200 with
- * `{ ok: true }`; a notification to the seller's chat (LEADS_NOTIFY) comes after that and never changes the answer. Nothing about the visitor is logged.
+ * `{ ok: true, id }` (the request number); a notification to the seller's chat (LEADS_NOTIFY) comes after that and never changes the answer. Nothing about the visitor is logged.
  * `env` and `fetchImpl` are for tests.
  */
 export async function handleLead(request: Request, env: Record<string, string | undefined> = process.env, fetchImpl: typeof fetch = fetch): Promise<Response> {
@@ -59,7 +62,7 @@ export async function handleLead(request: Request, env: Record<string, string | 
 
   // the honeypot: a bot fills every field. It gets the same answer as a success and nothing is stored.
   const trap = (raw as Record<string, unknown>).website;
-  if (typeof trap === "string" && trap.trim() !== "") return json(200, { ok: true });
+  if (typeof trap === "string" && trap.trim() !== "") return json(200, { ok: true, id: requestNumber(randomUUID()) }); // a request number like any other, so that a bot cannot tell
 
   const checked = validateLead(raw);
   if (!checked.ok) return json(400, { ok: false, error: "invalid", errors: checked.errors });
@@ -76,13 +79,20 @@ export async function handleLead(request: Request, env: Record<string, string | 
   }
 
   // viewing and test drive: every slot is checked again against the seller's settings (allowed day and hours, a future
-  // day inside the horizon, the seller's calendar, daylight saving). One generic answer whatever is wrong.
-  if (needsSlots(checked.data.requestType) && (!context.viewing || slotsProblem(checked.data.preferredSlots, context.viewing, new Date()) !== null)) {
+  // day inside the horizon, the seller's calendar, daylight saving). One generic answer whatever is wrong. A request from the
+  // agent may have none (Sofia arranges the time in the call); the ones it has are checked like any other.
+  const slots = checked.data.preferredSlots;
+  if (needsSlots(checked.data.requestType) && (slots?.length ?? 0) > 0 && (!context.viewing || slotsProblem(slots, context.viewing, new Date()) !== null)) {
     return json(400, { ok: false, error: "invalid", errors: { preferredSlots: "invalid" } });
   }
 
+  // an offer: the amount must be inside the product's range (it has one unless the product has no price to go by)
+  if (checked.data.requestType === "offer" && checked.data.amount !== undefined && amountProblem(checked.data.amount, context.offer ?? null) !== null) {
+    return json(400, { ok: false, error: "invalid", errors: { amount: "amount" } });
+  }
+
   const owner = { lang: context.defaultLanguage ?? context.languages[0], windows: context.contactWindows, productTitle: context.productTitle };
-  const record = buildRecord(checked.data, context, request.headers.get("user-agent"));
+  const record = buildRecord(checked.data, context, request.headers.get("user-agent"), new Date(), randomUUID(), storeKindOf(env));
   try {
     const wrong = checkDelivery(env);
     if (wrong) throw wrong;
@@ -92,6 +102,7 @@ export async function handleLead(request: Request, env: Record<string, string | 
     console.error(`lead not stored (${e instanceof LeadStoreError ? e.reason : "error"})`);
     return refuse(503, "unavailable");
   }
-  await notifyLead(record, env, fetchImpl, owner); // after the store; it cannot change the answer
-  return json(200, { ok: true });
+  // after the store; it cannot change the answer. A file store's record then says the chat was told.
+  if (await notifyLead(record, env, fetchImpl, owner)) await markNotified(record, env);
+  return json(200, { ok: true, id: record.requestNumber });
 }

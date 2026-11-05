@@ -36,7 +36,7 @@ const gallery = () => box!.querySelector("#gallery") as any;
 const field = (name: string) => box!.querySelector(`dialog.contact-dialog form [name=${name}]`) as HTMLInputElement;
 function type(el: HTMLInputElement, value: string) {
   act(() => {
-    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(el, value);
+    Object.getOwnPropertyDescriptor(el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype, "value")!.set!.call(el, value);
     el.dispatchEvent(new Event("input", { bubbles: true }));
   });
 }
@@ -78,6 +78,10 @@ describe("navigate #contact", () => {
     goContact();
     expect(document.activeElement).toBe(field("email"));
     type(field("email"), "typed@example.invalid");
+    act(() => section().close());
+    goContact();
+    expect(document.activeElement).toBe(field("message")); // a question: the question is the next field the web form needs
+    type(field("message"), "A question");
     act(() => section().close());
     goContact();
     expect(document.activeElement).toBe(field("consent"));

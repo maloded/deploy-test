@@ -1,7 +1,7 @@
 // @vitest-environment node
 import fs from "node:fs";
 import { describe, expect, it } from "vitest";
-import { leadRecordSchema } from "@/lib/leads";
+import { LEAD_SCHEMA_VERSION, leadRecordSchema } from "@/lib/leads";
 import { ownerMessage } from "@/lib/owner-message";
 import { telegramText } from "@/lib/telegram";
 import { FAKE_OWNER, FAKE_RECORD } from "./telegram-fakes";
@@ -32,7 +32,7 @@ describe("docs/LEADS.md", () => {
     expect(Object.keys(body).sort()).toEqual(["chat_id", "disable_web_page_preview", "text"]);
     expect(body.disable_web_page_preview).toBe(true);
     expect(body.text).toBe(telegramText(body.text));
-    expect(body.text).toBe(ownerMessage({ ...FAKE_RECORD, requestType: "question", lang: "en", timezone: undefined }, "short", FAKE_OWNER("en")));
+    expect(body.text).toBe(ownerMessage({ ...FAKE_RECORD, type: "question", lang: "en", timezone: undefined }, "short", FAKE_OWNER("en")));
     expect(body.chat_id).toBe("-1000000000000");
     expect(JSON.stringify(body)).not.toMatch(/parse_mode|bot\d|Jane|invalid/);
   });
@@ -49,5 +49,35 @@ describe("docs/LEADS.md: the record", () => {
     expect(record.contactWindow).toBe("morning");
     expect(record).not.toHaveProperty("bestTime");
     expect(record).toEqual(JSON.parse(JSON.stringify(FAKE_RECORD)));
+  });
+
+  it("has an example of every kind of request, each a valid record of the current version, with the contact fields it can lack", () => {
+    const get = (name: string) => JSON.parse(block(name)) as Record<string, unknown>;
+    const examples = { viewing: get("lead-record"), testdrive: get("lead-record:testdrive"), question: get("lead-record:question"), offer: get("lead-record:offer"), agent: get("lead-record:offer-agent") };
+    for (const [name, record] of Object.entries(examples)) {
+      const parsed = leadRecordSchema.safeParse(record);
+      expect(parsed.error?.issues ?? [], name).toEqual([]);
+      expect(record.schemaVersion, name).toBe(LEAD_SCHEMA_VERSION);
+    }
+    expect(Object.values(examples).map((r) => r.type)).toEqual(["viewing", "testdrive", "question", "offer", "offer"]);
+    expect(examples.testdrive).not.toHaveProperty("phone"); // e-mail only
+    expect(examples.question).not.toHaveProperty("email"); // phone only
+    expect(examples.offer).toMatchObject({ amount: 49500.5, currency: "EUR" });
+    expect(examples.offer).toHaveProperty("phone");
+    expect(examples.offer).toHaveProperty("email"); // an offer has both
+    expect(examples.agent).toMatchObject({ source: "agent", currency: "EUR" });
+    expect(examples.agent).not.toHaveProperty("amount"); // left for the call
+    expect(examples.agent).not.toHaveProperty("slots");
+    for (const slot of (examples.testdrive.slots as { start: string }[])) expect(slot.start).toMatch(/[+-]\d{2}:\d{2}$/); // ISO with the offset
+    for (const text of Object.values(examples).map((r) => JSON.stringify(r))) expect(text).not.toMatch(/"ip"|"userAgent"|"consentText"/);
+  });
+
+  it("documents every field of the record schema in its table", () => {
+    const table = doc.slice(doc.indexOf("## The lead record"), doc.indexOf("<!-- lead-record:start -->"));
+    const documented = [...table.matchAll(/^\| `([^|]+)` \|/gm)].flatMap((m) => m[1].split("`, `"));
+    const keys = Object.keys((leadRecordSchema as unknown as { shape: Record<string, unknown> }).shape);
+    expect(keys.length).toBeGreaterThan(18);
+    for (const key of keys) expect(documented, key).toContain(key);
+    for (const key of documented) expect(keys, key).toContain(key);
   });
 });

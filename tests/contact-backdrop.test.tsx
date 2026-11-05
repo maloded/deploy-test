@@ -35,7 +35,7 @@ const press = (el: Element) => act(() => void el.dispatchEvent(new Event("pointe
 const click = (el: Element) => act(() => void el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true })));
 const type = (el: HTMLInputElement, value: string) =>
   act(() => {
-    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(el, value);
+    Object.getOwnPropertyDescriptor(el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype, "value")!.set!.call(el, value);
     el.dispatchEvent(new Event("input", { bubbles: true }));
   });
 const key = (k: string) => act(() => void dialog().dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true })));
@@ -97,6 +97,7 @@ describe("a click outside the dialog box closes it", () => {
     open();
     type(field("name"), "Test Person");
     type(field("email"), "person@example.invalid");
+    type(field("message"), "A question about the car");
     act(() => void field("consent").click());
     await act(async () => void q("dialog form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })));
     expect(q<HTMLButtonElement>("dialog [type=submit]").disabled).toBe(true); // sending

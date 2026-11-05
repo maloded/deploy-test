@@ -16,6 +16,7 @@ describe("the owner message", () => {
       [
         "New request #0A1B2C3D",
         "Type: Viewing",
+        "Source: Form (website)",
         "Product: Example house (example-seller/example-house)",
         "Page language: Deutsch",
         "Name: Jane Example",
@@ -37,6 +38,7 @@ describe("the owner message", () => {
       [
         "Neue Anfrage #0A1B2C3D",
         "Art: Besichtigung",
+        "Quelle: Formular (Website)",
         "Produkt: Beispielhaus (example-seller/example-house)",
         "Seitensprache: Deutsch",
         "Name: Jane Example",
@@ -57,6 +59,7 @@ describe("the owner message", () => {
     expect(ownerMessage(FAKE_RECORD, "short", FAKE_OWNER("en"))).toBe([
       "New request #0A1B2C3D",
       "Type: Viewing",
+      "Source: Form (website)",
       "Product: Example house (example-seller/example-house)",
       "Page language: Deutsch",
       "Received: 2026-06-10 12:05 (Vienna) · 10:05 UTC",
@@ -65,6 +68,7 @@ describe("the owner message", () => {
     expect(ownerMessage(FAKE_RECORD, "short", FAKE_OWNER("de"))).toBe([
       "Neue Anfrage #0A1B2C3D",
       "Art: Besichtigung",
+      "Quelle: Formular (Website)",
       "Produkt: Beispielhaus (example-seller/example-house)",
       "Seitensprache: Deutsch",
       "Eingegangen: 2026-06-10 12:05 (Wien) · 10:05 UTC",
@@ -81,9 +85,9 @@ describe("the owner message", () => {
   });
 
   it("full leaves out the optional lines the visitor did not fill in", () => {
-    const text = ownerMessage({ ...FAKE_RECORD, requestType: "question", phone: undefined, channel: undefined, message: undefined, preferredSlots: undefined }, "full", FAKE_OWNER("en"));
+    const text = ownerMessage({ ...FAKE_RECORD, type: "question", phone: undefined, channel: undefined, message: undefined, slots: undefined }, "full", FAKE_OWNER("en"));
     // the product line carries the title, the window line is always there, the time line has the zone of the record
-    expect(text.split("\n")).toEqual(["New request #0A1B2C3D", "Type: Question", "Product: Example house (example-seller/example-house)", "Page language: Deutsch", "Name: Jane Example", "E-mail: jane@example.invalid", "Contact window: Morning (09:00\u201312:00)", "Received: 2026-06-10 12:05 (Vienna) \u00b7 10:05 UTC"]);
+    expect(text.split("\n")).toEqual(["New request #0A1B2C3D", "Type: Question", "Source: Form (website)", "Product: Example house (example-seller/example-house)", "Page language: Deutsch", "Name: Jane Example", "E-mail: jane@example.invalid", "Contact window: Morning (09:00\u201312:00)", "Received: 2026-06-10 12:05 (Vienna) \u00b7 10:05 UTC"]);
   });
 
   it("cuts the message to 500 characters in the full format", () => {
@@ -114,14 +118,34 @@ describe("the owner message", () => {
 
   it("the product line falls back to the reference alone without a title (or with a title equal to it)", () => {
     expect(ownerMessage(FAKE_RECORD, "full", { lang: "en" })).toContain("\nProduct: example-seller/example-house\n");
-    expect(ownerMessage(FAKE_RECORD, "short", { lang: "de", productTitle: FAKE_RECORD.product })).toContain("\nProdukt: example-seller/example-house\n");
+    expect(ownerMessage(FAKE_RECORD, "short", { lang: "de", productTitle: `${FAKE_RECORD.seller}/${FAKE_RECORD.product}` })).toContain("\nProdukt: example-seller/example-house\n");
+  });
+
+  it("an offer shows the amount in the product's currency; from the agent it says so, and without an amount it says it is agreed in the call", () => {
+    const offer = { ...FAKE_RECORD, type: "offer" as const, slots: undefined, amount: 49500.5, currency: "EUR" };
+    expect(ownerMessage(offer, "full", FAKE_OWNER("de"))).toContain("Angebotener Betrag: 49.500,50\u00a0€\n");
+    expect(ownerMessage({ ...offer, amount: 50000 }, "full", FAKE_OWNER("en"))).toContain("Offered amount: €50,000\n");
+    expect(ownerMessage({ ...offer, amount: 50000, source: "agent" }, "full", FAKE_OWNER("de"))).toContain("Quelle: Sofia (Agent)\n");
+    expect(ownerMessage({ ...offer, amount: undefined, source: "agent" }, "full", FAKE_OWNER("de"))).toContain("Angebotener Betrag: im Gespräch mit Sofia\n");
+    expect(ownerMessage({ ...offer, amount: undefined }, "full", FAKE_OWNER("en"))).toContain("Offered amount: to be agreed in the call\n");
+    expect(ownerMessage({ ...offer, amount: 50000 }, "short", FAKE_OWNER("en"))).not.toContain("50,000"); // the short message holds no personal data and no amount
+    expect(ownerMessage({ ...FAKE_RECORD, amount: 5 }, "full", FAKE_OWNER("en"))).not.toContain("Offered amount"); // only an offer has one
+  });
+
+  it("phone only or e-mail only: the line that is not there is left out, nothing says undefined", () => {
+    const phoneOnly = ownerMessage({ ...FAKE_RECORD, email: undefined }, "full", FAKE_OWNER("en"));
+    expect(phoneOnly).toContain("Phone: +00 000 000 000");
+    expect(phoneOnly).not.toMatch(/E-mail|undefined/);
+    const mailOnly = ownerMessage({ ...FAKE_RECORD, phone: undefined, channel: undefined }, "full", FAKE_OWNER("en"));
+    expect(mailOnly).toContain("E-mail: jane@example.invalid");
+    expect(mailOnly).not.toMatch(/Phone|undefined/);
   });
 
   it("the time line: local time with the city in brackets, then UTC; UTC only without a zone; follows daylight saving", () => {
     expect(ownerMessage(FAKE_RECORD, "full", FAKE_OWNER("de"))).toContain("Eingegangen: 2026-06-10 12:05 (Wien) \u00b7 10:05 UTC");
     expect(ownerMessage(FAKE_RECORD, "full", FAKE_OWNER("en"))).toContain("Received: 2026-06-10 12:05 (Vienna) \u00b7 10:05 UTC");
     expect(ownerMessage({ ...FAKE_RECORD, timezone: undefined }, "short", { lang: "de" })).toContain("Eingegangen: 2026-06-10 10:05 UTC\n");
-    expect(ownerMessage({ ...FAKE_RECORD, receivedAt: "2026-01-10T10:05:00.000Z" }, "short", FAKE_OWNER("en"))).toContain("Received: 2026-01-10 11:05 (Vienna) \u00b7 10:05 UTC");
+    expect(ownerMessage({ ...FAKE_RECORD, createdAt: "2026-01-10T10:05:00.000Z" }, "short", FAKE_OWNER("en"))).toContain("Received: 2026-01-10 11:05 (Vienna) \u00b7 10:05 UTC");
     expect(ownerMessage({ ...FAKE_RECORD, timezone: "Asia/Tokyo" }, "short", FAKE_OWNER("en"))).toContain("Received: 2026-06-10 19:05 (Tokyo) \u00b7 10:05 UTC");
   });
 });

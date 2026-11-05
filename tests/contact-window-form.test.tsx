@@ -45,7 +45,7 @@ const section = () => box!.querySelector("#contact") as any;
 const form = () => box!.querySelector("dialog.contact-dialog form") as HTMLFormElement;
 const field = (name: string) => form().querySelector(`[name=${name}]`) as HTMLSelectElement & HTMLInputElement;
 function type(el: HTMLInputElement | HTMLSelectElement, value: string) {
-  const proto = el instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
+  const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : el instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
   act(() => {
     Object.getOwnPropertyDescriptor(proto, "value")!.set!.call(el, value);
     el.dispatchEvent(new Event(el instanceof HTMLSelectElement ? "change" : "input", { bubbles: true }));
@@ -60,6 +60,7 @@ const reply = () => {
 const fillPerson = () => {
   type(field("name"), "Test Person");
   type(field("email"), "person@example.invalid");
+  type(field("message"), "A question about the car");
   act(() => void field("consent").click());
 };
 const ask = () => {
@@ -165,7 +166,8 @@ describe("the contact window select", () => {
     expect(getFormSnapshot().contactWindow).toBe("afternoon");
     let a = ask();
     expect(a.phase).toBe("open_filling");
-    expect(a).not.toHaveProperty("form");
+    expect(a.form).not.toHaveProperty("values"); // the states are there, the values are not
+    expect(a.form).not.toHaveProperty("contactWindow");
     expect(JSON.stringify(a)).not.toMatch(/afternoon|Nachmittag|12:00/);
     fillPerson();
     a = ask();

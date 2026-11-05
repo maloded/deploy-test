@@ -5,14 +5,21 @@ import { windowLabel, zoneHint, type ContactWindow } from "@/lib/contact-windows
 import { CHANNELS, LIMITS, type LeadField } from "@/lib/lead";
 import { pick } from "@/lib/i18n";
 import { localeOf } from "@/lib/languages";
+import type { OfferBounds } from "@/lib/offer-amount";
 import { needsSlots, REQUEST_TYPES, type RequestType } from "@/lib/request-types";
 import { bookingWindow, DAYS, MAX_SLOTS, timeSlots } from "@/lib/viewing";
 import type { Language } from "@/lib/schema";
 import { ui, uiFmt, type UiKey } from "@/lib/ui-strings";
 import type { ContactModel } from "./contact-model";
 
-const errorText = (field: string, code: string, lang: Language) =>
-  field === "preferredSlots" ? ui(code === "required" ? "contact.error.slotRequired" : "contact.error.slots", lang) : uiFmt(`contact.error.${code}` as UiKey, lang, { max: LIMITS.message });
+const errorText = (field: string, code: string, lang: Language, money: (n: number) => string, offer: OfferBounds | null) =>
+  field === "preferredSlots"
+    ? ui(code === "required" ? "contact.error.slotRequired" : "contact.error.slots", lang)
+    : code === "amount"
+      ? offer
+        ? uiFmt("contact.error.amount", lang, { min: money(offer.min), max: money(offer.max) })
+        : ui("contact.error.invalid", lang)
+      : uiFmt(`contact.error.${code}` as UiKey, lang, { max: LIMITS.message });
 
 /**
  * Whether the consent text already carries the privacy link: it contains the link's target, or its label as a whole word
@@ -40,6 +47,7 @@ export function ContactForm({
   model,
   idBase,
   lang,
+  currency,
   contactWindows,
   timezone,
   email,
@@ -52,6 +60,8 @@ export function ContactForm({
   model: ContactModel;
   idBase: string;
   lang: Language;
+  /** The currency of the product's price: the amount of an offer is in it. */
+  currency: string;
   /** The windows of the select (the seller's override or the defaults). */
   contactWindows: readonly ContactWindow[];
   /** The seller's time zone, for the hint under the select; none, no hint. */
@@ -83,16 +93,27 @@ export function ContactForm({
 
   const fieldErrors = (Object.keys(errors) as (LeadField | "form")[]).filter((k): k is LeadField => k !== "form" && Boolean(errors[k]));
   const describe = (name: LeadField, extra?: string) => [errors[name] ? id(`${name}-error`) : null, extra].filter(Boolean).join(" ") || undefined;
-  const label = (name: LeadField, key: UiKey, required: boolean) => (
+  // `hint` replaces "optional" for a field of which one of two is needed ("phone or e-mail")
+  const label = (name: LeadField, key: UiKey, required: boolean, hint?: UiKey) => (
     <label htmlFor={id(name)}>
       {ui(key, lang)}
-      {required ? <span aria-hidden="true"> *</span> : <span className="contact__optional"> ({ui("contact.optional", lang)})</span>}
+      {required ? <span aria-hidden="true"> *</span> : <span className="contact__optional"> ({ui(hint ?? "contact.optional", lang)})</span>}
     </label>
   );
+  const money = (n: number) => {
+    try {
+      return new Intl.NumberFormat(localeOf(lang), { style: "currency", currency, maximumFractionDigits: 0 }).format(n);
+    } catch {
+      return `${n} ${currency}`;
+    }
+  };
+  const isOffer = values.requestType === "offer";
+  const agent = model.agent;
+  const range = model.offer;
   const fieldError = (name: LeadField) =>
     errors[name] ? (
       <p className="contact__error" id={id(`${name}-error`)}>
-        {errorText(name, errors[name]!, lang)}
+        {errorText(name, errors[name]!, lang, money, range)}
       </p>
     ) : null;
   const common = (name: Exclude<LeadField, "consent" | "channel" | "requestType" | "preferredSlots" | "contactWindow">) => ({
@@ -108,6 +129,8 @@ export function ContactForm({
   const showPrivacyLink = Boolean(privacyUrl) && !consentPointsToPrivacy(consentText, ui("contact.privacy", lang), privacyUrl!);
   const viewing = model.viewing;
   const withSlots = needsSlots(values.requestType) && viewing !== null;
+  /** What to bring: the test drive's own note where there is one, else the general one. */
+  const notes = values.requestType === "testdrive" ? (viewing?.testDriveNotes ?? viewing?.notes) : viewing?.notes;
 
   if (status === "success") {
     const viewed = model.sentType !== null && needsSlots(model.sentType);
@@ -128,7 +151,7 @@ export function ContactForm({
   };
 
   return (
-    <form className="contact__form" noValidate onSubmit={onSubmit} aria-describedby={id("note")}>
+    <form className="contact__form" noValidate onSubmit={onSubmit} aria-describedby={id("note")} data-agent={agent ? "true" : undefined}>
       {(fieldErrors.length > 0 || failure) && (
         <div className="contact__summary" ref={summaryRef} tabIndex={-1} role="alert">
           {failure ? (
@@ -155,7 +178,7 @@ export function ContactForm({
                     >
                       {ui(`contact.${name}` as UiKey, lang)}
                     </a>
-                    <span>: {errorText(name, errors[name]!, lang)}</span>
+                    <span>: {errorText(name, errors[name]!, lang, money, range)}</span>
                   </li>
                 ))}
               </ul>
@@ -191,15 +214,16 @@ export function ContactForm({
         <fieldset className="contact__slots" aria-describedby={id("slots-hint")}>
           <legend>
             {ui("contact.preferredSlots", lang)}
-            <span aria-hidden="true"> *</span>
+            {agent ? <span className="contact__optional"> ({ui("contact.optional", lang)})</span> : <span aria-hidden="true"> *</span>}
           </legend>
+          {agent && <p className="contact__hint">{ui("contact.agentOptional", lang)}</p>}
           <dl className="contact__viewing">
             <dt>{ui("contact.slots.address", lang)}</dt>
             <dd>{pick(viewing.address, lang)}</dd>
-            {viewing.notes && (
+            {notes && (
               <>
                 <dt>{ui("contact.slots.notes", lang)}</dt>
-                <dd>{pick(viewing.notes, lang)}</dd>
+                <dd>{pick(notes, lang)}</dd>
               </>
             )}
           </dl>
@@ -260,6 +284,17 @@ export function ContactForm({
         </fieldset>
       )}
 
+      {isOffer && (
+        <div className="contact__field">
+          {label("amount", "contact.amount", !agent)}
+          <input type="text" inputMode="decimal" autoComplete="off" required={!agent} maxLength={20} {...common("amount")} aria-describedby={describe("amount", id("amount-hint"))} />
+          <p className="contact__hint" id={id("amount-hint")}>
+            {range ? uiFmt("contact.amount.hint", lang, { min: money(range.min), max: money(range.max) }) : currency} {agent && ui("contact.agentOptional", lang)}
+          </p>
+          {fieldError("amount")}
+        </div>
+      )}
+
       <div className="contact__grid">
         <div className="contact__field">
           {label("name", "contact.name", true)}
@@ -267,13 +302,13 @@ export function ContactForm({
           {fieldError("name")}
         </div>
         <div className="contact__field">
-          {label("email", "contact.email", true)}
-          <input type="email" autoComplete="email" inputMode="email" required maxLength={LIMITS.email} {...common("email")} />
+          {label("email", "contact.email", isOffer, "contact.either")}
+          <input type="email" autoComplete="email" inputMode="email" required={isOffer} maxLength={LIMITS.email} {...common("email")} />
           {fieldError("email")}
         </div>
         <div className="contact__field">
-          {label("phone", "contact.phone", false)}
-          <input type="tel" autoComplete="tel" inputMode="tel" maxLength={LIMITS.phone} {...common("phone")} />
+          {label("phone", "contact.phone", isOffer, "contact.either")}
+          <input type="tel" autoComplete="tel" inputMode="tel" required={isOffer} maxLength={LIMITS.phone} {...common("phone")} />
           {fieldError("phone")}
         </div>
         <div className="contact__field">
@@ -306,12 +341,13 @@ export function ContactForm({
         )}
         <div className="contact__field contact__field--wide">
           <div className="contact__label-row">
-            {label("message", "contact.message", false)}
+            {label("message", "contact.message", values.requestType === "question" && !agent)}
             <span className="contact__count" id={id("count")}>
               {uiFmt("contact.count", lang, { n: values.message.length, max: LIMITS.message })}
             </span>
           </div>
-          <textarea rows={3} maxLength={LIMITS.message} {...common("message")} aria-describedby={describe("message", id("count"))} />
+          <textarea rows={3} maxLength={LIMITS.message} required={values.requestType === "question" && !agent} {...common("message")} aria-describedby={describe("message", id("count"))} />
+          {agent && values.requestType === "question" && <p className="contact__hint">{ui("contact.agentOptional", lang)}</p>}
           {fieldError("message")}
         </div>
       </div>

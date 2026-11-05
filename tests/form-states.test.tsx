@@ -59,7 +59,7 @@ const section = () => box!.querySelector("#contact") as any;
 const form = () => box!.querySelector("dialog.contact-dialog form") as HTMLFormElement;
 const field = (name: string) => box!.querySelector(`dialog.contact-dialog form [name=${name}]`) as HTMLInputElement;
 function type(el: HTMLInputElement | HTMLSelectElement, value: string) {
-  const proto = el instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
+  const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : el instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
   act(() => {
     Object.getOwnPropertyDescriptor(proto, "value")!.set!.call(el, value);
     el.dispatchEvent(new Event(el instanceof HTMLSelectElement ? "change" : "input", { bubbles: true }));
@@ -73,10 +73,10 @@ const ask = () => {
   w.remove();
   return call.answers[0] as Record<string, any>;
 };
-const navigateContact = () => {
+const navigateContact = (path = "/#contact") => {
   const w = fakeWidget();
   let call!: ReturnType<typeof w.command>;
-  act(() => void (call = w.command("navigate", { path: "/#contact" })));
+  act(() => void (call = w.command("navigate", { path })));
   w.remove();
   return call;
 };
@@ -85,6 +85,7 @@ const fillAll = () => {
   act(() => section().open());
   type(field("name"), NAME);
   type(field("email"), EMAIL);
+  type(field("message"), "A question about the car"); // the default type is a question, and the web form needs it
   check(field("consent"));
 };
 
@@ -123,6 +124,7 @@ describe("the scenarios", () => {
     await mount();
     act(() => section().open());
     type(field("email"), EMAIL);
+  type(field("message"), "A question about the car"); // the default type is a question, and the web form needs it
     check(field("consent"));
     expect(ask()).toMatchObject({ phase: "open_filling", missing: ["name"] });
   });
@@ -132,6 +134,7 @@ describe("the scenarios", () => {
     act(() => section().open());
     type(field("name"), NAME);
     type(field("email"), EMAIL);
+  type(field("message"), "A question about the car"); // the default type is a question, and the web form needs it
     act(() => section().close());
     expect(ask()).toMatchObject({ phase: "no_consent", missing: ["consent"] });
   });
@@ -141,6 +144,7 @@ describe("the scenarios", () => {
     act(() => section().open());
     type(field("name"), NAME);
     type(field("email"), EMAIL);
+  type(field("message"), "A question about the car"); // the default type is a question, and the web form needs it
     expect(ask()).toMatchObject({ phase: "open_filling", missing: ["consent"] });
   });
 
@@ -148,12 +152,13 @@ describe("the scenarios", () => {
     await mount();
     act(() => section().open());
     type(field("name"), NAME);
+    type(field("message"), "A question");
     check(field("consent"));
     act(() => section().close());
     const a = ask();
-    expect(a).toMatchObject({ phase: "incomplete", missing: ["email"] });
+    expect(a).toMatchObject({ phase: "incomplete", missing: ["email", "phone"] }); // neither phone nor e-mail: both are named
     expect(JSON.stringify(a)).not.toContain(NAME);
-    expect(a).not.toHaveProperty("form");
+    expect(a.form).not.toHaveProperty("values");
   });
 
   it("8. an edit after the agent read the form: the next page_context has the new values", async () => {
@@ -164,12 +169,12 @@ describe("the scenarios", () => {
     expect(ask().form.name).toBe("Changed Name");
   });
 
-  it("9. the dialog is already open: navigate #contact is handled and changes nothing", async () => {
+  it("9. the dialog is already open on that type: navigate to it is handled and changes nothing", async () => {
     await mount();
     act(() => section().open());
     type(field("name"), NAME);
     act(() => field("email").focus());
-    expect(navigateContact().handled).toBe(true);
+    expect(navigateContact("/#contact-question").handled).toBe(true);
     expect(document.activeElement).toBe(field("email"));
     expect(field("name").value).toBe(NAME);
   });
@@ -190,6 +195,7 @@ describe("the scenarios", () => {
     // autofill: the browser fills the fields at once (input events, no typing); the visitor ticks consent and presses Send
     type(field("name"), NAME);
     type(field("email"), EMAIL);
+  type(field("message"), "A question about the car"); // the default type is a question, and the web form needs it
     check(field("consent"));
     await send();
     expect(calls[0]).toBeLessThan(MIN_FILL_MS);
@@ -222,6 +228,7 @@ describe("the scenarios", () => {
     act(() => section().open());
     type(field("name"), NAME);
     type(field("email"), EMAIL);
+  type(field("message"), "A question about the car"); // the default type is a question, and the web form needs it
     act(() => section().close());
     answers.push(ask()); // no_consent
     act(() => section().open());
@@ -231,6 +238,7 @@ describe("the scenarios", () => {
     answers.push(ask()); // incomplete
     act(() => section().open());
     type(field("email"), EMAIL);
+  type(field("message"), "A question about the car"); // the default type is a question, and the web form needs it
     answers.push(ask()); // complete
     reply(503);
     await send();
@@ -238,7 +246,8 @@ describe("the scenarios", () => {
     expect(answers.map((a) => a.phase)).toEqual(["not_opened", "open_filling", "closed_empty", "no_consent", "incomplete", "complete", "complete"]);
     for (const a of answers) {
       if (a.phase !== "complete") {
-        expect(a).not.toHaveProperty("form");
+        expect(a.form).not.toHaveProperty("values");
+        expect(a.form).not.toHaveProperty("name");
         expect(JSON.stringify(a)).not.toMatch(/Quillfeather|example\.invalid|broken/);
       }
     }

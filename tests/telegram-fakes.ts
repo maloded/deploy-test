@@ -6,25 +6,30 @@ export const FAKE_CHAT = "-1000000000000";
 
 /** A FAKE record: nothing here belongs to a person. */
 export const FAKE_RECORD: LeadRecord = {
+  schemaVersion: 2,
   id: "0a1b2c3d-0000-4000-8000-000000000000",
-  receivedAt: "2026-06-10T10:05:00.000Z",
-  product: "example-seller/example-house",
+  requestNumber: "0A1B2C3D",
+  createdAt: "2026-06-10T10:05:00.000Z",
+  seller: "example-seller",
+  product: "example-house",
+  type: "viewing",
+  source: "form",
   lang: "de",
-  requestType: "viewing",
   name: "Jane Example",
-  email: "jane@example.invalid",
   phone: "+00 000 000 000",
+  email: "jane@example.invalid",
   channel: "phone",
   contactWindow: "morning",
   timezone: "Europe/Vienna",
-  message: "Is the second floor accessible?",
-  preferredSlots: [
-    { date: "2026-06-11", time: "10:00" },
-    { date: "2026-06-13", time: "15:00" },
+  slots: [
+    { date: "2026-06-11", time: "10:00", start: "2026-06-11T10:00:00+02:00" },
+    { date: "2026-06-13", time: "15:00", start: "2026-06-13T15:00:00+02:00" },
   ],
+  message: "Is the second floor accessible?",
   consent: true,
+  consentVersion: "2026-06-01",
   consentTextSha256: "0".repeat(64),
-  source: "form",
+  delivery: { stored: true, store: "file", notified: true },
   userAgentSha256: "1".repeat(64),
 };
 

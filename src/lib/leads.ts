@@ -4,86 +4,147 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { ANYTIME, CODE_PATTERN } from "./contact-windows";
 import { CHANNELS, type LeadInput } from "./lead";
-import { ownerMessage, type OwnerContext } from "./owner-message";
+import { ownerMessage, requestNumber, type OwnerContext } from "./owner-message";
 import { NOTIFY_TIMEOUT_MS, sendTelegram, STORE_TIMEOUT_MS, TelegramError } from "./telegram";
 import { notifyChoice, telegramSetup } from "./telegram-config";
 import { sha256, type LeadContext } from "./lead-context";
 import type { Language } from "./languages";
 import { REQUEST_TYPE_IDS, type RequestType } from "./request-types";
+import { isoWithOffset } from "./viewing";
 import { languageSchema } from "./schema";
 
 /**
- * A stored lead. No IP address (a hash of the user agent only), no HTML, and the SHA-256 of the consent text that was
- * shown, so a later change of the text can be told apart. `source` is always "form": nothing is submitted by an agent.
+ * The version of the stored record's shape. 1 was the record before this field existed (receivedAt, requestType test_drive, a combined product reference,
+ * preferredSlots without an offset); 2 is the shape below, the contract for whatever reads the stored requests (docs/LEADS.md, "The lead record"). Bump it when a
+ * field is renamed, removed or changes its meaning; adding an optional field does not need it.
+ */
+export const LEAD_SCHEMA_VERSION = 2 as const;
+
+export type LeadStoreKind = "file" | "webhook" | "telegram";
+const STORE_KINDS = ["file", "webhook", "telegram"] as const;
+
+/** One preferred time: the seller-local date and time as the visitor chose them, and the same instant as ISO 8601 with its UTC offset. */
+export type LeadSlot = { date: string; time: string; start: string };
+
+/** How the request was delivered: `stored` is always true for a stored record; `notified` says whether the seller's chat was told (see markNotified). */
+export type LeadDelivery = { stored: true; store: LeadStoreKind; notified: boolean };
+
+/**
+ * A stored lead. No IP address (a hash of the user agent only), no HTML, and the SHA-256 of the consent text that was shown, so a later change of the text can be told
+ * apart. `source` says whether the visitor sent the form on their own ("form") or after the voice assistant led them to it ("agent").
  */
 export type LeadRecord = {
+  schemaVersion: typeof LEAD_SCHEMA_VERSION;
+  /** The unique key of the record (a UUID; also in the file name). */
   id: string;
+  /** What the visitor and the seller's message call the request: the first eight characters of `id`, upper case. */
+  requestNumber: string;
   /** UTC, ISO 8601. */
-  receivedAt: string;
-  /** "<seller>/<product>" */
+  createdAt: string;
+  /** The seller's id and the product's id (the two parts of the content reference "<seller>/<product>"). */
+  seller: string;
   product: string;
+  /** "viewing", "testdrive", "question" or "offer". */
+  type: RequestType;
+  source: "form" | "agent";
+  /** The language of the page the visitor used. */
   lang: Language;
-  /** "viewing", "test_drive", "question" or "offer". */
-  requestType: RequestType;
   name: string;
-  email: string;
+  /** At least one of `phone` and `email` is present (an offer has both): a reader must handle either missing. */
   phone?: string;
+  email?: string;
   channel?: string;
   /** The code of the contact window ("anytime" when none was chosen). */
   contactWindow: string;
   /** The seller's time zone when the record was made (IANA); absent when the seller has none. */
   timezone?: string;
+  /** Viewing and test drive requests: 1 to 3 preferred times (absent when the agent arranged them in the call). */
+  slots?: LeadSlot[];
+  /** An offer request: the amount offered, and the currency of the product's price (ISO 4217). The amount is absent when the agent took it in the call. */
+  amount?: number;
+  currency?: string;
   message?: string;
-  /** Viewing and test drive requests: 1 to 3 preferred times, seller-local (the seller's time zone is in the viewing settings). */
-  preferredSlots?: { date: string; time: string }[];
   consent: true;
+  /** The seller's label of the consent text's version ("unversioned" when the seller gives none) and the SHA-256 of the text the visitor saw. */
+  consentVersion: string;
   consentTextSha256: string;
-  source: "form";
+  delivery: LeadDelivery;
   userAgentSha256: string;
 };
 
-/** The shape of a stored record (strict): a test checks the sample record in PROJECT.md and every record the store writes against it. */
+/** The shape of a stored record (strict): a test checks the sample records in docs/LEADS.md and every record the store writes against it. */
 export const leadRecordSchema = z
   .object({
+    schemaVersion: z.literal(LEAD_SCHEMA_VERSION),
     id: z.string().regex(/^[0-9a-f-]{36}$/),
-    receivedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
-    product: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*\/[a-z0-9]+(-[a-z0-9]+)*$/),
+    requestNumber: z.string().regex(/^[0-9A-F]{8}$/),
+    createdAt: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
+    seller: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
+    product: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
+    type: z.enum(REQUEST_TYPE_IDS),
+    source: z.enum(["form", "agent"]),
     lang: languageSchema,
-    requestType: z.enum(REQUEST_TYPE_IDS),
     name: z.string().min(1),
-    email: z.email(),
     phone: z.string().optional(),
+    email: z.email().optional(),
     channel: z.enum(CHANNELS).optional(),
     contactWindow: z.string().regex(CODE_PATTERN),
     timezone: z.string().optional(),
+    slots: z
+      .array(z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), time: z.string().regex(/^\d{2}:\d{2}$/), start: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/) }).strict())
+      .min(1)
+      .max(3)
+      .optional(),
+    amount: z.number().positive().optional(),
+    currency: z.string().regex(/^[A-Z]{3}$/).optional(),
     message: z.string().optional(),
-    preferredSlots: z.array(z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), time: z.string().regex(/^\d{2}:\d{2}$/) }).strict()).min(1).max(3).optional(),
     consent: z.literal(true),
+    consentVersion: z.string().regex(/^[0-9a-z][0-9a-z-]{0,23}$/),
     consentTextSha256: z.string().regex(/^[0-9a-f]{64}$/),
-    source: z.literal("form"),
+    delivery: z.object({ stored: z.literal(true), store: z.enum(STORE_KINDS), notified: z.boolean() }).strict(),
     userAgentSha256: z.string().regex(/^[0-9a-f]{64}$/),
   })
-  .strict();
+  .strict()
+  .refine((r) => r.phone !== undefined || r.email !== undefined, { message: "a record has a phone number or an e-mail address" });
 
-/** The record for a validated input. `now` and `id` are for tests. */
-export function buildRecord(input: LeadInput, context: LeadContext, userAgent: string | null, now: Date = new Date(), id: string = randomUUID()): LeadRecord {
+/** The store kind LEADS_STORE names (checked by the handler before it gets here); "file" for anything else. */
+export const storeKindOf = (env: Record<string, string | undefined>): LeadStoreKind => {
+  const v = env.LEADS_STORE?.trim();
+  return v === "webhook" || v === "telegram" ? v : "file";
+};
+
+/**
+ * The record for a validated input. `now`, `id` and `store` are for tests and the handler. With Telegram as the store the message IS the delivery, so the record says
+ * it was notified; for another store it says not yet, and markNotified changes it after the notifier has answered.
+ */
+export function buildRecord(input: LeadInput, context: LeadContext, userAgent: string | null, now: Date = new Date(), id: string = randomUUID(), store: LeadStoreKind = "file"): LeadRecord {
+  const [seller, product] = context.product.split("/");
   const record: LeadRecord = {
+    schemaVersion: LEAD_SCHEMA_VERSION,
     id,
-    receivedAt: now.toISOString(),
-    product: context.product,
+    requestNumber: requestNumber(id),
+    createdAt: now.toISOString(),
+    seller,
+    product,
+    type: input.requestType,
+    source: input.source ?? "form",
     lang: input.lang,
-    requestType: input.requestType,
     name: input.name,
-    email: input.email,
     contactWindow: input.contactWindow ?? ANYTIME,
     ...(context.timezone ? { timezone: context.timezone } : {}),
     consent: true,
+    consentVersion: context.consentVersion ?? "unversioned",
     consentTextSha256: context.consent[input.lang],
-    source: "form",
+    delivery: { stored: true, store, notified: store === "telegram" },
     userAgentSha256: sha256(userAgent ?? ""),
   };
-  for (const key of ["phone", "channel", "message"] as const) if (input[key] !== undefined) record[key] = input[key];
-  if (input.preferredSlots?.length) record.preferredSlots = input.preferredSlots.map(({ date, time }) => ({ date, time }));
+  for (const key of ["phone", "email", "channel", "message"] as const) if (input[key] !== undefined) record[key] = input[key];
+  const zone = context.viewing?.timezone ?? context.timezone;
+  if (input.preferredSlots?.length) record.slots = input.preferredSlots.map(({ date, time }) => ({ date, time, start: (zone && isoWithOffset(date, time, zone)) || `${date}T${time}:00+00:00` }));
+  if (input.requestType === "offer") {
+    if (input.amount !== undefined) record.amount = Math.round(input.amount * 100) / 100;
+    if (context.currency) record.currency = context.currency;
+  }
   return record;
 }
 
@@ -106,7 +167,7 @@ async function storeFile(record: LeadRecord, env: Env, cwd: string): Promise<voi
   const dir = path.resolve(cwd, env.LEADS_DIR?.trim() || DEFAULT_LEADS_DIR);
   try {
     await fs.mkdir(dir, { recursive: true });
-    await fs.writeFile(path.join(dir, `${stamp(record.receivedAt)}-${record.id}.json`), JSON.stringify(record, null, 2) + "\n", { flag: "wx", mode: 0o600 });
+    await fs.writeFile(path.join(dir, `${stamp(record.createdAt)}-${record.id}.json`), JSON.stringify(record, null, 2) + "\n", { flag: "wx", mode: 0o600 });
   } catch (e) {
     throw new LeadStoreError(`file: ${(e as NodeJS.ErrnoException).code ?? "error"}`); // the code (EROFS, EACCES ...), never the path or the data
   }
@@ -157,20 +218,40 @@ export async function storeLead(record: LeadRecord, env: Env = process.env, fetc
 /**
  * Tells the seller's chat AFTER another store accepted the lead (LEADS_NOTIFY=telegram). It never throws and never changes
  * what the visitor is told: a failure is logged as one generic line (a status class or the NAMES of bad variables, never data)
- * and not retried beyond the adapter's single network retry. With Telegram as the store itself LEADS_NOTIFY is a
- * configuration error that the handler refuses before storing (see checkDelivery).
+ * and not retried beyond the adapter's single network retry. Resolves true when the chat was told, false when it was not (no notifier configured, or a failure).
+ * With Telegram as the store itself LEADS_NOTIFY is a configuration error that the handler refuses before storing (see checkDelivery).
  */
-export async function notifyLead(record: LeadRecord, env: Env = process.env, fetchImpl: typeof fetch = fetch, owner: OwnerContext = { lang: "en" }): Promise<void> {
+export async function notifyLead(record: LeadRecord, env: Env = process.env, fetchImpl: typeof fetch = fetch, owner: OwnerContext = { lang: "en" }): Promise<boolean> {
   const choice = notifyChoice(env);
-  if (choice === "none") return;
+  if (choice === "none") return false;
   try {
     if (choice === "invalid") throw new LeadStoreError("configuration error in LEADS_NOTIFY");
     const setup = telegramSetup(env, "notifier");
     if (!setup.ok) throw new LeadStoreError(`configuration error in ${setup.names.join(", ")}`);
     await sendTelegram(setup.config, ownerMessage(record, setup.config.detail, owner), { fetchImpl, timeoutMs: NOTIFY_TIMEOUT_MS });
+    return true;
   } catch (e) {
     const reason = e instanceof TelegramError || e instanceof LeadStoreError ? e.reason : "error";
     console.error(`lead notification not sent (${reason})`);
+    return false;
+  }
+}
+
+/**
+ * After the notifier told the chat: a file store's record says so (`delivery.notified` true), by writing the file again. Best effort, like the notification: a failure is
+ * one generic line and changes nothing for the visitor. A webhook receiver got the record before the notification and keeps `notified: false`; Telegram as the store says
+ * true from the start. Resolves true when the file was updated.
+ */
+export async function markNotified(record: LeadRecord, env: Env = process.env, cwd: string = process.cwd()): Promise<boolean> {
+  if (storeKindOf(env) !== "file" || env.LEADS_STORE?.trim() !== "file") return false;
+  const dir = path.resolve(cwd, env.LEADS_DIR?.trim() || DEFAULT_LEADS_DIR);
+  try {
+    const updated: LeadRecord = { ...record, delivery: { ...record.delivery, notified: true } };
+    await fs.writeFile(path.join(dir, `${stamp(record.createdAt)}-${record.id}.json`), JSON.stringify(updated, null, 2) + "\n", { flag: "w", mode: 0o600 });
+    return true;
+  } catch (e) {
+    console.error(`lead record not updated (file: ${(e as NodeJS.ErrnoException).code ?? "error"})`);
+    return false;
   }
 }
 

@@ -43,7 +43,7 @@ const section = () => box!.querySelector("#contact") as any;
 const field = (name: string) => box!.querySelector(`dialog form [name=${name}]`) as HTMLInputElement;
 const slotRow = () => box!.querySelector(".contact__slot") as HTMLElement;
 function type(el: HTMLInputElement | HTMLSelectElement, value: string) {
-  const proto = el instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
+  const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : el instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
   act(() => {
     Object.getOwnPropertyDescriptor(proto, "value")!.set!.call(el, value);
     el.dispatchEvent(new Event(el instanceof HTMLSelectElement ? "change" : "input", { bubbles: true }));
@@ -64,12 +64,14 @@ const setSlot = (date: string, time: string) => {
 describe("page_context: missing", () => {
   it("lists the names of the blocking fields in page order, in every phase but complete", async () => {
     await mount();
-    expect(ask()).toMatchObject({ phase: "not_opened", missing: ["name", "email", "consent"] });
+    expect(ask()).toMatchObject({ phase: "not_opened", missing: ["name", "email", "phone", "message", "consent"] });
     act(() => section().open());
-    expect(ask()).toMatchObject({ phase: "open_filling", missing: ["name", "email", "consent"] });
+    expect(ask()).toMatchObject({ phase: "open_filling", missing: ["name", "email", "phone", "message", "consent"] }); // a question: phone or e-mail, and the question itself
     type(field("name"), NAME);
-    expect(ask().missing).toEqual(["email", "consent"]);
+    expect(ask().missing).toEqual(["email", "phone", "message", "consent"]);
     type(field("email"), EMAIL);
+    expect(ask().missing).toEqual(["message", "consent"]); // one of phone and e-mail is enough
+    type(field("message"), "A question");
     expect(ask().missing).toEqual(["consent"]);
     check(field("consent"));
     expect(ask()).toMatchObject({ phase: "complete", missing: [] });
@@ -79,6 +81,7 @@ describe("page_context: missing", () => {
     await mount();
     act(() => section().open());
     type(field("email"), EMAIL);
+    type(field("message"), "A question");
     check(field("consent"));
     expect(ask()).toMatchObject({ phase: "open_filling", missing: ["name"] });
   });
@@ -88,6 +91,7 @@ describe("page_context: missing", () => {
     act(() => section().open());
     type(field("name"), NAME);
     type(field("email"), "broken");
+    type(field("message"), "A question");
     check(field("consent"));
     expect(ask().missing).toEqual(["email"]);
     act(() => section().close());
@@ -99,6 +103,7 @@ describe("page_context: missing", () => {
     act(() => section().open());
     type(field("name"), NAME);
     type(field("email"), EMAIL);
+    type(field("message"), "A question");
     expect(ask()).toMatchObject({ phase: "open_filling", missing: ["consent"] });
     act(() => section().close());
     expect(ask()).toMatchObject({ phase: "no_consent", missing: ["consent"] });

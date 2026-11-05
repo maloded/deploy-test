@@ -57,6 +57,7 @@ export const viewingSchema = z
     durationMinutes: z.number().int().min(MIN_DURATION).max(MAX_DURATION).optional(),
     timezone: z.string().refine(isTimeZone, 'must be an IANA time zone such as "Europe/Vienna"').optional(),
     notes: localizedSchema.optional(),
+    testDriveNotes: localizedSchema.optional(),
   })
   .strict()
   .superRefine((v, ctx) => {
@@ -155,6 +156,12 @@ const specSchema = z.object({
   group: z.string().min(1).optional(),
 });
 
+/** The range of the amount an offer request may name (product.json `offerAmount`, optional): without it the range is from half to three times the price (offer-amount.ts). */
+export const offerAmountSchema = z
+  .object({ min: z.number().positive().optional(), max: z.number().positive().optional() })
+  .strict()
+  .refine((v) => v.min === undefined || v.max === undefined || v.max > v.min, { message: "max must be greater than min" });
+
 const priceSchema = z.object({
   amount: z.number().nonnegative(),
   currency: z.string().regex(/^[A-Z]{3}$/, "must be an ISO 4217 code such as EUR"),
@@ -178,6 +185,8 @@ export const baseShape = {
   title: localizedSchema,
   tagline: localizedSchema,
   price: priceSchema,
+  /** Optional range of the amount an offer request may name (see offerAmountSchema). */
+  offerAmount: offerAmountSchema.optional(),
   /** Offer details, under the key the offer type names (lease, rent, ...). */
   lease: looseObject.optional(),
   rent: looseObject.optional(),

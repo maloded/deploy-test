@@ -62,9 +62,11 @@ describe("a viewing request", () => {
     expect(res.status).toBe(200);
     const [name] = stored(e);
     const record = JSON.parse(fs.readFileSync(path.join(e.LEADS_DIR, name), "utf8")) as LeadRecord;
-    expect(record).toMatchObject({ requestType: "viewing", product: HOUSE, source: "form", preferredSlots: slots });
+    // the seller-local date and time as chosen, and the same instant ISO 8601 with the zone's offset (CEST in June)
+    expect(record).toMatchObject({ type: "viewing", seller: "example-seller", product: "example-house", source: "form", timezone: "Europe/Vienna" });
+    expect(record.slots).toEqual([{ date: "2026-06-11", time: "10:00", start: "2026-06-11T10:00:00+02:00" }, { date: "2026-06-13", time: "15:00", start: "2026-06-13T15:00:00+02:00" }]);
     expect(leadRecordSchema.safeParse(record).success).toBe(true);
-    expect(Object.keys(record.preferredSlots![0]).sort()).toEqual(["date", "time"]);
+    expect(record).not.toHaveProperty("preferredSlots"); // the version 1 name
   });
 
   it("travels with the webhook payload", async () => {
@@ -72,7 +74,7 @@ describe("a viewing request", () => {
     const res = await post({ ...BASE, preferredSlots: slots }, env({ LEADS_STORE: "webhook", LEADS_WEBHOOK_URL: "https://hooks.example/x" }), f as unknown as typeof fetch);
     expect(res.status).toBe(200);
     const sent = JSON.parse(String((f.mock.calls[0] as unknown as [URL, RequestInit])[1].body)) as LeadRecord;
-    expect(sent).toMatchObject({ requestType: "viewing", preferredSlots: slots });
+    expect(sent).toMatchObject({ type: "viewing", slots: [{ date: "2026-06-11" }, { date: "2026-06-13" }] });
     expect(leadRecordSchema.safeParse(sent).success).toBe(true);
   });
 
@@ -135,7 +137,8 @@ describe("a viewing request", () => {
   });
 
   it("a request without slots is still fine for the other types", async () => {
-    for (const requestType of ["question", "offer"]) expect((await post({ ...BASE, requestType })).status, requestType).toBe(200);
+    expect((await post({ ...BASE, requestType: "question", message: "Is it still available?" })).status).toBe(200);
+    expect((await post({ ...BASE, requestType: "offer", phone: "+00 000 000 000", amount: "500.000" })).status).toBe(200); // the house costs 890,000: 445,000 to 2,670,000
   });
 });
 
@@ -170,15 +173,18 @@ describe("daylight saving in the server's check", () => {
 });
 
 describe("the lead record schema", () => {
-  it("accepts a record built from a validated viewing request, and rejects an agent source or a stray field", () => {
+  it("accepts a record built from a validated viewing request, and rejects a stray field, an unknown source, a record without any contact and an old version", () => {
     const checked = validateLead({ ...BASE, preferredSlots: [{ date: "2026-06-11", time: "10:00" }] });
     expect(checked.ok).toBe(true);
     if (!checked.ok) return;
     const context = readLeadContext({ CONTENT_DIR: EXAMPLES_DIR, CONTENT_PRODUCT: HOUSE });
     const record = buildRecord(checked.data, context, "UA");
     expect(leadRecordSchema.safeParse(record).success).toBe(true);
-    expect(leadRecordSchema.safeParse({ ...record, source: "agent" }).success).toBe(false);
+    expect(leadRecordSchema.safeParse({ ...record, source: "agent" }).success).toBe(true); // a request the voice assistant led to the form
+    expect(leadRecordSchema.safeParse({ ...record, source: "robot" }).success).toBe(false);
     expect(leadRecordSchema.safeParse({ ...record, ip: "203.0.113.1" }).success).toBe(false);
+    expect(leadRecordSchema.safeParse({ ...record, email: undefined }).success).toBe(false); // no phone either
+    expect(leadRecordSchema.safeParse({ ...record, schemaVersion: 1 }).success).toBe(false);
   });
 
   it("validates the sample record in PROJECT.md (fake data)", () => {
@@ -188,8 +194,8 @@ describe("the lead record schema", () => {
     const sample = JSON.parse(block![1]);
     const parsed = leadRecordSchema.safeParse(sample);
     expect(parsed.error?.issues ?? []).toEqual([]);
-    expect(sample.requestType).toBe("viewing");
-    expect(sample.preferredSlots.length).toBeGreaterThan(0);
+    expect(sample.type).toBe("viewing");
+    expect(sample.slots.length).toBeGreaterThan(0);
     expect(sample.email).toMatch(/\.invalid$/);
   });
 });
@@ -202,7 +208,7 @@ describe("one answer lists every blocking field (the slot requirement is not hid
   });
 
   it("validateLead: a type that takes no slots, with another field failing, still reports the slots as invalid", () => {
-    const r = validateLead({ ...BASE, requestType: "question", name: "", preferredSlots: [{ date: "2026-06-16", time: "10:00" }] });
+    const r = validateLead({ ...BASE, requestType: "question", message: "Hello", name: "", preferredSlots: [{ date: "2026-06-16", time: "10:00" }] });
     expect(!r.ok && r.errors).toEqual({ name: "required", preferredSlots: "invalid" });
   });
 

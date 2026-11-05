@@ -20,8 +20,10 @@ export type ViewingSettings = {
   durationMinutes?: number;
   /** IANA name, for example "Europe/Vienna". */
   timezone?: string;
-  /** What to bring. */
+  /** What to bring (shown for every kind of appointment). */
   notes?: Texts;
+  /** What to bring to a test drive, shown instead of `notes` for it. */
+  testDriveNotes?: Texts;
 };
 
 /** The settings after the seller's and the product's have been merged: everything a slot needs is there. */
@@ -33,6 +35,7 @@ export type ViewingConfig = {
   durationMinutes: number;
   timezone: string;
   notes?: Texts;
+  testDriveNotes?: Texts;
 };
 
 export const MIN_DURATION = 10;
@@ -165,6 +168,17 @@ export function timeSlots(config: Pick<ViewingConfig, "from" | "to" | "durationM
   const out: string[] = [];
   for (let t = toMinutes(config.from); t + config.durationMinutes <= toMinutes(config.to); t += config.durationMinutes) out.push(fromMinutes(t));
   return out;
+}
+
+/** A seller-local date and time as an ISO 8601 string with its UTC offset ("2026-06-11T10:00:00+02:00"); null when that local time does not exist. */
+export function isoWithOffset(ymd: Ymd, hm: string, timeZone: string): string | null {
+  const at = instantOf(ymd, hm, timeZone);
+  if (at === null) return null;
+  const p = partsAt(at, timeZone);
+  const minutes = Math.round((Date.UTC(p.y, p.m - 1, p.d, p.h, p.mi) - at) / 60000);
+  const sign = minutes < 0 ? "-" : "+";
+  const abs = Math.abs(minutes);
+  return `${ymd}T${hm}:00${sign}${String(Math.floor(abs / 60)).padStart(2, "0")}:${String(abs % 60).padStart(2, "0")}`;
 }
 
 export type Slot = { date: string; time: string };

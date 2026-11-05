@@ -4,7 +4,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import ProductLayout from "@/components/ProductLayout";
-import { navigateTarget } from "@/lib/agent-bridge";
+import { navigateTarget, registerAgentBridge } from "@/lib/agent-bridge";
 import { buildSite } from "@/lib/site";
 import { FIXTURE_DIR, fixtures } from "./helpers";
 import { fakeWidget } from "./fake-widget";
@@ -37,11 +37,22 @@ describe("navigateTarget: the allow-list", () => {
   const rendered = ["hero", "gallery", "offer", "contact"];
   const t = (path: unknown, lang: "de" | "en" = "en") => navigateTarget(path, lang, origin, rendered);
 
+  it("the contact targets: #contact (a viewing, or the first type offered), #contact-<type> for the four types and both spellings of the test drive, in any case; no other name", () => {
+    expect(t("/#contact-viewing")).toEqual({ kind: "contact", type: "viewing" });
+    expect(t("/#contact-testdrive")).toEqual({ kind: "contact", type: "testdrive" });
+    expect(t("/#contact-test_drive")).toEqual({ kind: "contact", type: "testdrive" }); // the old name is the same type
+    expect(t("/en#contact-question")).toEqual({ kind: "contact", type: "question" });
+    expect(t("/#contact-offer")).toEqual({ kind: "contact", type: "offer" });
+    expect(t("/#Contact-Offer")).toEqual({ kind: "contact", type: "offer" });
+    expect(t("/#contact%2Doffer")).toEqual({ kind: "contact", type: "offer" }); // decoded like the reference
+    for (const bad of ["/#contact-", "/#contact-booking", "/#contact-offer-now", "/#contact-1", "/#contacts", "/#contact--offer", "/de#contact-offer"]) expect(t(bad), bad).toBeNull(); // (the last: another page language)
+  });
+
   it("accepts / and /<page language>, with no hash, #contact, a rendered block or #gallery-<n>", () => {
     expect(t("/")).toEqual({ kind: "top" });
     expect(t("/en")).toEqual({ kind: "top" });
-    expect(t("/#contact")).toEqual({ kind: "contact" });
-    expect(t("/en#contact")).toEqual({ kind: "contact" });
+    expect(t("/#contact")).toEqual({ kind: "contact", type: "contact" }); // a viewing, or the first type the product offers
+    expect(t("/en#contact")).toEqual({ kind: "contact", type: "contact" });
     expect(t("/en#offer")).toEqual({ kind: "hash", id: "offer" });
     expect(t("/#gallery-3")).toEqual({ kind: "gallery", hash: "#gallery-3" });
     for (const hash of ["#gallery-interior", "#photo-cockpit", "#photo-steering-wheel-panel", "#spot-mileage-reading", "#gallery-0", "#gallery-1000", "#gallery-nope"]) {
@@ -148,5 +159,54 @@ describe("the command handler", () => {
     root = undefined;
     expect(w.command("page_context").handled).toBe(false);
     w.remove();
+  });
+});
+
+describe("registerAgentBridge: what it tells the contact row", () => {
+  const setup = (callActive?: () => boolean) => {
+    const contact = document.createElement("div");
+    contact.id = "contact";
+    const open = vi.fn();
+    (contact as any).open = open;
+    document.body.appendChild(contact);
+    const off = registerAgentBridge({ lang: "en", answer: () => ({}), ...(callActive ? { callActive } : {}) });
+    const navigate = (path: string) => {
+      const event = new CustomEvent("agent-command", { detail: { type: "navigate", payload: { path }, respond() {} }, cancelable: true });
+      document.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    return { open, navigate, done: () => { off(); contact.remove(); } };
+  };
+
+  it("opens it on the type named, led by the agent; the call marks the request as the agent's only while it runs", () => {
+    let call = false;
+    const s = setup(() => call);
+    expect(s.navigate("/#contact-offer")).toBe(true);
+    expect(s.open).toHaveBeenLastCalledWith({ type: "offer", by: "agent" });
+    call = true;
+    expect(s.navigate("/#contact-test_drive")).toBe(true);
+    expect(s.open).toHaveBeenLastCalledWith({ type: "testdrive", by: "agent", agent: true });
+    expect(s.navigate("/#contact")).toBe(true);
+    expect(s.open).toHaveBeenLastCalledWith({ type: "contact", by: "agent", agent: true });
+    s.done();
+  });
+
+  it("a name that is no request type is left alone (not handled, nothing opened)", () => {
+    const s = setup();
+    expect(s.navigate("/#contact-booking")).toBe(false);
+    expect(s.open).not.toHaveBeenCalled();
+    s.done();
+  });
+
+  it("does nothing while the page is not interactive yet (no open method): not handled", () => {
+    const contact = document.createElement("div");
+    contact.id = "contact";
+    document.body.appendChild(contact);
+    const off = registerAgentBridge({ lang: "en", answer: () => ({}) });
+    const event = new CustomEvent("agent-command", { detail: { type: "navigate", payload: { path: "/#contact-offer" }, respond() {} }, cancelable: true });
+    document.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+    off();
+    contact.remove();
   });
 });

@@ -27,5 +27,5 @@ export const fields = {
   detailsKey: null,
   detailsFields: [],
   schemaType: "Car",
-  requestTypes: ["viewing", "test_drive", "question", "offer"],
+  requestTypes: ["viewing", "testdrive", "question", "offer"],
 } as const satisfies ProductTypeFields;

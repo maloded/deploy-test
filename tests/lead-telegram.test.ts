@@ -66,7 +66,7 @@ describe("Telegram as the store", () => {
     const t = fake(tgOk);
     const res = await post(env({ LEADS_STORE: "telegram", ...TG }), t.f);
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ ok: true });
+    expect(await res.json()).toEqual({ ok: true, id: expect.stringMatching(/^[0-9A-F]{8}$/) });
     expect(t.telegram()).toHaveLength(1);
     const text = t.telegram()[0].text!;
     expect(text).toContain(`${OWNER_LABELS.title[ownerLang]} #`);
@@ -139,7 +139,7 @@ describe("Telegram as the notifier", () => {
     const t = fake(tgOk);
     const res = await post(e, t.f);
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ ok: true });
+    expect(await res.json()).toEqual({ ok: true, id: expect.stringMatching(/^[0-9A-F]{8}$/) });
     expect(stored(e)).toHaveLength(1);
     expect(t.telegram()).toHaveLength(1);
     for (const value of [NAME, MAIL, NOTE]) expect(t.telegram()[0].text).not.toContain(value);
@@ -160,7 +160,7 @@ describe("Telegram as the notifier", () => {
     const e = file();
     const res = await post(e, fake(answer).f);
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ ok: true });
+    expect(await res.json()).toEqual({ ok: true, id: expect.stringMatching(/^[0-9A-F]{8}$/) });
     expect(stored(e)).toHaveLength(1);
     expect(logged).toEqual([`lead notification not sent (${reason})`]);
     noLeak();

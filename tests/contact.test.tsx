@@ -51,6 +51,7 @@ const submit = async (form: HTMLFormElement) => act(async () => void form.dispat
 const fill = (form: HTMLFormElement) => {
   type(field(form, "name"), "Test Person");
   type(field(form, "email"), "person@example.invalid");
+  type(field(form, "message"), "A question about the car"); // the default type is a question, and the web form needs it
   check(field(form, "consent"));
 };
 const reply = (status: number, body: unknown = { ok: status === 200 }) => {
@@ -133,7 +134,7 @@ describe("the contact block (the footer's contact row)", () => {
     mount("en");
     const form = inline();
     for (const name of ["name", "email", "phone", "channel", "contactWindow", "message", "consent", "website"]) expect(field(form, name), name).toBeTruthy();
-    expect([...form.querySelectorAll("[required]")].map((e) => e.getAttribute("name"))).toEqual(["name", "email", "consent"]);
+    expect([...form.querySelectorAll("[required]")].map((e) => e.getAttribute("name"))).toEqual(["name", "message", "consent"]); // a question: the question itself is required on the web, and phone or e-mail (neither is required alone)
     expect(field(form, "message").getAttribute("maxlength")).toBe("1000");
     expect([...field(form, "channel").querySelectorAll("option")].map((o) => o.getAttribute("value"))).toEqual(["", "email", "phone", "whatsapp", "telegram"]);
     for (const el of form.querySelectorAll("input:not([type=checkbox]), select, textarea")) {
@@ -161,8 +162,10 @@ describe("the contact block (the footer's contact row)", () => {
     const f = reply(200);
     fill(inline());
     type(field(inline(), "requestType") as unknown as HTMLSelectElement, "offer");
+    type(field(inline(), "phone"), "+00 000 000 000"); // an offer needs both
+    type(field(inline(), "amount"), "800"); // the fixture car costs 589: the range is 295 to 1,767
     await submit(inline());
-    expect(JSON.parse((f.mock.calls as any)[0][1].body)).toMatchObject({ requestType: "offer", lang: "de" });
+    expect(JSON.parse((f.mock.calls as any)[0][1].body)).toMatchObject({ requestType: "offer", lang: "de", amount: 800, source: "form" });
   });
 
   it("never repeats an id on the page (the band, the dialog and the form)", () => {
@@ -243,7 +246,7 @@ describe("sending", () => {
     const body = JSON.parse(init.body);
     expect(body).toMatchObject({ name: "Test Person", email: "person@example.invalid", message: "Hello", consent: true, lang: "en", website: "" });
     expect(body.elapsedMs).toBeGreaterThanOrEqual(0);
-    expect(body).not.toHaveProperty("source");
+    expect(body).toMatchObject({ source: "form" }); // the visitor opened it themselves
     expect(section().textContent).not.toContain("Test Person");
     expect(section().querySelector(".contact__success")!.textContent).toContain(ui("contact.success.text", "en"));
     expect(events).toHaveLength(1);
@@ -456,7 +459,7 @@ describe("the page interface on section#contact", () => {
     const own = Object.keys(el).filter((k) => typeof el[k] === "function").sort();
     expect(own).toEqual(["close", "open"]);
     for (const name of ["setField", "getState", "prefill", "setConsent", "consent", "values", "submit"]) expect(el[name], name).toBeUndefined();
-    expect(el.open.length).toBe(0); // no parameter: nothing can be passed in
+    expect(el.open.length).toBe(1); // one optional options object, {agent: true}: all it can say is who opened the form; nothing of the visitor's can be passed in
     expect(el.close.length).toBe(0);
   });
 

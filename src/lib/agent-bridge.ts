@@ -1,3 +1,4 @@
+import { canonicalRequestType } from "./request-types";
 import type { Language } from "./schema";
 
 /**
@@ -16,11 +17,11 @@ import type { Language } from "./schema";
 type AgentCommandDetail = { type?: unknown; payload?: { path?: unknown } | null; respond?: unknown };
 
 /** "top" with `smooth` is the explicit #top; a plain "/" or "/<lang>" is the same target without it. */
-export type NavigateTarget = { kind: "top"; smooth?: true } | { kind: "contact" } | { kind: "hash"; id: string } | { kind: "gallery"; hash: string };
+export type NavigateTarget = { kind: "top"; smooth?: true } | { kind: "contact"; type: string } | { kind: "hash"; id: string } | { kind: "gallery"; hash: string };
 
 /**
  * Which place on this page a navigate path means, or null when it is not one. Accepted: "/" or "/<page language>", with no
- * query and with an optional hash: #contact (the dialog), #<id of a block this page renders>, or a gallery address when the gallery is
+ * query and with an optional hash: #contact or #contact-<type> (the dialog: see below), #<id of a block this page renders>, or a gallery address when the gallery is
  * rendered: #gallery-<category>, #gallery-<n> (1-based), #photo-<id>, #spot-<id> (which of them exist is the gallery's to say: it answers "unhandled"
  * for a name it does not have). The path is parsed against the page origin; another origin, another language, a query or any other hash is null.
  */
@@ -35,7 +36,14 @@ export function navigateTarget(path: unknown, lang: Language, origin: string, re
   if (url.origin !== origin || url.search !== "" || (url.pathname !== "/" && url.pathname !== `/${lang}`)) return null;
   const hash = url.hash;
   if (hash === "") return { kind: "top" };
-  if (hash === "#contact") return { kind: "contact" };
+  // the contact form: #contact (a viewing, or the first type the product offers) and #contact-viewing, -testdrive (or -test_drive), -question, -offer, as on the reference site;
+  // any other name after the dash is not a target. Which of them the product offers is the form's to say (it falls back to the default type for one it does not).
+  const contact = /^#contact(?:-([a-z_]+))?$/i.exec(safeDecode(hash));
+  if (contact) {
+    if (contact[1] === undefined) return { kind: "contact", type: "contact" };
+    const type = canonicalRequestType(contact[1].toLowerCase());
+    return type === null ? null : { kind: "contact", type };
+  }
   if (hash === "#top") return { kind: "top", smooth: true };
   const id = hash.slice(1);
   if (id !== "contact" && renderedBlocks.includes(id)) return { kind: "hash", id };
@@ -43,10 +51,27 @@ export function navigateTarget(path: unknown, lang: Language, origin: string, re
   return null;
 }
 
+const safeDecode = (s: string): string => {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
+};
+
 /** The ids of the blocks the page renders, as the layout publishes them. */
 const renderedBlockIds = (): string[] => (document.querySelector<HTMLElement>("[data-block-order]")?.dataset.blockOrder ?? "").split(" ").filter(Boolean);
 
 type ContactApi = { open?: unknown };
+/** What the bridge tells the contact row when it opens the form: the agent did it during a call. */
+export type ContactOpenOptions = {
+  /** A call is running: the request will say it comes from the agent (source "agent"). */
+  agent?: boolean;
+  /** Who led to the form: "agent" for the voice assistant's navigate (also without a running call). A send is only kept (not reset) when the agent leads to the same type again. */
+  by?: "agent";
+  /** The kind of request to open: a request type's id ("testdrive" and "test_drive" both), or "contact" for a viewing / the first offered type. One the product does not offer opens the default type. */
+  type?: string;
+};
 
 /**
  * #top: smooth scroll to the top (instant with prefers-reduced-motion), then focus on the page's main landmark so the next Tab
@@ -76,7 +101,7 @@ function showGalleryAddress(hash: string): boolean {
  * Registers the handler on the document and returns the function that removes it. `product` is the
  * "<seller>/<product>" reference. The answer of page_context is built by `answer`.
  */
-export function registerAgentBridge({ lang, answer }: { lang: Language; answer: () => unknown }): () => void {
+export function registerAgentBridge({ lang, answer, callActive = () => false }: { lang: Language; answer: () => unknown; /** Whether a call is running now: a form the agent opens then is marked as the agent's (the request's source). */ callActive?: () => boolean }): () => void {
   const onCommand = (event: Event) => {
     const detail = (event as CustomEvent<AgentCommandDetail>).detail;
     if (!detail || typeof detail !== "object" || typeof detail.respond !== "function") return;
@@ -89,7 +114,7 @@ export function registerAgentBridge({ lang, answer }: { lang: Language; answer: 
         const contact = document.getElementById("contact") as (HTMLElement & ContactApi) | null;
         if (typeof contact?.open !== "function") return; // the page is not interactive yet
         event.preventDefault();
-        (contact.open as () => void)();
+        (contact.open as (options?: ContactOpenOptions) => void)({ type: target.type, by: "agent", ...(callActive() ? { agent: true } : {}) });
       } else if (target.kind === "top") {
         event.preventDefault();
         if (target.smooth) goToTop();

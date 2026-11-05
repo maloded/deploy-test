@@ -367,3 +367,7 @@ vw-multivan/product.json,music.tracks[2].title.tr,tr,Piyano,AI draft (this task)
 vw-multivan/product.json,music.tracks[2].title.bg,bg,Пиано,AI draft (this task),AI draft - needs native review
 vw-multivan/product.json,music.tracks[3].title.tr,tr,Anılar,AI draft (this task),AI draft - needs native review
 vw-multivan/product.json,music.tracks[3].title.bg,bg,Спомени,AI draft (this task),AI draft - needs native review
+vw-multivan/product.json,viewing.address.tr,tr,Adresi randevuyu onaylarken size bildireceğiz.,AI draft (form-rules step),AI draft - needs native review
+vw-multivan/product.json,viewing.address.bg,bg,Адреса ще съобщим при потвърждаването на часа.,AI draft (form-rules step),AI draft - needs native review
+vw-multivan/product.json,viewing.testDriveNotes.tr,tr,Lütfen ehliyetinizi ve kimliğinizi getirin.,AI draft (form-rules step),AI draft - needs native review
+vw-multivan/product.json,viewing.testDriveNotes.bg,bg,"Моля, носете шофьорска книжка и документ за самоличност.",AI draft (form-rules step),AI draft - needs native review
