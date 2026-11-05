@@ -1615,7 +1615,9 @@
           "bg": "Спокойна"
         },
         "file": "audio/calm.mp3",
-        "license": "TODO: source and licence"
+        "license": "Pixabay Content License: commercial use allowed, attribution not required, the raw track may not be sold or redistributed as a file. \"Calm\" by Sub_Clair, https://pixabay.com/music/612494/, downloaded 2026-10-28. Proof: the track page and the licence page as PDFs in licences/ (the content repository's root folder, outside good-point/, never published).",
+        "credit": "Pixabay",
+        "creditUrl": "https://pixabay.com/"
       },
       {
         "id": "background",
@@ -1626,7 +1628,9 @@
           "bg": "Фон"
         },
         "file": "audio/background.mp3",
-        "license": "TODO: source and licence"
+        "license": "Pixabay Content License: commercial use allowed, attribution not required, the raw track may not be sold or redistributed as a file. \"Background Music\" by Sub_Clair, https://pixabay.com/music/607575/, downloaded 2026-10-28. Proof: the track page and the licence page as PDFs in licences/ (the content repository's root folder, outside good-point/, never published).",
+        "credit": "Pixabay",
+        "creditUrl": "https://pixabay.com/"
       },
       {
         "id": "piano",
@@ -1637,7 +1641,9 @@
           "bg": "Пиано"
         },
         "file": "audio/piano.mp3",
-        "license": "TODO: source and licence"
+        "license": "Pixabay Content License: commercial use allowed, attribution not required, the raw track may not be sold or redistributed as a file. \"Inspiring Piano Cinematic Trailer\" by Kulakovka, https://pixabay.com/music/614895/, downloaded 2026-10-28. Proof: the track page and the licence page as PDFs in licences/ (the content repository's root folder, outside good-point/, never published).",
+        "credit": "Pixabay",
+        "creditUrl": "https://pixabay.com/"
       },
       {
         "id": "memories",
@@ -1648,7 +1654,9 @@
           "bg": "Спомени"
         },
         "file": "audio/memories.mp3",
-        "license": "TODO: source and licence"
+        "license": "Pixabay Content License: commercial use allowed, attribution not required, the raw track may not be sold or redistributed as a file. \"Leilyn's Shattered Memories\" by mlvr, https://pixabay.com/music/601669/, downloaded 2026-10-28. Proof: the track page and the licence page as PDFs in licences/ (the content repository's root folder, outside good-point/, never published).",
+        "credit": "Pixabay",
+        "creditUrl": "https://pixabay.com/"
       }
     ],
     "defaultTrack": "calm",

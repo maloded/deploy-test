@@ -3735,11 +3735,30 @@ html[data-hero-pending] .hero {
   word-break: normal;
 }
 
-/* the music credit line (only when a track's licence asks for it): quiet, like the legal note */
+/* the music credit line (only when a track has a credit): beside the version line, in the same small, quiet type */
+.site-footer__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  column-gap: 0.6em;
+  min-width: 0;
+}
+
 .site-footer__credit {
-  color: var(--muted);
-  font-size: 0.8rem;
+  color: color-mix(in srgb, var(--muted) 70%, var(--bg));
+  font-size: 0.62rem;
   overflow-wrap: anywhere;
+}
+
+.site-footer .site-footer__credit a {
+  color: inherit; /* the link keeps the quiet colour of the line (the footer's links are otherwise the text colour) */
+}
+
+/* a quiet dot between the two when they stand on one line */
+.site-footer__credit + .site-footer__version::before {
+  content: "·";
+  margin-inline-end: 0.6em;
 }
 
 /*
@@ -3913,9 +3932,9 @@ a.site-footer__badge:hover {
     min-height: 2.75rem;
   }
 
-  .site-footer__version {
+  .site-footer__meta {
     flex: 0 0 100%;
-    text-align: center;
+    justify-content: center;
   }
 }
 

@@ -2,7 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
-import { loadProduct } from "@/lib/content";
+import { loadProduct, musicLicenseWarnings } from "@/lib/content";
 import { MAX_AUDIO_BYTES, startTrackId } from "@/lib/music";
 import { referencedFiles } from "../scripts/lib/referenced.mjs";
 import { fixtures } from "./helpers";
@@ -107,5 +107,37 @@ describe("music in product.json", () => {
     const refs = referencedFiles({ media: { hero: "h.jpg", gallery: [] }, music: { tracks: [track("a"), track("b")] } }).map((r: { file: string }) => r.file);
     expect(refs).toEqual(expect.arrayContaining(["audio/a.wav", "audio/b.wav"]));
     expect(referencedFiles({ media: { hero: "h.jpg", gallery: [] } }).map((r: { file: string }) => r.file)).toEqual(["h.jpg"]);
+  });
+});
+
+describe("the licence warning of a build", () => {
+  const note = (id: string, license: string | undefined) => ({ id, file: `audio/${id}.wav`, license });
+
+  it("names the product and the track whose note still says TODO (any case, after spaces), and says nothing for a recorded source", () => {
+    const out = musicLicenseWarnings("sell/prod", [note("calm", "TODO: source and licence"), note("piano", "  todo"), note("memories", "Pixabay Content License, https://pixabay.com/music/1/"), note("td", "Todoist-free licence text")]);
+    expect(out).toHaveLength(2);
+    expect(out[0]).toContain('sell/prod: music track "calm" (audio/calm.wav) still says "TODO"');
+    expect(out[0]).toContain("licences/");
+    expect(out[1]).toContain('"piano"');
+    expect(out.join("\n")).not.toContain("memories");
+    expect(out.join("\n")).not.toContain('"td"'); // "Todoist ..." is not a TODO
+  });
+
+  it("also reports a note that is missing or empty (the schema refuses those before this point, so the check holds for any data that reaches it)", () => {
+    const out = musicLicenseWarnings("s/p", [note("a", undefined), note("b", "   ")]);
+    expect(out.map((w) => /has no license note/.test(w))).toEqual([true, true]);
+    expect(musicLicenseWarnings("s/p", undefined)).toEqual([]);
+  });
+
+  it("a product with a TODO note still loads (a warning, never a failure), and the warning is in the load result with the product and the track", () => {
+    const loaded = setup({ tracks: [track("a", { license: "TODO: source and licence" }), track("b")] }, A).load(true);
+    expect(loaded.licenseWarnings).toHaveLength(1);
+    expect(loaded.licenseWarnings[0]).toMatch(/fixture-car: music track "a" \(audio\/a\.wav\) still says "TODO"/);
+    expect(loaded.warnings.join("\n")).not.toMatch(/TODO/); // a separate list: media warnings stay about media
+  });
+
+  it("a product without music or with every source recorded has no warning", () => {
+    expect(setup(undefined).load().licenseWarnings).toEqual([]);
+    expect(setup({ tracks: [track("a"), track("b")] }, A).load().licenseWarnings).toEqual([]);
   });
 });

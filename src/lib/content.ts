@@ -69,7 +69,20 @@ export type LoadedProduct = {
   podiumEmblem: string | null;
   /** Missing media files, only reported (instead of thrown) when `strictMedia` is false. */
   warnings: string[];
+  /** Music tracks whose license note is missing, empty or still a "TODO": a warning naming the product and the track, never an error (the page works; the licence is the owner's to settle). */
+  licenseWarnings: string[];
 };
+
+/** The warnings for tracks without a recorded source: a missing, empty or "TODO..." license note. (A missing or empty note is also refused by the schema; this keeps the check true for any data that reaches it.) */
+export function musicLicenseWarnings(ref: string, tracks: readonly { id: string; file: string; license?: string }[] | undefined): string[] {
+  const out: string[] = [];
+  for (const t of tracks ?? []) {
+    const note = (t.license ?? "").trim();
+    const why = note === "" ? "has no license note" : /^todo\b/i.test(note) ? 'still says "TODO"' : null;
+    if (why) out.push(`${ref}: music track "${t.id}" (${t.file}) ${why}: record its source and licence, and keep the proof in the content repository's licences/ folder`);
+  }
+  return out;
+}
 
 export type LoadOptions = {
   contentDir?: string;
@@ -227,5 +240,5 @@ export function loadProduct(ref: string, options: LoadOptions = {}): LoadedProdu
   // without it gets it last (listing "contact" only decides where it goes)
   const listed = file.blocks ?? defaultBlocksFor(typeFields);
   const blocks: BlockId[] = listed.includes("contact") ? [...listed] : [...listed, "contact"];
-  return { ref, seller, product, typeFields, blocks, viewing, images, translationWarnings, coverage, warnings, avatar, logo, developerIcon, podiumEmblem };
+  return { ref, seller, product, typeFields, blocks, viewing, images, translationWarnings, coverage, warnings, licenseWarnings: musicLicenseWarnings(ref, file.music?.tracks), avatar, logo, developerIcon, podiumEmblem };
 }

@@ -98,23 +98,6 @@ export function Footer({ site }: { site: Site }) {
         <div className="site-footer__bottom">
           <div className="site-footer__notes">
             {seller.legalNote && <p className="site-footer__legal">{pick(seller.legalNote, lang)}</p>}
-            {credits.length > 0 && (
-              <p className="site-footer__credit">
-                {ui("footer.music", lang)}{" "}
-                {credits.map((c, i) => (
-                  <span key={c.credit + (c.url ?? "")}>
-                    {i > 0 && " · "}
-                    {c.url ? (
-                      <a href={c.url} target="_blank" rel="noopener noreferrer">
-                        {c.credit}
-                      </a>
-                    ) : (
-                      c.credit
-                    )}
-                  </span>
-                ))}
-              </p>
-            )}
           </div>
           {developer && (
             <Badge className="site-footer__badge site-footer__badge--developer" href={developer.url}>
@@ -139,7 +122,28 @@ export function Footer({ site }: { site: Site }) {
                 ))}
               </nav>
             )}
-            {version && <p className="site-footer__version">{version}</p>}
+            {(credits.length > 0 || version) && (
+              <div className="site-footer__meta">
+                {credits.length > 0 && (
+                  <p className="site-footer__credit">
+                    {ui("footer.music", lang)}{" "}
+                    {credits.map((c, i) => (
+                      <span key={c.credit + (c.url ?? "")}>
+                        {i > 0 && " · "}
+                        {c.url ? (
+                          <a href={c.url} target="_blank" rel="noopener noreferrer">
+                            {c.credit}
+                          </a>
+                        ) : (
+                          c.credit
+                        )}
+                      </span>
+                    ))}
+                  </p>
+                )}
+                {version && <p className="site-footer__version">{version}</p>}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -28,6 +28,7 @@ export function buildSite(themeOverride: string | null, refOverride?: string, co
     reported.add(ref);
     console.log(`translation coverage ${ref}: ${coverageLine(loaded.coverage)}`);
     for (const w of loaded.translationWarnings) console.warn(`translation: ${w}`);
+    for (const w of loaded.licenseWarnings) console.warn(`music licence: ${w}`); // a warning, never a failure of the build
   }
   const available = listThemes();
   const requested = themeSwitcherEnabled() && themeOverride ? themeOverride : loaded.product.theme;

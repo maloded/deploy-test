@@ -106,6 +106,35 @@ describe("snapshot of one product", () => {
     expect(all.filter((n) => n.includes("tracked"))).toEqual([]);
   });
 
+  it("never copies a licences/ folder from the content root (the proof of the music licences is kept there, outside every seller), and never lists it", async () => {
+    const s = await setup();
+    put(s.contentRoot, "licences/calm-pixabay.pdf", "proof");
+    put(s.contentRoot, "licences/pixabay-content-license.pdf", "proof");
+    put(s.contentRoot, "licences/notes.txt", "proof");
+    fs.chmodSync(path.join(s.contentRoot, "licences"), 0o000); // not even readable: the snapshot must not need it
+    try {
+      await snapshot(s);
+    } finally {
+      fs.chmodSync(path.join(s.contentRoot, "licences"), 0o755);
+    }
+    expect(names(s.dest).filter((n) => /licen[cs]e/i.test(n))).toEqual([]);
+    expect(fs.existsSync(path.join(s.dest, "content", "licences"))).toBe(false);
+    expect(fs.existsSync(path.join(s.dest, "licences"))).toBe(false);
+  });
+
+  it("refuses a licences folder that ended up inside the product or the template (a second line of defence)", async () => {
+    const s = await setup();
+    put(s.contentRoot, `${CHOSEN}/licences/calm.pdf`, "proof"); // a mistake: inside the product, so the product copy would carry it
+    await expect(snapshot(s)).rejects.toThrow(SnapshotRefused);
+    await expect(snapshot(s)).rejects.toThrow(/licences folder/);
+    expect(fs.existsSync(s.dest)).toBe(false);
+  });
+
+  it("the guard names a licences folder at any depth, in either spelling, and nothing else that is merely called licence", () => {
+    for (const rel of ["content/licences/calm.pdf", "licences/calm.pdf", "content/sell-a/alpha-1/licenses/x.pdf", "content/sell-a/Licences/x.pdf"]) expect(forbiddenReason(rel), rel).toMatch(/licences folder/);
+    for (const rel of ["LICENSE", "content/sell-a/alpha-1/product.json", "src/lib/licence-note.ts", "docs-licences.md"]) expect(forbiddenReason(rel), rel).toBeNull();
+  });
+
   it("never reads the other seller's or the sibling product's folder (they can be locked)", async () => {
     const s = await setup();
     const locked = [path.join(s.contentRoot, "sell-b"), path.join(s.contentRoot, SIBLING)];

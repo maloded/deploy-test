@@ -18,6 +18,7 @@ export function forbiddenReason(rel, bytes = 0) {
   if (parts.includes("node_modules")) return "node_modules";
   if (parts.includes(".git")) return ".git folder";
   if (parts.includes(".private")) return ".private folder (private term list)";
+  if (parts.some((part) => /^licen[cs]es$/i.test(part))) return "a licences folder (the proof of a track's or photo's licence stays in the content repository, in its root licences/ folder; it is never published)";
   if (/(^|\/)data\/leads(\/|$)/.test(rel)) return "data/leads (visitor data)"; // at any depth, also inside a content folder
   if (base.startsWith(".env") && base !== ".env.example") return ".env file (secrets)"; // .env.example lists variable names only
   if (/^content\/[^/]+\/(?:[^/]+\/)?media\//.test(rel)) { // content/<seller>/<product>/media (and the layout from before seller folders)
