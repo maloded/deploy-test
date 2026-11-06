@@ -1355,21 +1355,21 @@ html[data-hero-pending] .hero {
 }
 
 /*
- * One-screen hero with the card: more room for the picture. The eyebrow stays at the top of its band (the band keeps its height: Sofia's invitation sits in it, above
+ * One-screen hero with the card, podium layout only (data-layout; the cards layout keeps its 0.9.1 proportions): more room for the picture. The eyebrow stays at the top of its band (the band keeps its height: Sofia's invitation sits in it, above
  * the card), the headline block (the eyebrow's band is not touched) is pulled up under the eyebrow by 1.55rem (the left stage has a negative top margin and, being
  * stretched, is taller by as much: its bottom stays level with the card's bottom), and the headline is one step smaller (0.9 of the theme's size, but not below
  * 2.7rem, about the section titles' size, so that it stays the largest text of the page; it is never larger than the theme's size). The panel gets all the room that is freed, and its picture scales with it.
  */
 @media (min-width: 56em) and (min-height: 37.5em) {
-  .hero[data-card] .hero__lead-in {
+  .hero[data-card][data-layout="podium"] .hero__lead-in {
     padding-block: var(--space-2) 0;
   }
 
-  .hero[data-card] .hero__top .hero__stage {
+  .hero[data-card][data-layout="podium"] .hero__top .hero__stage {
     margin-top: -1.55rem;
   }
 
-  .hero[data-card] .hero__top .hero__headline {
+  .hero[data-card][data-layout="podium"] .hero__top .hero__headline {
     font-size: min(var(--hero-headline-size, clamp(1.9rem, 4vw, 3.25rem)), max(calc(var(--hero-headline-size, clamp(1.9rem, 4vw, 3.25rem)) * 0.9), 2.7rem));
   }
 }
@@ -1598,6 +1598,81 @@ html[data-hero-pending] .hero {
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+}
+
+/*
+ * The cards hero (data-layout="cards", the three-card hero), after the client's first feedback. Podium is not touched by any of this.
+ *  - The eyebrow is centred over the photo area (as in 0.9.1; the title is left-aligned on its left edge; on a phone both are centred). On a wide window it moves up and the title
+ *    follows it: the band keeps its height (the invitation and the card hang from it and stay where they were), so what the eyebrow gives at the top the band
+ *    gives back at the bottom, and the title's block is pulled up by the same amount as in the podium hero (the left column is stretched, so its bottom stays
+ *    level with the card's bottom: the photos get the room).
+ *  - The title is smaller by --hero-title-scale (hero.titleScale, default 0.78) at every width: the theme's own size (--hero-headline-size) times the scale, so the phone and
+ *    tablet sizes shrink in proportion.
+ *  - The photo area is two columns, the main card and the stack of two cards, in the ratio --hero-main-fr : --hero-side-fr (hero.mainShare, default 2 : 1); the main card fills
+ *    its column (no ratio of its own), the two cards together are as tall as it is. The gaps, radii and backdrops are as before.
+ */
+.hero[data-layout="cards"] .hero__lead-in {
+  text-align: center; /* over the photo area (below 56em that is the whole width, above it see the padding below), as it was in 0.9.1 */
+}
+
+.hero[data-layout="cards"] .hero__headline {
+  font-size: calc(var(--hero-headline-size, clamp(1.9rem, 4vw, 3.25rem)) * var(--hero-title-scale, 0.78));
+}
+
+@media (width < 56em) {
+  .hero[data-layout="cards"] .hero__top > .hero__stage {
+    align-items: center;
+    text-align: center; /* a phone: the eyebrow and the title on one centre line */
+  }
+}
+
+@media (min-width: 56em) and (min-height: 37.5em) {
+  .hero[data-layout="cards"] .hero__lead-in {
+    padding-block: var(--space-3) var(--space-5);
+    /* the band is as wide as the photo area: the card's column (the slot's width, with its floor, and the gap of .hero__top) is left out on the right, so the centred eyebrow is centred over the photos */
+    padding-right: calc(var(--space-4) + var(--hero-lead-slot-w, 18rem) + max(2.5rem, min(5vw, 5rem)));
+    --hero-lead-slot-w: max(18rem, min(36rem, 44vw, calc(var(--hero-slot-h, calc(100svh - 24.8rem)) * 0.8)));
+  }
+
+  .hero[data-layout="cards"] .hero__top .hero__stage {
+    margin-top: -1.2rem;
+  }
+
+  .hero[data-layout="cards"] .hero__top .hero__photo[data-thumbs] {
+    grid-template-columns: minmax(0, var(--hero-main-fr, 2fr)) minmax(0, var(--hero-side-fr, 1fr));
+  }
+
+  .hero[data-layout="cards"] .hero__top .hero__photo[data-thumbs] .hero__frame {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    height: auto;
+    min-height: 0;
+    align-self: stretch;
+    aspect-ratio: auto;
+  }
+
+  .hero[data-layout="cards"] .hero__top .hero__photo[data-thumbs] .hero__box {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    aspect-ratio: auto;
+  }
+}
+
+@media (min-width: 56em) and (min-height: 50.01em) and (max-height: 60em) {
+  .hero[data-layout="cards"] .hero__lead-in {
+    --hero-lead-slot-w: max(13rem, min(36rem, 44vw, calc(var(--hero-slot-h, calc(100svh - 24.8rem)) * 0.8)));
+  }
+}
+
+@media (min-width: 56em) and (min-height: 37.5em) and (max-height: 50em) {
+  .hero[data-layout="cards"] .hero__lead-in {
+    padding-block: var(--space-2) var(--space-3);
+    --hero-lead-slot-w: max(11rem, min(36rem, 44vw, calc(var(--hero-slot-h, calc(100svh - 24.8rem)) * 0.8)));
   }
 }
 

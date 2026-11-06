@@ -1,7 +1,7 @@
 import Image from "next/image";
 import type { CSSProperties } from "react";
 import { objectPosition } from "@/lib/focus";
-import { frameRangeForTheme, heroDescription, heroEyebrow, heroFacts, factPairs, heroFit, heroHeadline, heroMobile, splitLead } from "@/lib/hero";
+import { frameRangeForTheme, heroDescription, heroEyebrow, heroFacts, factPairs, heroFit, heroHeadline, heroLayout, heroMobile, splitLead } from "@/lib/hero";
 import { heroFitScript, type HeroFitParts } from "@/lib/hero-fit";
 import { heroThumbs } from "@/lib/hero-thumbs";
 import { formatPrice, pick } from "@/lib/i18n";
@@ -50,13 +50,22 @@ export function Hero({ site }: { site: Site }) {
 
   // with the agent's card the left column has room beside the photo: the next two gallery photos after the hero one, as thumbnails that open the gallery
   // at that photo (the same deep link as /#gallery-N). Only when the page renders the gallery block.
-  // hero.mode "single": the photo alone, one large image in the left column and no tiles; with a cut-out it can stand on a podium and have glowing lights (hero.podium, hero.lights)
-  const single = hasCard && product.hero?.mode === "single";
+  // hero.layout "podium" (or the older hero.mode "single"; missing: "cards", the photo with its two cards): the photo alone, one large image in the left column and no tiles; with a cut-out it can stand on a podium and have glowing lights (hero.podium, hero.lights)
+  const single = hasCard && heroLayout(product.hero) === "podium";
   const car = single && cutout && Boolean(image);
   const podium = car ? podiumOf(product.hero?.podium, lang) : null;
   const lights = car ? (product.hero?.lights ?? []) : [];
   const fitParts: HeroFitParts = { ...(facts.length > 0 ? { facts: ".hero__facts" } : {}), ...(hasCard ? { heading: ".sofia-intro__heading", slot: "[data-agent-slot]" } : {}) };
   const thumbs = hasCard && !single && site.blocks.includes("gallery") ? heroThumbs(galleryProps(site).slides, image?.src) : [];
+
+  // the cards layout's two optional settings (hero.titleScale, hero.mainShare) go to the CSS as variables, only when the content sets them (the CSS has the defaults)
+  const cardsStyle: CSSProperties | undefined =
+    hasCard && !single && (product.hero?.titleScale !== undefined || product.hero?.mainShare !== undefined)
+      ? ({
+          ...(product.hero?.titleScale !== undefined ? { "--hero-title-scale": product.hero.titleScale } : {}),
+          ...(product.hero?.mainShare !== undefined ? { "--hero-main-fr": `${product.hero.mainShare}fr`, "--hero-side-fr": `${Math.round((1 - product.hero.mainShare) * 1000) / 1000}fr` } : {}),
+        } as CSSProperties)
+      : undefined;
 
   // the title zone: eyebrow, then headline and the photo frame
   const eyebrow = <p className="hero__eyebrow label">{heroEyebrow(product, lang, getOfferType(product.offerType).label)}</p>;
@@ -104,7 +113,7 @@ export function Hero({ site }: { site: Site }) {
   );
 
   return (
-    <section className="hero" id="hero" data-block="hero" data-card={hasCard ? "true" : undefined} aria-label={ui("section.hero", lang)}>
+    <section className="hero" id="hero" data-block="hero" data-card={hasCard ? "true" : undefined} data-layout={hasCard ? (single ? "podium" : "cards") : undefined} style={cardsStyle} aria-label={ui("section.hero", lang)}>
       {background && (
         <Image className="hero__bg" src={background.src} alt="" aria-hidden="true" fill sizes="100vw" />
       )}

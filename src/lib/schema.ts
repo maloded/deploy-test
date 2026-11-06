@@ -255,6 +255,16 @@ export const baseShape = {
        */
       mode: z.enum(["tiles", "single"]).optional(),
       /**
+       * Which hero the product has, one word: "cards" (the main photo and, beside it, the next two gallery photos as cards that open the gallery; the original hero, and
+       * the default when the field is missing) or "podium" (the cut-out van alone on its podium, with the settings below: podium, frame, phoneFrame, lights). The settings stay
+       * valid and are simply unused in "cards", so switching back is this one word. When `layout` is missing, the older `mode` still decides ("single" is "podium").
+       */
+      layout: z.enum(["cards", "podium"]).optional(),
+      /** Only for "cards": the title's size as a share of the theme's headline size, at every width (default 0.78). */
+      titleScale: z.number().min(0.5).max(1).optional(),
+      /** Only for "cards": the main card's share of the photo area, the two cards beside it taking the rest (default 0.667, two thirds). */
+      mainShare: z.number().min(0.5).max(0.8).optional(),
+      /**
        * The cut-out stands on a quiet oval podium: true (an oval under the photo's bottom edge) or its geometry, so that another photo can be tuned without code. The
        * oval is the footprint seen from the camera's height: `x` and `y` its centre in percent of the photo's width and height (default 50 and 100), `angle` the tilt
        * of its long axis in degrees (default 0; positive: the right end lower, as the line from a car's rear wheel to its front wheel in a three-quarter photo),

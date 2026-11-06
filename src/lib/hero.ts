@@ -137,3 +137,8 @@ export function heroMobile(product: Product, type: ProductTypeFields, lang: Lang
     shortCta: product.hero?.shortCta ? pick(product.hero.shortCta, lang) : ui("hero.shortCta", lang),
   };
 }
+
+/** Which hero a product has: hero.layout when given, else the older hero.mode ("single" is the podium), else "cards" (the original hero with its two photo cards). */
+export function heroLayout(hero: { layout?: "cards" | "podium"; mode?: "tiles" | "single" } | undefined): "cards" | "podium" {
+  return hero?.layout ?? (hero?.mode === "single" ? "podium" : "cards");
+}

@@ -326,7 +326,7 @@ describe("the single hero's styles", () => {
   });
 
   it("the one-screen hero's headline is one step smaller, never larger than the theme's size and not below 2.7rem; the stage is pulled up under the eyebrow", () => {
-    const one = /@media \(min-width: 56em\) and \(min-height: 37\.5em\) \{\s*\.hero\[data-card\] \.hero__lead-in \{[\s\S]*?\n\}\n/.exec(css)![0];
+    const one = /@media \(min-width: 56em\) and \(min-height: 37\.5em\) \{\s*\.hero\[data-card\]\[data-layout="podium"\] \.hero__lead-in \{[\s\S]*?\n\}\n/.exec(css)![0];
     expect(one).toMatch(/font-size: min\(var\(--hero-headline-size, clamp\(1\.9rem, 4vw, 3\.25rem\)\), max\(calc\(var\(--hero-headline-size, clamp\(1\.9rem, 4vw, 3\.25rem\)\) \* 0\.9\), 2\.7rem\)\)/);
     expect(one).toMatch(/\.hero__stage \{\s*margin-top: -[\d.]+rem;/);
     expect(one).toMatch(/\.hero__lead-in \{\s*padding-block: var\(--space-2\) 0;/);

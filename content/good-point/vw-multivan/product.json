@@ -114,6 +114,7 @@
       "tr": "Randevu",
       "bg": "Оглед"
     },
+    "layout": "cards",
     "mode": "single",
     "podium": {
       "x": 50.4,
