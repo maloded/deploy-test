@@ -206,7 +206,7 @@ describe("navigate #top", () => {
   it("another language, a query or another origin with #top is ignored; a plain / keeps its old behaviour (instant, no focus)", async () => {
     await mount();
     const w = fakeWidget();
-    for (const path of ["/de#top", "/?a=1#top", "//evil.example/#top", "https://evil.example/#top", "/api/lead#top", "/#top2", "/#TOP", "/en/#top"]) {
+    for (const path of ["/de#top", "/?a=1#top", "//evil.example/#top", "https://evil.example/#top", "/api/lead#top", "/#top2", "/#TOP", "/de/#top", "/en//#top"]) {
       expect(w.command("navigate", { path }), path).toMatchObject({ handled: false, answers: [] });
     }
     expect(scrollTo).not.toHaveBeenCalled();

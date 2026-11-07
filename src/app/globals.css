@@ -4613,13 +4613,6 @@ a.site-footer__badge:hover {
   font-size: calc(var(--avatar-card-w, 12.5rem) / 16);
 }
 
-/* the docked card in the corner stops above the footer: the script (use-card-footer-cap.ts) adds the lift to its usual offset, so it rises with the page instead of sitting over the footer */
-@media (width >= 56.25em) and (height >= 32.5em) {
-  .avatar-card[data-placement="dock"] {
-    bottom: calc(var(--avatar-card-bottom, 6rem) + var(--avatar-card-lift, 0rem));
-  }
-}
-
 .avatar-card[data-placement="hero"] {
   font-size: clamp(0.75rem, calc(var(--avatar-slot-w, 20rem) / 20), 1rem);
 }
@@ -5801,9 +5794,9 @@ a.site-footer__badge:hover {
 }
 
 /*
- * The footer ends the page: no reserve below it. The docked card stops above the footer's top edge as the page reaches it (use-card-footer-cap lifts it by
- * --avatar-card-lift), so it never sits over the footer. Only the windows where the card stays fixed in its corner (a tiny window: a small circle) keep room
- * below the last line.
+ * The footer ends the page: no reserve below it. The docked card is fixed in its corner all the way down and sits over the footer when the page is at its end (it does not
+ * stop above it). So that it never hides anything clickable, the footer's content keeps clear of it (see the rule below). Only the windows where the card stays fixed
+ * in its corner (a tiny window: a small circle) keep room below the last line.
  */
 .site-footer--agent-card {
   padding-bottom: calc(var(--space-5) + var(--avatar-card-h, 15.625rem) + var(--avatar-card-bottom, 6rem));
@@ -5812,6 +5805,17 @@ a.site-footer__badge:hover {
 @media (width >= 40em) and (height >= 32.5em) {
   .site-footer--agent-card {
     padding-bottom: var(--space-5);
+  }
+}
+
+@media (width >= 56.25em) and (height >= 32.5em) {
+  /*
+   * The card (in the corner from 56.25em; below that the call bar) stays over the footer, so the footer's content ends left of it: its right padding is as wide as the card
+   * (its width, its distance from the window's edge and a gap) less the margin the centred container already leaves at that edge, and never less than the normal padding.
+   * On a wide window the margin is enough: no extra padding. (100%, not 100vw: the scrollbar is not part of the footer's width.)
+   */
+  .site-footer--agent-card .site-footer__inner {
+    padding-right: max(var(--space-4), calc(var(--avatar-card-w, 12.5rem) + 2 * var(--space-3) - max(0rem, (100% - var(--container-wide, var(--container))) / 2)));
   }
 }
 

@@ -49,10 +49,10 @@ function Badge({ href, className, children }: { href?: string; className: string
 
 /**
  * The version line. In a RELEASE build (SITE_INDEXABLE=1, the switch that tells a release from a demo snapshot, see README "Demo vs release mode") only the
- * version, "v0.9.0"; in a demo or test snapshot and in development the full line (version, template and content commits, build time; "dev" without a version.json).
+ * version, "v0.9.0" (and "dev" when there is no version at all, never an empty line); in a demo or test snapshot and in development the full line (version, template and content commits, build time; "dev" without a version.json).
  */
 export function footerVersionLine(info = currentVersion(), release = indexingAllowed()): string {
-  return release ? versionOnly(info) : versionLine(info);
+  return (release ? versionOnly(info) : versionLine(info)) || "dev"; // never an empty line: without a version it says "dev"
 }
 
 /**

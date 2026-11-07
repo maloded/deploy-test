@@ -18,7 +18,6 @@ import { useOrbRings } from "./use-orb-rings";
 import { AgentCaptions } from "./AgentCaptions";
 import { callAttribute } from "@/lib/call-outcome";
 import { useCardTilt } from "./use-card-tilt";
-import { useCardFooterCap } from "./use-card-footer-cap";
 import { useCardPlacement, type Placement } from "./use-card-placement";
 import { useCallBubble } from "./use-call-bubble";
 import { useRoleShort } from "./use-role-short";
@@ -94,7 +93,6 @@ export function AgentAvatarCard({ avatar, lang, host, slot = false, placement: p
   // the example call and the status line are for the large card only (the docked card is small, and the circle is the picture)
   const example = placement === "hero" && lang ? (avatar.example?.[lang] ?? null) : null;
   useCardTilt(cardRef, frameRef);
-  useCardFooterCap(cardRef, placement);
 
   // the idle loop waits for the page to be idle
   useEffect(() => {

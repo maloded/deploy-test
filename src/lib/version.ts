@@ -27,11 +27,23 @@ export function cleanVersionInfo(raw: unknown): VersionInfo | null {
 
 type Env = Record<string, string | undefined>;
 
-/** { VERSION_INFO: "<json>" } for next.config.ts, or {} when there is no (readable) version.json. */
-export function versionEnv(projectRoot: string = process.cwd()): Record<string, string> {
+/**
+ * { VERSION_INFO: "<json>" } for next.config.ts, or {} when there is nothing to say. The source is the version.json of the project root (a snapshot writes it,
+ * and so does scripts/write-version.mjs in the image build). Without that file and with `fallbackToPackage`, the version of package.json alone is used, so a
+ * built site never has an empty version line; the working repository in development keeps "dev".
+ */
+export function versionEnv(projectRoot: string = process.cwd(), { fallbackToPackage = false }: { fallbackToPackage?: boolean } = {}): Record<string, string> {
   try {
     const info = cleanVersionInfo(JSON.parse(fs.readFileSync(path.join(projectRoot, "version.json"), "utf8")));
-    return info ? { VERSION_INFO: JSON.stringify(info) } : {};
+    if (info) return { VERSION_INFO: JSON.stringify(info) };
+  } catch {
+    // no (readable) version.json
+  }
+  if (!fallbackToPackage) return {};
+  try {
+    const pkg = JSON.parse(fs.readFileSync(path.join(projectRoot, "package.json"), "utf8")) as { version?: unknown };
+    const fromPackage = cleanVersionInfo({ version: pkg.version });
+    return fromPackage ? { VERSION_INFO: JSON.stringify(fromPackage) } : {};
   } catch {
     return {};
   }

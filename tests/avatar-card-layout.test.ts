@@ -287,13 +287,13 @@ describe("the card's place and stacking", () => {
     expect(body("body:has(.avatar-card) .theme-switcher")).toContain("var(--avatar-card-w, 12.5rem)");
   });
 
-  it("the footer ends the page on windows where the card docks (the card is capped above the footer instead); tiny ones keep the room below", () => {
+  it("the footer ends the page on windows where the card docks (the card stays over it, the footer's content keeps clear of it); tiny ones keep the room below", () => {
     expect(body(".site-footer--agent-card")).toMatch(/padding-bottom: calc\(var\(--space-5\) \+ var\(--avatar-card-h, 15\.625rem\) \+ var\(--avatar-card-bottom, 6rem\)\)/);
     const WIDE = "@media (width >= 40em) and (height >= 32.5em)";
-    // docked card: no reserve below the footer (no empty band), the card is lifted above the footer by the cap
+    // docked card: no reserve below the footer (no empty band); the card stays where it is, and the footer's content ends left of it (see card-over-footer.test.ts)
     expect(body(".site-footer--agent-card", WIDE)).toMatch(/padding-bottom: var\(--space-5\)/);
-    // the footer is as wide as the header, nothing reserved beside it
-    expect(body(".site-footer--agent-card .site-footer__inner", WIDE)).toBe("");
+    // the footer is as wide as the header; beside the corner card (from 56.25em) it only gets the right padding that keeps its content out from under the card
+    expect(body(".site-footer--agent-card .site-footer__inner", "@media (width >= 56.25em) and (height >= 32.5em)")).toMatch(/^\s*padding-right: max\(/);
     expect(body(":root")).toContain("--avatar-card-h: calc(var(--avatar-card-w, 12.5rem) * 1.25)");
   });
 });

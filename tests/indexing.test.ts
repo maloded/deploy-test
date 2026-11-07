@@ -57,9 +57,11 @@ describe("each of the four places follows it", () => {
   });
 
   it("next.config: the catch-all noindex header by default, no header rule with SITE_INDEXABLE=1", async () => {
-    expect(await nextConfig.headers!()).toEqual([{ source: "/:path*", headers: [{ key: "X-Robots-Tag", value: NOINDEX }] }]);
+    // the robots rules only (the Cache-Control entries of the pages are tests/cache-control.test.ts's)
+    const robotsRules = async () => (await nextConfig.headers!()).filter((h) => !h.headers.some((x) => x.key === "Cache-Control"));
+    expect(await robotsRules()).toEqual([{ source: "/:path*", headers: [{ key: "X-Robots-Tag", value: NOINDEX }] }]);
     vi.stubEnv("SITE_INDEXABLE", "1");
-    expect(await nextConfig.headers!()).toEqual([]);
+    expect(await robotsRules()).toEqual([]);
   });
 
   it("the page metadata takes its robots from the helper, so there is no hand-written noindex left in the layout", () => {
@@ -100,5 +102,27 @@ describe("DEPLOY.md's production checklist", () => {
 
   it("has no secret, e-mail address or phone number in it", () => {
     expect(checklist).not.toMatch(/[\w.+-]+@[\w-]+\.[\w.]+|\+\d[\d\s]{7,}|token=|[0-9a-f]{24}/i);
+  });
+});
+
+describe("DEPLOY.md's Docker image section", () => {
+  const deploy = src("DEPLOY.md");
+  const section = deploy.slice(deploy.indexOf("## The Docker image"), deploy.indexOf("## Voice assistant widget"));
+
+  it("names the two variables that turn indexing on and says they must be set at build AND at runtime, and why", () => {
+    expect(section).toContain("`SITE_INDEXABLE`");
+    expect(section).toContain("`SITE_URL`");
+    expect(section).toMatch(/must be set at build AND at runtime/);
+    expect(section).toMatch(/`next start` loads `next\.config\.ts` again/);
+  });
+
+  it("says indexing stays off by default and explains the cache values and the version line", () => {
+    expect(section).toMatch(/Indexing is off by default/);
+    expect(section).toContain("public, max-age=0, s-maxage=60, stale-while-revalidate=60");
+    expect(section).toContain("scripts/write-version.mjs");
+  });
+
+  it("does not change the Dockerfile's default: no SITE_INDEXABLE or SITE_URL in it", () => {
+    expect(src("Dockerfile")).not.toMatch(/SITE_INDEXABLE|SITE_URL/);
   });
 });

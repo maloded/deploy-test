@@ -13,6 +13,11 @@ ARG CONTENT_DIR=content-repo
 ARG CONTENT_PRODUCT=good-point/vw-multivan
 ENV CONTENT_DIR=$CONTENT_DIR \
     CONTENT_PRODUCT=$CONTENT_PRODUCT
+# The footer's version line: the image has no git history, so version.json (version from package.json, build time, and the commits when
+# the build is given them) is written here, the same file a snapshot carries (scripts/write-version.mjs).
+ARG TEMPLATE_COMMIT
+ARG CONTENT_COMMIT
+RUN node scripts/write-version.mjs
 RUN npm run build
 
 FROM node:22-bookworm-slim

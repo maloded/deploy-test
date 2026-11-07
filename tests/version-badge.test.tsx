@@ -1,12 +1,14 @@
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
-import { Footer } from "@/components/Footer";
+import { Footer, footerVersionLine } from "@/components/Footer";
 import { GET } from "@/app/version.json/route";
 import { cleanVersionInfo, currentVersion, versionEnv, versionLine } from "@/lib/version";
 import { buildVersionInfo } from "../scripts/lib/version-info.mjs";
+import { versionToWrite, writeVersion } from "../scripts/write-version.mjs";
 import { verifyDeploy } from "../scripts/lib/verify-deploy.mjs";
 import { fixtures } from "./helpers";
 
@@ -109,6 +111,65 @@ describe("version.ts: reading, cleaning and the line", () => {
     expect(versionEnv(path.join(tmp, "nowhere"))).toEqual({});
     put(dir, "version.json", "{broken");
     expect(versionEnv(dir)).toEqual({});
+  });
+});
+
+describe("a build without version.json (the Docker image) still has a version line", () => {
+  const FULL = { version: "0.2.0", template: "9328a8e", content: "4b59167", built: "2026-10-28 14:10" };
+  it("versionEnv falls back to the version of package.json when asked to (a production build), and keeps {} otherwise (development says dev)", () => {
+    const dir = path.join(tmp, "fallback");
+    put(dir, "package.json", JSON.stringify({ name: "x", version: "0.11.0" }));
+    expect(versionEnv(dir)).toEqual({});
+    expect(JSON.parse(versionEnv(dir, { fallbackToPackage: true }).VERSION_INFO)).toEqual({ version: "0.11.0", template: null, content: null, built: null });
+    // a version.json wins over the fallback
+    put(dir, "version.json", JSON.stringify(FULL));
+    expect(JSON.parse(versionEnv(dir, { fallbackToPackage: true }).VERSION_INFO)).toEqual(FULL);
+    // nothing usable anywhere: nothing (the footer then says dev)
+    const bare = path.join(tmp, "fallback-bare");
+    put(bare, "package.json", JSON.stringify({ name: "x" }));
+    expect(versionEnv(bare, { fallbackToPackage: true })).toEqual({});
+    expect(versionEnv(path.join(tmp, "fallback-none"), { fallbackToPackage: true })).toEqual({});
+  });
+
+  it("the footer line is never empty: a release build with no version says dev, and with only a version says v<version>", () => {
+    expect(footerVersionLine(null, true)).toBe("dev");
+    expect(footerVersionLine(null, false)).toBe("dev");
+    expect(footerVersionLine({ version: null, template: "abc1234", content: null, built: null }, true)).toBe("dev"); // no commit hashes in a release
+    expect(footerVersionLine({ version: "0.11.0", template: null, content: null, built: null }, true)).toBe("v0.11.0");
+    expect(footerVersionLine({ version: "0.11.0", template: null, content: null, built: null }, false)).toBe("v0.11.0");
+  });
+
+  it("scripts/write-version.mjs writes the snapshot's version.json from package.json, the clock and the commits it is given", () => {
+    const dir = path.join(tmp, "write");
+    put(dir, "package.json", JSON.stringify({ version: "0.11.0" }));
+    const env = { TEMPLATE_COMMIT: "3FD922C1234567890", CONTENT_COMMIT: "4bd3e25", CONTENT_DIR: "content-repo" };
+    const result = writeVersion({ projectRoot: dir, env, now: NOW });
+    expect(result.written).toBe(true);
+    const file = JSON.parse(fs.readFileSync(path.join(dir, "version.json"), "utf8"));
+    expect(file).toEqual({ version: "0.11.0", template: "3fd922c", content: "4bd3e25", built: "2026-10-28 14:10" });
+    expect(cleanVersionInfo(file)).toEqual(file); // the shape the page accepts
+    expect(JSON.parse(versionEnv(dir).VERSION_INFO)).toEqual(file);
+  });
+
+  it("takes only hash-shaped commits from the environment, leaves a missing one out, and never overwrites an existing version.json", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "write-odd-")); // outside this repository: git has nothing to say about it
+    try {
+      put(dir, "package.json", JSON.stringify({ version: "0.11.0" }));
+      const odd = versionToWrite({ projectRoot: dir, contentRoot: path.join(dir, "nowhere"), env: { TEMPLATE_COMMIT: "/home/someone/repo", CONTENT_COMMIT: "" }, now: NOW });
+      expect(odd).toEqual({ version: "0.11.0", template: null, content: null, built: "2026-10-28 14:10" });
+      put(dir, "version.json", JSON.stringify(FULL));
+      expect(writeVersion({ projectRoot: dir, env: {}, now: NOW }).written).toBe(false);
+      expect(JSON.parse(fs.readFileSync(path.join(dir, "version.json"), "utf8"))).toEqual(FULL);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("the Dockerfile writes it before the build, with the two commit arguments, and next.config.ts asks for the fallback in production only", () => {
+    const docker = fs.readFileSync(path.join(process.cwd(), "Dockerfile"), "utf8");
+    expect(docker).toMatch(/ARG TEMPLATE_COMMIT\s+ARG CONTENT_COMMIT\s+RUN node scripts\/write-version\.mjs\s+RUN npm run build/);
+    const config = fs.readFileSync(path.join(process.cwd(), "next.config.ts"), "utf8");
+    expect(config).toContain('versionEnv(process.cwd(), { fallbackToPackage: process.env.NODE_ENV === "production" })');
   });
 });
 

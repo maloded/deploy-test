@@ -61,8 +61,20 @@ describe("navigateTarget: the allow-list", () => {
     expect(t("/de#hero", "de")).toEqual({ kind: "hash", id: "hero" });
   });
 
+  it("accepts a trailing slash after the page language, as the reference site did: /en/, /en/#offer, and the same with the other targets; /#offer needs none", () => {
+    expect(t("/en/")).toEqual({ kind: "top" });
+    expect(t("/en/#offer")).toEqual({ kind: "hash", id: "offer" });
+    expect(t("/#offer")).toEqual({ kind: "hash", id: "offer" });
+    expect(t("/en/#contact-offer")).toEqual({ kind: "contact", type: "offer" });
+    expect(t("/en/#photo-cockpit")).toEqual({ kind: "gallery", hash: "#photo-cockpit" });
+    expect(t("/en/#top")).toEqual({ kind: "top", smooth: true });
+    expect(t("/de/#hero", "de")).toEqual({ kind: "hash", id: "hero" });
+    // still the page's own language only, and unknown ids stay rejected, with or without the slash
+    for (const bad of ["/de/", "/de/#hero", "/en/#nope", "/en/#faq", "/en/x/", "/en//"]) expect(t(bad), bad).toBeNull();
+  });
+
   it("ignores everything else", () => {
-    for (const path of ["/de", "/de#contact", "/fr", "/en/", "/en/x", "/en?a=1", "/?a=1#contact", "/api/lead", "//evil.example", "//evil.example/en", "https://page.example/en", "https://evil.example/en", "\\evil", "/\\evil", "/en#faq", "/en#nope", "/en#gallery-", "/en#photo-", "/en#spot-", "/en#photo-Cockpit", "/en#photo-a_b", "/en#photo--a", "/en#photo-a--b", "/en#gallery--1", "/en#spot-a%20b", "en", "", "#contact", "/%2Fen", "/en#contact2"]) {
+    for (const path of ["/de", "/de#contact", "/de/", "/de/#offer", "/fr", "/en/x", "/en//", "/en//#offer", "//en/", "/en/#nope", "/en/?a=1", "/en?a=1", "/?a=1#contact", "/api/lead", "//evil.example", "//evil.example/en", "https://page.example/en", "https://evil.example/en", "\\evil", "/\\evil", "/en#faq", "/en#nope", "/en#gallery-", "/en#photo-", "/en#spot-", "/en#photo-Cockpit", "/en#photo-a_b", "/en#photo--a", "/en#photo-a--b", "/en#gallery--1", "/en#spot-a%20b", "en", "", "#contact", "/%2Fen", "/en#contact2"]) {
       expect(t(path), path).toBeNull();
     }
     for (const bad of [undefined, null, 5, {}, ["/en"]]) expect(t(bad)).toBeNull();

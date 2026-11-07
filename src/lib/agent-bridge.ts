@@ -21,7 +21,7 @@ type AgentCommandDetail = { type?: unknown; payload?: { path?: unknown } | null;
 export type NavigateTarget = { kind: "top"; smooth?: true } | { kind: "contact"; type: string } | { kind: "hash"; id: string } | { kind: "gallery"; hash: string };
 
 /**
- * Which place on this page a navigate path means, or null when it is not one. Accepted: "/" or "/<page language>", with no
+ * Which place on this page a navigate path means, or null when it is not one. Accepted: "/", "/<page language>" or "/<page language>/", with no
  * query and with an optional hash: #contact or #contact-<type> (the dialog: see below), #<id of a block this page renders>, or a gallery address when the gallery is
  * rendered: #gallery-<category>, #gallery-<n> (1-based), #photo-<id>, #spot-<id> (which of them exist is the gallery's to say: it answers "unhandled"
  * for a name it does not have). The path is parsed against the page origin; another origin, another language, a query or any other hash is null.
@@ -34,7 +34,8 @@ export function navigateTarget(path: unknown, lang: Language, origin: string, re
   } catch {
     return null;
   }
-  if (url.origin !== origin || url.search !== "" || (url.pathname !== "/" && url.pathname !== `/${lang}`)) return null;
+  // "/", "/<lang>" and "/<lang>/" (a trailing slash, as the reference site accepted it), each with or without a hash; another language, a longer path or a doubled slash is not this page
+  if (url.origin !== origin || url.search !== "" || (url.pathname !== "/" && url.pathname !== `/${lang}` && url.pathname !== `/${lang}/`)) return null;
   const hash = url.hash;
   if (hash === "") return { kind: "top" };
   // the contact form: #contact (a viewing, or the first type the product offers) and #contact-viewing, -testdrive (or -test_drive), -question, -offer, as on the reference site;

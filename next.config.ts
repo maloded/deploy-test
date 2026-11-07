@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { cacheHeaders } from "./src/lib/cache-control.ts";
 import { robotsHeader } from "./src/lib/indexing.ts";
 import { assertSiteUrl } from "./src/lib/site-url.ts";
 import { leadContextEnv } from "./src/lib/lead-context.ts";
@@ -15,11 +16,12 @@ const nextConfig: NextConfig = {
   // the 404 page for every unmatched URL: the root layout is in [lang], so there is none to compose it from (src/app/global-not-found.tsx)
   experimental: { globalNotFound: true },
   // the seller's default language, inlined for the proxy, which sends "/" to "/<defaultLanguage>" (no Accept-Language negotiation)
-  env: { ...rootRedirectEnv(), ...siteStatusEnv(), ...leadContextEnv(), ...versionEnv() }, // and the lead API's context (product, languages, consent text hashes), and the snapshot's version.json
+  env: { ...rootRedirectEnv(), ...siteStatusEnv(), ...leadContextEnv(), ...versionEnv(process.cwd(), { fallbackToPackage: process.env.NODE_ENV === "production" }) }, // and the lead API's context (product, languages, consent text hashes), and the snapshot's version.json
   // belt and braces: noindex on every response, also for files the proxy does not handle (none with SITE_INDEXABLE=1, set at build time)
   async headers() {
     const robots = robotsHeader();
-    return robots ? [{ source: "/:path*", headers: [{ key: "X-Robots-Tag", value: robots }] }] : [];
+    // the pages and the generated files say how long they may be cached (src/lib/cache-control.ts); the hashed assets keep Next.js's own year
+    return [...cacheHeaders(), ...(robots ? [{ source: "/:path*", headers: [{ key: "X-Robots-Tag", value: robots }] }] : [])];
   },
 };
 
