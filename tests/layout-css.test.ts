@@ -61,7 +61,7 @@ describe("one screen in three zones", () => {
     const narrow = (sel: string) => rule(sel, "@media (width < 56.25em)").body;
     expect(narrow(".site-header:not(.site-header--agent) .site-header__inner")).toMatch(/flex-wrap: nowrap/);
     expect(narrow(".site-header:not(.site-header--agent) .site-header__end")).toMatch(/flex-wrap: nowrap/);
-    expect(narrow(".site-header:not(.site-header--agent) .site-header__brand")).toMatch(/flex: 1 1 0/);
+    expect(narrow(".site-header:not(.site-header--agent) .site-header__brand")).toMatch(/flex: 0 1 auto/); // its content's width: it used to be `1 1 0`, which let the name wrap
     expect(narrow(".site-header:not(.site-header--agent) .site-header__end > .button--small")).toMatch(/display: none/);
   });
 
@@ -75,7 +75,8 @@ describe("one screen in three zones", () => {
     expect(rule(":root", "").body).toMatch(/--brand-size: 1\.7rem/);
     expect(rule(":root", "@media (width < 56.25em)").body).toMatch(/--brand-size: 1\.35rem/);
     const name = rule(".site-header__name", "").body;
-    expect(name).toMatch(/font-size: var\(--brand-size, 1\.7rem\)/);
+    expect(name).toMatch(/font-size: var\(--brand-now, 1\.7rem\)/); // --brand-now is the theme's --brand-size, smaller only on a narrow phone (tests/header-brand.test.ts)
+    expect(rule(".site-header__brand", "").body).toContain("min(var(--brand-size, 1.7rem)");
     expect(name).toMatch(/line-height: 1\.1/); // 1.7rem x 1.1 stays under the control's height
     expect(name).toMatch(/font-family: var\(--font-heading\)/);
   });
@@ -255,9 +256,9 @@ describe("the bottom row has bounded heights", () => {
 
 describe("long words never widen the page", () => {
   /** Elements that hold running text. Each needs hyphens: auto and overflow-wrap: anywhere as a safety net. */
-  const TEXT = [".details__label", ".details__value", ".faq__question", ".faq__answer", ".button", ".hero__description", ".offer__note", ".offer__disclaimer", ".site-header__name", ".site-footer", "h1", "h2", "h3"];
+  const TEXT = [".details__label", ".details__value", ".faq__question", ".faq__answer", ".button", ".hero__description", ".offer__note", ".offer__disclaimer", ".site-footer", "h1", "h2", "h3"];
 
-  it("gives every text element hyphens: auto and overflow-wrap: anywhere (spec values, FAQ, buttons, headings, footer)", () => {
+  it("gives every text element hyphens: auto and overflow-wrap: anywhere (spec values, FAQ, buttons, headings, footer; not the header's brand name, which stays on one line)", () => {
     const net = rules().find((r) => /hyphens:\s*auto/.test(r.body) && /overflow-wrap:\s*anywhere/.test(r.body) && r.media === "")!;
     const selectors = net.selector.split(",").map((x) => x.trim());
     for (const sel of TEXT) expect(selectors, sel).toContain(sel);

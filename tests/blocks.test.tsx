@@ -654,10 +654,11 @@ describe("brand", () => {
     expect(shortTitle("(only brackets)")).toBe("(only brackets)");
   });
 
-  it("lets the header name wrap instead of cutting it with an ellipsis", () => {
+  it("keeps the header name on one line (it wraps nowhere, not even at a space); a name too long for the row ends in an ellipsis (tests/header-brand.test.ts)", () => {
     const css = fs.readFileSync(path.join(process.cwd(), "src", "app", "globals.css"), "utf8");
     const rule = /\.site-header__name \{[^}]*\}/.exec(css)?.[0] ?? "";
-    expect(rule).not.toMatch(/text-overflow|nowrap/);
-    expect(rule).toMatch(/overflow-wrap/);
+    expect(rule).toMatch(/white-space:\s*nowrap/);
+    expect(rule).toMatch(/text-overflow:\s*ellipsis/);
+    expect(rule).not.toMatch(/overflow-wrap/);
   });
 });

@@ -57,7 +57,6 @@ h3,
 .hero__description,
 .offer__note,
 .offer__disclaimer,
-.site-header__name,
 .site-footer {
   hyphens: auto;
   overflow-wrap: anywhere;
@@ -414,7 +413,7 @@ main:focus-visible {
   }
 
   .site-header:not(.site-header--agent) .site-header__brand {
-    flex: 1 1 0;
+    flex: 0 1 auto; /* its content's width: the other items give way first (see the compact controls below), the name's ellipsis is the very last resort */
     gap: var(--space-1);
   }
 
@@ -444,6 +443,8 @@ main:focus-visible {
 /* the brand: the seller's logo (when it has one) before the name. The mark is a little taller than the name's text but shorter than the controls, so the header does not grow;
    its currentColor is the theme's text colour, so it reads in both themes */
 .site-header__brand {
+  /* the size the mark and the name are drawn at: the theme's --brand-size, or on a narrow phone the size that fits the row (--brand-fit, set on the header only; the footer's brand has none) */
+  --brand-now: max(0.9rem, min(var(--brand-size, 1.7rem), var(--brand-fit, 99rem)));
   display: flex;
   min-width: 0;
   align-items: center;
@@ -477,15 +478,69 @@ a.site-brand-link:focus-visible {
   display: block;
   overflow: visible; /* an inline <svg> clips to its viewBox by default; a mark that touches the box edge (the dot above the ring) lost its top row of pixels */
   width: auto;
-  height: calc(var(--brand-size, 1.7rem) * 1.15);
+  height: calc(var(--brand-now, 1.7rem) * 1.15);
 }
 
+/* the brand name is ONE line, at every width: it never wraps ("Good" / "Point") and is never broken inside a word. A name too long for the row (not the case of the bundled
+   content, which the compact controls below make room for) ends in an ellipsis instead of pushing the page wider. */
 .site-header__name {
   min-width: 0;
+  overflow: hidden;
   font-family: var(--font-heading);
-  font-size: var(--brand-size, 1.7rem);
+  font-size: var(--brand-now, 1.7rem);
   line-height: 1.1;
-  overflow-wrap: anywhere;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * A phone has to carry the brand on one line next to the language button and the theme/music group, so the controls give way, in this order, before the name does:
+ * below 30em the language button loses its arrow and most of its padding; below 22.5em it is just the globe (the dropdown still lists the codes and names, the button keeps
+ * its accessible name). Only then does the brand itself get smaller, and only as far as the row needs: below 25em its size follows the window (--brand-fit: what is left of
+ * the width after the padding, the gap and the controls, over the name's width in em, measured with the widest of the bundled fonts), never above the theme's size. Below 21em
+ * the side padding is 1rem. --brand-fit is set on the header only, so the footer's brand (the same markup) keeps its size.
+ */
+@media (width < 30em) {
+  .site-header:not(.site-header--agent) .lang-menu__current {
+    gap: var(--space-1);
+    padding-inline: var(--space-1);
+  }
+
+  .site-header:not(.site-header--agent) .lang-menu__current::after {
+    display: none;
+  }
+}
+
+@media (width < 25em) {
+  .site-header:not(.site-header--agent) {
+    --brand-fit: calc((100vw - 13.5rem) / 6.25);
+  }
+}
+
+@media (width < 22.5em) {
+  .site-header:not(.site-header--agent) {
+    --brand-fit: calc((100vw - 13rem) / 6.25);
+  }
+
+  .site-header:not(.site-header--agent) .lang-menu__current {
+    width: var(--header-control-h, 2.75rem);
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .site-header:not(.site-header--agent) .lang-menu__current-code {
+    display: none;
+  }
+}
+
+@media (width < 21em) {
+  .site-header:not(.site-header--agent) {
+    --brand-fit: calc((100vw - 12rem) / 6.25);
+  }
+
+  .site-header:not(.site-header--agent) .site-header__inner {
+    padding-inline: var(--space-3);
+  }
 }
 
 /*

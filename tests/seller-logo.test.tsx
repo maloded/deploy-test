@@ -147,9 +147,9 @@ describe("in the header", () => {
     expect(out).not.toContain("site-header__logo");
     expect(out).toContain('class="site-header__name"');
   });
-  it("the stylesheet sizes the mark from the brand size and colours it with the text colour (both themes)", () => {
+  it("the stylesheet sizes the mark from the brand size (--brand-now, the theme's --brand-size unless a narrow phone needs less) and colours it with the text colour (both themes)", () => {
     const css = fs.readFileSync(path.join(process.cwd(), "src/app/globals.css"), "utf8");
     expect(css).toMatch(/\.site-header__logo \{[^}]*color: var\(--text\)/);
-    expect(css).toMatch(/\.site-header__logo svg \{[^}]*height: calc\(var\(--brand-size, 1\.7rem\) \* 1\.15\)/);
+    expect(css).toMatch(/\.site-header__logo svg \{[^}]*height: calc\(var\(--brand-now, 1\.7rem\) \* 1\.15\)/);
   });
 });
